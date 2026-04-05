@@ -34,6 +34,7 @@ import type {
   UpdateCaseBody,
   UpdateCategoryBody,
   UpdateFindingBody,
+  UploadDocumentsBody,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -766,6 +767,95 @@ export const useCreateDocument = <
   TContext
 > => {
   return useMutation(getCreateDocumentMutationOptions(options));
+};
+
+/**
+ * @summary Upload one or more files (PDF, DOCX, image, TXT) to a case
+ */
+export const getUploadDocumentsUrl = (caseId: number) => {
+  return `/api/cases/${caseId}/documents/upload`;
+};
+
+export const uploadDocuments = async (
+  caseId: number,
+  uploadDocumentsBody: UploadDocumentsBody,
+  options?: RequestInit,
+): Promise<Document[]> => {
+  const formData = new FormData();
+  uploadDocumentsBody.files.forEach((value) => formData.append(`files`, value));
+
+  return customFetch<Document[]>(getUploadDocumentsUrl(caseId), {
+    ...options,
+    method: "POST",
+    body: formData,
+  });
+};
+
+export const getUploadDocumentsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof uploadDocuments>>,
+    TError,
+    { caseId: number; data: BodyType<UploadDocumentsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof uploadDocuments>>,
+  TError,
+  { caseId: number; data: BodyType<UploadDocumentsBody> },
+  TContext
+> => {
+  const mutationKey = ["uploadDocuments"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof uploadDocuments>>,
+    { caseId: number; data: BodyType<UploadDocumentsBody> }
+  > = (props) => {
+    const { caseId, data } = props ?? {};
+
+    return uploadDocuments(caseId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UploadDocumentsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof uploadDocuments>>
+>;
+export type UploadDocumentsMutationBody = BodyType<UploadDocumentsBody>;
+export type UploadDocumentsMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Upload one or more files (PDF, DOCX, image, TXT) to a case
+ */
+export const useUploadDocuments = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof uploadDocuments>>,
+    TError,
+    { caseId: number; data: BodyType<UploadDocumentsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof uploadDocuments>>,
+  TError,
+  { caseId: number; data: BodyType<UploadDocumentsBody> },
+  TContext
+> => {
+  return useMutation(getUploadDocumentsMutationOptions(options));
 };
 
 /**

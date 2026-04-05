@@ -174,6 +174,17 @@ export const CreateDocumentBody = zod.object({
 });
 
 /**
+ * @summary Upload one or more files (PDF, DOCX, image, TXT) to a case
+ */
+export const UploadDocumentsParams = zod.object({
+  caseId: zod.coerce.number(),
+});
+
+export const UploadDocumentsBody = zod.object({
+  files: zod.array(zod.instanceof(File)),
+});
+
+/**
  * @summary Get a document
  */
 export const GetDocumentParams = zod.object({

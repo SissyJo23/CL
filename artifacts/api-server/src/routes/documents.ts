@@ -2,21 +2,12 @@ import { Router, type Response } from "express";
 import multer from "multer";
 import pdfParse from "pdf-parse";
 import mammoth from "mammoth";
-import { db } from "@workspace/db";
-import {
-  documentsTable,
-  insertDocumentSchema,
-} from "@workspace/db";
-import {
-  findingsTable,
-  crossCaseMatchesTable,
-  casesTable,
-} from "@workspace/db";
+import { db, documentsTable, insertDocumentSchema, findingsTable, crossCaseMatchesTable, casesTable, categoriesTable } from "@workspace/db";
 import { eq, and, desc, ne } from "drizzle-orm";
 import { anthropic, buildAnalysisPrompt, runCrossCaseMatching } from "../lib/anthropic";
 
 const router = Router({ mergeParams: true });
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024, files: 10 } });
 
 router.get("/cases/:caseId/documents", async (req, res) => {
   const caseId = Number(req.params.caseId);
@@ -42,81 +33,87 @@ router.post("/cases/:caseId/documents", async (req, res) => {
   res.status(201).json(row);
 });
 
-router.post(
-  "/cases/:caseId/documents/upload",
-  upload.single("file"),
-  async (req, res) => {
-    const caseId = Number(req.params.caseId);
-    const { title, documentType } = req.body as { title?: string; documentType?: string };
-
-    if (!req.file) {
-      res.status(400).json({ error: "No file provided" });
-      return;
-    }
-    if (!title) {
-      res.status(400).json({ error: "Title is required" });
-      return;
-    }
-
-    const file = req.file;
-    const mime = file.mimetype;
-    let content = "";
-
-    try {
-      if (mime === "application/pdf" || file.originalname.endsWith(".pdf")) {
-        const result = await pdfParse(file.buffer);
-        content = result.text;
-      } else if (
-        mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-        file.originalname.endsWith(".docx")
-      ) {
-        const result = await mammoth.extractRawText({ buffer: file.buffer });
-        content = result.value;
-      } else if (mime.startsWith("image/")) {
-        const base64 = file.buffer.toString("base64");
-        const msg = await anthropic.messages.create({
-          model: "claude-opus-4-5",
-          max_tokens: 8192,
-          messages: [
+async function extractTextFromFile(file: Express.Multer.File): Promise<string> {
+  const mime = file.mimetype;
+  if (mime === "application/pdf" || file.originalname.endsWith(".pdf")) {
+    const result = await pdfParse(file.buffer);
+    return result.text;
+  }
+  if (
+    mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    file.originalname.endsWith(".docx")
+  ) {
+    const result = await mammoth.extractRawText({ buffer: file.buffer });
+    return result.value;
+  }
+  if (mime.startsWith("image/")) {
+    const base64 = file.buffer.toString("base64");
+    const msg = await anthropic.messages.create({
+      model: "claude-opus-4-5",
+      max_tokens: 8192,
+      messages: [
+        {
+          role: "user",
+          content: [
             {
-              role: "user",
-              content: [
-                {
-                  type: "image",
-                  source: { type: "base64", media_type: mime as "image/jpeg" | "image/png" | "image/gif" | "image/webp", data: base64 },
-                },
-                { type: "text", text: "Transcribe all text from this document image exactly as it appears. Return only the raw transcribed text, preserving structure." },
-              ],
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: mime as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
+                data: base64,
+              },
+            },
+            {
+              type: "text",
+              text: "Transcribe all text from this document image exactly as it appears. Return only the raw transcribed text, preserving structure.",
             },
           ],
-        });
-        content = msg.content[0]?.type === "text" ? msg.content[0].text : "";
-      } else {
-        content = file.buffer.toString("utf-8");
-      }
+        },
+      ],
+    });
+    return msg.content[0]?.type === "text" ? msg.content[0].text : "";
+  }
+  return file.buffer.toString("utf-8");
+}
 
-      if (!content.trim()) {
-        res.status(422).json({ error: "Could not extract text from this file. Try pasting the content manually." });
-        return;
-      }
+router.post(
+  "/cases/:caseId/documents/upload",
+  upload.array("files", 10),
+  async (req, res) => {
+    const caseId = Number(req.params.caseId);
+    const files = req.files as Express.Multer.File[] | undefined;
+    const documentType = (req.body as { documentType?: string }).documentType ?? "other";
 
-      const parsed = insertDocumentSchema.safeParse({
-        caseId,
-        title,
-        documentType: documentType ?? "other",
-        content,
-      });
-      if (!parsed.success) {
-        res.status(400).json({ error: parsed.error.issues });
-        return;
-      }
-
-      const [row] = await db.insert(documentsTable).values(parsed.data).returning();
-      res.status(201).json(row);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "File processing failed";
-      res.status(500).json({ error: msg });
+    if (!files || files.length === 0) {
+      res.status(400).json({ error: "No files provided" });
+      return;
     }
+
+    const results: { name: string; status: "ok" | "error"; error?: string }[] = [];
+    const created: typeof documentsTable.$inferSelect[] = [];
+
+    for (const file of files) {
+      try {
+        const content = await extractTextFromFile(file);
+        if (!content.trim()) {
+          results.push({ name: file.originalname, status: "error", error: "No text extracted" });
+          continue;
+        }
+        const title = file.originalname.replace(/\.[^.]+$/, "");
+        const parsed = insertDocumentSchema.safeParse({ caseId, title, documentType, content });
+        if (!parsed.success) {
+          results.push({ name: file.originalname, status: "error", error: "Validation failed" });
+          continue;
+        }
+        const [row] = await db.insert(documentsTable).values(parsed.data).returning();
+        created.push(row);
+        results.push({ name: file.originalname, status: "ok" });
+      } catch (err) {
+        results.push({ name: file.originalname, status: "error", error: err instanceof Error ? err.message : "Processing failed" });
+      }
+    }
+
+    res.status(created.length > 0 ? 201 : 422).json({ results, documents: created });
   },
 );
 
@@ -170,6 +167,10 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
     .filter((d) => d.id !== docId)
     .map((d) => ({ id: d.id, title: d.title, content: d.content }));
 
+  const userCategories = await db
+    .select({ id: categoriesTable.id, name: categoriesTable.name, description: categoriesTable.description })
+    .from(categoriesTable);
+
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
@@ -186,6 +187,7 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
       doc.title,
       doc.content,
       otherDocsForPrompt,
+      userCategories,
     );
 
     const message = await anthropic.messages.create({
@@ -197,10 +199,13 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
     const rawText =
       message.content[0]?.type === "text" ? message.content[0].text : "[]";
 
+    const validCategoryIds = new Set(userCategories.map((c) => c.id));
+
     let findings: {
       issueTitle: string;
       transcriptExcerpt: string;
       legalAnalysis: string;
+      categoryId?: number | null;
       precedentName?: string | null;
       precedentCitation?: string | null;
       precedentType?: string | null;
@@ -230,6 +235,9 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
     }> = [];
 
     for (const f of findings) {
+      const resolvedCategoryId =
+        f.categoryId != null && validCategoryIds.has(f.categoryId) ? f.categoryId : null;
+
       const [inserted] = await db
         .insert(findingsTable)
         .values({
@@ -238,6 +246,7 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
           issueTitle: f.issueTitle,
           transcriptExcerpt: f.transcriptExcerpt,
           legalAnalysis: f.legalAnalysis,
+          categoryId: resolvedCategoryId,
           precedentName: f.precedentName ?? null,
           precedentCitation: f.precedentCitation ?? null,
           precedentType: f.precedentType ?? null,
@@ -287,9 +296,9 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
           .from(findingsTable)
           .innerJoin(documentsTable, eq(findingsTable.documentId, documentsTable.id))
           .innerJoin(casesTable, eq(findingsTable.caseId, casesTable.id))
-          .where(ne(findingsTable.caseId, caseId))
+          .where(ne(findingsTable.documentId, docId))
           .orderBy(desc(findingsTable.id))
-          .limit(50);
+          .limit(80);
 
         if (otherCaseFindings.length > 0) {
           const crossMatches = await runCrossCaseMatching(

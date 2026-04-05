@@ -28,6 +28,7 @@ export function buildAnalysisPrompt(
   documentTitle: string,
   content: string,
   otherDocuments: { id: number; title: string; content: string }[],
+  userCategories?: { id: number; name: string; description?: string | null }[],
 ): string {
   const docTypeLabel =
     DOCUMENT_TYPE_LABELS[documentType] ?? "Legal Document";
@@ -42,6 +43,13 @@ export function buildAnalysisPrompt(
           .join("\n\n")}`
       : "";
 
+  const categoryContext =
+    userCategories && userCategories.length > 0
+      ? `\n\nAVAILABLE ISSUE CATEGORIES (use these IDs for categoryId field):\n${userCategories
+          .map((c) => `  ID ${c.id}: "${c.name}"${c.description ? ` — ${c.description}` : ""}`)
+          .join("\n")}\n\nFor each finding, set "categoryId" to the most applicable category ID from the list above, or null if none fits.`
+      : "";
+
   return `You are an expert legal analyst reviewing a ${docTypeLabel} titled "${documentTitle}" for potential constitutional violations, procedural errors, ineffective assistance of counsel, Brady violations, prosecutorial misconduct, chain-of-custody issues, and any other legal issues that could support post-conviction relief.
 
 Your analysis must be EXHAUSTIVE. You must examine EVERY element of the document — every line, every date, every signature, every procedural notation, every piece of boilerplate, every off-record reference, every spelling error or inconsistency, every timestamp, every name — nothing may be skipped or summarized away. If it's in the document, you must analyze it.
@@ -49,12 +57,14 @@ Your analysis must be EXHAUSTIVE. You must examine EVERY element of the document
 DOCUMENT TO ANALYZE:
 ${content}
 ${crossDocContext}
+${categoryContext}
 
 TASK: Return a JSON array of findings. Each finding must follow this exact structure:
 {
   "issueTitle": "Short descriptive title of the issue",
   "transcriptExcerpt": "The exact quoted text from the document that supports this finding",
   "legalAnalysis": "Deep legal analysis explaining why this is significant, what right or standard it implicates, and how it could be raised on appeal or in a post-conviction motion",
+  "categoryId": <integer ID from available categories, or null>,
   "precedentName": "Name of most directly applicable case (or null)",
   "precedentCitation": "Full citation (or null)",
   "precedentType": "BINDING or PERSUASIVE (or null)",

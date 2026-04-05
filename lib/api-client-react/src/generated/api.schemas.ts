@@ -325,3 +325,7 @@ export interface CaseExport {
   motions: Motion[];
   exportedAt: string;
 }
+
+export type UploadDocumentsBody = {
+  files: Blob[];
+};

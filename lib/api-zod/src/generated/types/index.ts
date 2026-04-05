@@ -35,3 +35,4 @@ export * from "./motion";
 export * from "./updateCaseBody";
 export * from "./updateCategoryBody";
 export * from "./updateFindingBody";
+export * from "./uploadDocumentsBody";

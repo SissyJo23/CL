@@ -54,7 +54,7 @@ export default function CourtShow() {
           </Link>
           
           {caseData?.hasMotion && (
-            <Link href={`/cases/${caseId}`}>
+            <Link href={`/cases/${caseId}/motions`}>
               <Button variant="outline" size="sm">
                 <FileText className="w-4 h-4 mr-2" />
                 View Generated Motion

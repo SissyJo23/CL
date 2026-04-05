@@ -149,7 +149,14 @@ export default function DocumentShow() {
                     </div>
                   ) : filteredFindings.length > 0 ? (
                     filteredFindings.map(finding => (
-                      <FindingCard key={finding.id || Math.random()} finding={finding} />
+                      <FindingCard
+                        key={finding.id || Math.random()}
+                        finding={finding}
+                        caseId={caseId}
+                        documentId={documentId}
+                        onDeleted={(id) => setLiveFindings(prev => prev.filter(f => f.id !== id))}
+                        onUpdated={(updated) => setLiveFindings(prev => prev.map(f => f.id === updated.id ? updated : f))}
+                      />
                     ))
                   ) : isAnalyzing ? (
                     <div className="flex flex-col items-center justify-center h-full text-muted-foreground space-y-4">

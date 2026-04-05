@@ -11,6 +11,7 @@ import CourtNew from "@/pages/court/new";
 import CourtRun from "@/pages/court/run";
 import CourtShow from "@/pages/court/show";
 import MotionShow from "@/pages/motions/show";
+import MotionList from "@/pages/motions/list";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/cases/:id/court/new" component={CourtNew} />
       <Route path="/cases/:caseId/court/:id/run" component={CourtRun} />
       <Route path="/cases/:caseId/court/:id" component={CourtShow} />
+      <Route path="/cases/:caseId/motions" component={MotionList} />
       <Route path="/cases/:caseId/motions/:id" component={MotionShow} />
       <Route component={NotFound} />
     </Switch>

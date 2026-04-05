@@ -187,6 +187,40 @@ paths:
               schema:
                 $ref: "#/components/schemas/Document"
 
+  /cases/{caseId}/documents/upload:
+    post:
+      operationId: uploadDocuments
+      tags: [documents]
+      summary: Upload one or more files (PDF, DOCX, image, TXT) to a case
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+              required: [files]
+      responses:
+        "201":
+          description: Documents created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+
   /cases/{caseId}/documents/{id}:
     get:
       operationId: getDocument

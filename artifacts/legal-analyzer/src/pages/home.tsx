@@ -34,6 +34,13 @@ export default function Home() {
                 </Button>
               </Link>
             )}
+            {!isLoading && data?.case?.hasMotion && (
+              <Link href={`/cases/${data.case.id}/motions`} className="w-full sm:w-auto">
+                <Button variant="ghost" size="lg" className="w-full sm:w-auto text-base h-14 px-8 rounded-full" data-testid="button-view-motions">
+                  View Generated Motion
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </main>
