@@ -1,0 +1,21 @@
+Hearing Simulation - §974.06 Postconviction
+
+HEARING SIMULATION - §974.06 POSTCONVICTION
+
+Case: State vs. Joseph Lagerman | Defendant: Joseph Henry Lagerman
+
+Verdict: UNASSAILABLE after 3 rounds
+
+ROUND 1- State: MODERATE
+
+Burden: Defense - Defense must prove by preponderance: (1) sufficient reason for failure to raise claim on direct appeal (ineffective assistance of appellate counsel), AND (2) Strickland prong 1 (counsel's performance deficient), AND (3) Strickland prong 2 (reasonable probability of different outcome) [disputed - Defense has established Escalona exception and constitutional violation; State relies on totality-of-circumstances argument and questionnaire, which case law does not permit as substitute for on-record colloquy]
+
+THE STATE:
+
+The State contends this claim is procedurally barred under State v. Escalona-Naranjo, 185 Wis. 2d 168 (1994). The absence of an on-record plea colloquy was apparent from the face of the record and available for direct appeal. Defendant failed to raise it. Under Escalona, claims that could have been raised on direct appeal but were not are barred from §974.06 review absent sufficient reason. Defendant has shown no sufficient reason for the failure to raise this issue previously. The claim is procedurally defaulted. Even reaching the merits, the plea questionnaire shows defendant initialed acknowledgments of the plea terms. We would call Attorney Mary Kenney as a witness, and she would testify that she explained the global disposition to defendant in multiple jail conferences, that defendant understood he was pleading no contest to amended charges in exchange for dismissal and read-in of this case, and that defendant affirmatively agreed to proceed. The questionnaire, signed and initialed by defendant, references 'all terms of the plea agreement' and defendant's acknowledgment that he discussed them with counsel. The totality of the circumstances-questionnaire, attorney consultation, defendant's execution of the plea in open court without objection-demonstrates a knowing and voluntary plea. State v.
+
+Hoppe, 2009 WI 41, 47, holds that a plea may be sustained even with circuit court error if the totality of circumstances shows defendant understood the plea. Here, defendant proceeded without protest, was sentenced, and only now-years later-claims he didn't understand. His incentive to fabricate is obvious. His credibility is undermined by the record of his conduct: he fired a weapon at police, made inconsistent statements, and has every reason to seek relief from a lengthy sentence. The plea was knowing and voluntary under the totality of circumstances.
+
+THE COURT:
+
+Counsel, I'm looking at this transcript. Where exactly in the record does it show the circuit court conducted a plea colloquy with Mr. Lagerman about this global disposition? I see defense counsel talking to the prosecutor on pages 2-3, but where is the court's colloquy with the defendant?
