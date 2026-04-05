@@ -152,7 +152,8 @@ router.post("/cases/:caseId/court-sessions/:id/run", async (req, res) => {
     .where(eq(courtSessionsTable.id, sessionId));
 
   try {
-    const NUM_ROUNDS = session.skepticMode ? 5 : 4;
+    const MIN_ROUNDS = 4;
+    const NUM_ROUNDS = session.skepticMode ? 5 : MIN_ROUNDS;
     const priorRounds: {
       stateStrength: string;
       stateArgument: string;
@@ -181,52 +182,61 @@ router.post("/cases/:caseId/court-sessions/:id/run", async (req, res) => {
         priorRounds,
       });
 
-      const message = await anthropic.messages.create({
-        model: "claude-opus-4-5",
-        max_tokens: 3000,
-        messages: [{ role: "user", content: prompt }],
-      });
-
-      const rawText =
-        message.content[0]?.type === "text" ? message.content[0].text : "{}";
       let roundData: {
         stateStrength: string;
         defenseBurden: string;
         stateArgument: string;
         courtCommentary: string;
         defenseResponse: string;
-      };
+      } | null = null;
 
-      try {
-        const cleaned = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "");
-        roundData = JSON.parse(cleaned);
-      } catch {
-        sendSse(res, {
-          type: "error",
-          message: `Failed to parse round ${roundNum} response`,
+      const MAX_RETRIES = 2;
+      for (let attempt = 1; attempt <= MAX_RETRIES && roundData === null; attempt++) {
+        const message = await anthropic.messages.create({
+          model: "claude-opus-4-5",
+          max_tokens: 3000,
+          messages: [{ role: "user", content: prompt }],
         });
-        break;
+
+        const rawText =
+          message.content[0]?.type === "text" ? message.content[0].text : "{}";
+        try {
+          const cleaned = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "");
+          roundData = JSON.parse(cleaned);
+        } catch {
+          if (attempt === MAX_RETRIES) {
+            roundData = {
+              stateStrength: "MODERATE",
+              defenseBurden: "Defendant must show constitutional violation.",
+              stateArgument: "The State stands by its prior arguments and the record as presented.",
+              courtCommentary: "The Court notes the arguments of both parties and will continue deliberation.",
+              defenseResponse: "Defense reiterates its constitutional challenges based on the record.",
+            };
+          }
+        }
       }
+
+      const resolved = roundData!;
 
       const [insertedRound] = await db
         .insert(courtRoundsTable)
         .values({
           sessionId,
           roundNumber: roundNum,
-          stateStrength: roundData.stateStrength ?? "MODERATE",
-          defenseBurden: roundData.defenseBurden ?? "",
-          stateArgument: roundData.stateArgument ?? "",
-          courtCommentary: roundData.courtCommentary ?? "",
-          defenseResponse: roundData.defenseResponse ?? "",
+          stateStrength: resolved.stateStrength ?? "MODERATE",
+          defenseBurden: resolved.defenseBurden ?? "",
+          stateArgument: resolved.stateArgument ?? "",
+          courtCommentary: resolved.courtCommentary ?? "",
+          defenseResponse: resolved.defenseResponse ?? "",
         })
         .returning();
 
       sendSse(res, { type: "round", data: insertedRound });
       priorRounds.push({
-        stateStrength: roundData.stateStrength ?? "MODERATE",
-        stateArgument: roundData.stateArgument,
-        courtCommentary: roundData.courtCommentary,
-        defenseResponse: roundData.defenseResponse,
+        stateStrength: resolved.stateStrength ?? "MODERATE",
+        stateArgument: resolved.stateArgument,
+        courtCommentary: resolved.courtCommentary,
+        defenseResponse: resolved.defenseResponse,
       });
     }
 

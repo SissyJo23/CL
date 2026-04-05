@@ -299,8 +299,7 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
           .innerJoin(documentsTable, eq(findingsTable.documentId, documentsTable.id))
           .innerJoin(casesTable, eq(findingsTable.caseId, casesTable.id))
           .where(ne(findingsTable.documentId, docId))
-          .orderBy(desc(findingsTable.id))
-          .limit(80);
+          .orderBy(desc(findingsTable.id));
 
         if (otherCaseFindings.length > 0) {
           const crossMatches = await runCrossCaseMatching(
