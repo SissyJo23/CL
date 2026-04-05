@@ -30,7 +30,7 @@ export default function CaseShow() {
   const [docTitle, setDocTitle] = useState("");
   const [docType, setDocType] = useState<CreateDocumentBodyDocumentType>("transcript");
   const [docContent, setDocContent] = useState("");
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [inputMode, setInputMode] = useState<"paste" | "upload">("paste");
 
@@ -58,15 +58,16 @@ export default function CaseShow() {
   };
 
   const handleUploadDocument = async () => {
-    if (!docTitle || !uploadFile) {
-      toast({ title: "Validation Error", description: "Title and file are required.", variant: "destructive" });
+    if (uploadFiles.length === 0) {
+      toast({ title: "Validation Error", description: "Please select at least one file.", variant: "destructive" });
       return;
     }
     setIsUploading(true);
     try {
       const formData = new FormData();
-      formData.append("file", uploadFile);
-      formData.append("title", docTitle);
+      for (const file of uploadFiles) {
+        formData.append("files", file);
+      }
       formData.append("documentType", docType);
 
       const res = await fetch(`/api/cases/${caseId}/documents/upload`, {
@@ -80,11 +81,13 @@ export default function CaseShow() {
         return;
       }
 
+      const created: { title: string }[] = await res.json().catch(() => []);
       queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
       setOpen(false);
       setDocTitle("");
-      setUploadFile(null);
-      toast({ title: "Document Uploaded", description: "Text was extracted and the document is ready." });
+      setUploadFiles([]);
+      const count = created.length;
+      toast({ title: count === 1 ? "Document Uploaded" : `${count} Documents Uploaded`, description: "Text extracted and documents are ready for analysis." });
     } catch {
       toast({ title: "Upload Error", description: "Failed to upload file.", variant: "destructive" });
     } finally {
@@ -220,18 +223,23 @@ export default function CaseShow() {
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <label className="text-sm font-medium">File (PDF, DOCX, TXT, or image)</label>
+                          <label className="text-sm font-medium">Files (PDF, DOCX, TXT, or image — multiple allowed)</label>
                           <Input
                             type="file"
                             accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp"
-                            onChange={e => setUploadFile(e.target.files?.[0] ?? null)}
+                            multiple
+                            onChange={e => setUploadFiles(Array.from(e.target.files ?? []))}
                             className="cursor-pointer"
                           />
-                          {uploadFile && (
-                            <p className="text-xs text-muted-foreground">Selected: {uploadFile.name} ({(uploadFile.size / 1024).toFixed(0)} KB)</p>
+                          {uploadFiles.length > 0 && (
+                            <div className="text-xs text-muted-foreground space-y-0.5">
+                              {uploadFiles.map((f, i) => (
+                                <p key={i}>{f.name} ({(f.size / 1024).toFixed(0)} KB)</p>
+                              ))}
+                            </div>
                           )}
-                          <Button className="w-full" onClick={handleUploadDocument} disabled={isUploading || !uploadFile}>
-                            {isUploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Extracting text...</> : "Upload & Extract"}
+                          <Button className="w-full" onClick={handleUploadDocument} disabled={isUploading || uploadFiles.length === 0}>
+                            {isUploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Extracting text...</> : `Upload & Extract${uploadFiles.length > 1 ? ` (${uploadFiles.length} files)` : ""}`}
                           </Button>
                         </div>
                       )}

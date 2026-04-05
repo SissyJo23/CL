@@ -33,11 +33,33 @@ router.post("/cases/:caseId/documents", async (req, res) => {
   res.status(201).json(row);
 });
 
+async function ocrWithVision(buffer: Buffer, mimeType: string): Promise<string> {
+  const allowed = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+  const useMime = allowed.includes(mimeType) ? mimeType : "image/jpeg";
+  const base64 = buffer.toString("base64");
+  const msg = await anthropic.messages.create({
+    model: "claude-opus-4-5",
+    max_tokens: 8192,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image", source: { type: "base64", media_type: useMime as "image/jpeg" | "image/png" | "image/gif" | "image/webp", data: base64 } },
+        { type: "text", text: "Transcribe all text from this document image exactly as it appears. Return only the raw transcribed text, preserving structure." },
+      ],
+    }],
+  });
+  return msg.content[0]?.type === "text" ? msg.content[0].text : "";
+}
+
 async function extractTextFromFile(file: Express.Multer.File): Promise<string> {
   const mime = file.mimetype;
-  if (mime === "application/pdf" || file.originalname.endsWith(".pdf")) {
+  if (mime === "application/pdf" || file.originalname.toLowerCase().endsWith(".pdf")) {
     const result = await pdfParse(file.buffer);
-    return result.text;
+    const pdfText = result.text?.trim() ?? "";
+    if (pdfText.length < 100) {
+      return await ocrWithVision(file.buffer, "image/jpeg");
+    }
+    return pdfText;
   }
   if (
     mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
@@ -47,31 +69,7 @@ async function extractTextFromFile(file: Express.Multer.File): Promise<string> {
     return result.value;
   }
   if (mime.startsWith("image/")) {
-    const base64 = file.buffer.toString("base64");
-    const msg = await anthropic.messages.create({
-      model: "claude-opus-4-5",
-      max_tokens: 8192,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: mime as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
-                data: base64,
-              },
-            },
-            {
-              type: "text",
-              text: "Transcribe all text from this document image exactly as it appears. Return only the raw transcribed text, preserving structure.",
-            },
-          ],
-        },
-      ],
-    });
-    return msg.content[0]?.type === "text" ? msg.content[0].text : "";
+    return await ocrWithVision(file.buffer, mime);
   }
   return file.buffer.toString("utf-8");
 }
@@ -113,7 +111,11 @@ router.post(
       }
     }
 
-    res.status(created.length > 0 ? 201 : 422).json({ results, documents: created });
+    if (created.length === 0) {
+      res.status(422).json({ error: "No files could be processed", details: results });
+      return;
+    }
+    res.status(201).json(created);
   },
 );
 
