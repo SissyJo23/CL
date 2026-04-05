@@ -1,5 +1,5 @@
 import { useParams, Link } from "wouter";
-import { useGetCourtSession, getGetCourtSessionQueryKey, useGetCase } from "@workspace/api-client-react";
+import { useGetCourtSession, getGetCourtSessionQueryKey, useGetCase, getGetCaseQueryKey } from "@workspace/api-client-react";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,8 +12,8 @@ export default function CourtShow() {
   const caseId = parseInt(params.caseId || "0", 10);
   const sessionId = parseInt(params.id || "0", 10);
   
-  const { data: sessionData, isLoading } = useGetCourtSession(sessionId, { query: { enabled: !!sessionId, queryKey: getGetCourtSessionQueryKey(sessionId) } });
-  const { data: caseData } = useGetCase(caseId, { query: { enabled: !!caseId } });
+  const { data: sessionData, isLoading } = useGetCourtSession(caseId, sessionId, { query: { enabled: !!(caseId && sessionId), queryKey: getGetCourtSessionQueryKey(caseId, sessionId) } });
+  const { data: caseData } = useGetCase(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseQueryKey(caseId) } });
 
   if (isLoading) {
     return (

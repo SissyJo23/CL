@@ -1,4 +1,4 @@
-import { Finding } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { Finding, CrossCaseMatch } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Scale, BookOpen, Quote, ChevronDown, Link as LinkIcon } from "lucide-react";
@@ -9,7 +9,7 @@ import { useState } from "react";
 
 export default function FindingCard({ finding }: { finding: Finding }) {
   const { data: categories = [] } = useListCategories();
-  const category = categories.find(c => c.id === finding.categoryId);
+  const category = categories.find((c) => c.id === finding.categoryId);
   const [crossCaseOpen, setCrossCaseOpen] = useState(false);
 
   const colorMap = {
@@ -95,7 +95,7 @@ export default function FindingCard({ finding }: { finding: Finding }) {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="divide-y divide-border">
-                {finding.crossCaseMatches.map((match, i) => (
+                {finding.crossCaseMatches.map((match: CrossCaseMatch, i: number) => (
                   <div key={i} className="p-3 space-y-2">
                     <div className="text-xs font-medium text-muted-foreground">
                       Source: {match.sourceDocumentTitle}

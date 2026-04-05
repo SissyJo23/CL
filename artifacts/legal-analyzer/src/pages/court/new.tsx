@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useGetCase, getGetCaseQueryKey, useListDocuments, getListDocumentsQueryKey, useCreateCourtSession, getListCourtSessionsQueryKey } from "@workspace/api-client-react";
+import type { CreateCourtSessionBodySimulationMode } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
@@ -52,7 +53,7 @@ export default function CourtNew() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const [mode, setMode] = useState<string>("direct_appeal");
+  const [mode, setMode] = useState<CreateCourtSessionBodySimulationMode>("direct_appeal");
   const [skepticMode, setSkepticMode] = useState(false);
   const [expandedRecord, setExpandedRecord] = useState(false);
   const [pleaNotes, setPleaNotes] = useState("");
@@ -72,9 +73,10 @@ export default function CourtNew() {
     }
 
     createSession.mutate(
-      { 
-        data: { 
-          simulationMode: mode as any,
+      {
+        caseId,
+        data: {
+          simulationMode: mode,
           skepticMode,
           expandedRecord,
           pleaQuestionnaireNotes: pleaNotes || null,
@@ -114,7 +116,7 @@ export default function CourtNew() {
             <div className="space-y-6">
               <section>
                 <h2 className="text-lg font-medium mb-4">Simulation Standard</h2>
-                <RadioGroup value={mode} onValueChange={setMode} className="grid gap-3">
+                <RadioGroup value={mode} onValueChange={(val) => setMode(val as CreateCourtSessionBodySimulationMode)} className="grid gap-3">
                   {SIMULATION_MODES.map((m) => {
                     const Icon = m.icon;
                     const isActive = mode === m.id;

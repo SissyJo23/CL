@@ -154,6 +154,7 @@ router.post("/cases/:caseId/court-sessions/:id/run", async (req, res) => {
   try {
     const NUM_ROUNDS = session.skepticMode ? 5 : 4;
     const priorRounds: {
+      stateStrength: string;
       stateArgument: string;
       courtCommentary: string;
       defenseResponse: string;
@@ -222,6 +223,7 @@ router.post("/cases/:caseId/court-sessions/:id/run", async (req, res) => {
 
       sendSse(res, { type: "round", data: insertedRound });
       priorRounds.push({
+        stateStrength: roundData.stateStrength ?? "MODERATE",
         stateArgument: roundData.stateArgument,
         courtCommentary: roundData.courtCommentary,
         defenseResponse: roundData.defenseResponse,

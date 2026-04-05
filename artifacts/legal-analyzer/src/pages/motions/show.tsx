@@ -11,7 +11,7 @@ export default function MotionShow() {
   const caseId = parseInt(params.caseId || "0", 10);
   const motionId = parseInt(params.id || "0", 10);
   
-  const { data: motion, isLoading } = useGetMotion(motionId, { query: { enabled: !!motionId, queryKey: getGetMotionQueryKey(motionId) } });
+  const { data: motion, isLoading } = useGetMotion(caseId, motionId, { query: { enabled: !!(caseId && motionId), queryKey: getGetMotionQueryKey(caseId, motionId) } });
 
   const handleDownload = () => {
     if (!motion) return;

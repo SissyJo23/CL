@@ -10,7 +10,7 @@ import { ArrowLeft, Play, AlertCircle, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import FindingCard from "@/components/findings/FindingCard";
 import CategoryFilter from "@/components/categories/CategoryFilter";
-import { Finding } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { Finding } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function DocumentShow() {
@@ -47,17 +47,22 @@ export default function DocumentShow() {
       
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      
+      let buffer = "";
+
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n').filter(Boolean);
-        
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
         for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          const jsonStr = line.slice(5).trim();
+          if (!jsonStr) continue;
           try {
-            const event = JSON.parse(line);
+            const event = JSON.parse(jsonStr);
             if (event.type === "finding") {
               setLiveFindings(prev => [...prev, event.data]);
             } else if (event.type === "done") {
@@ -83,7 +88,7 @@ export default function DocumentShow() {
 
   const filteredFindings = liveFindings.filter(f => {
     if (selectedCategories.size === 0) return true;
-    if (f.categoryId === null) return false;
+    if (f.categoryId == null) return false;
     return selectedCategories.has(f.categoryId);
   });
 

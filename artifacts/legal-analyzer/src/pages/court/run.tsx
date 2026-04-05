@@ -3,7 +3,7 @@ import { useParams, Link, useLocation } from "wouter";
 import { useGetCourtSession, getGetCourtSessionQueryKey } from "@workspace/api-client-react";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
-import { CourtRound } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { CourtRound } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, Gavel, FileText, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,7 @@ export default function CourtRun() {
   const sessionId = parseInt(params.id || "0", 10);
   const [, setLocation] = useLocation();
   
-  const { data: sessionData, isLoading } = useGetCourtSession(sessionId, { query: { enabled: !!sessionId, queryKey: getGetCourtSessionQueryKey(sessionId) } });
+  const { data: sessionData, isLoading } = useGetCourtSession(caseId, sessionId, { query: { enabled: !!(caseId && sessionId), queryKey: getGetCourtSessionQueryKey(caseId, sessionId) } });
   
   const [rounds, setRounds] = useState<CourtRound[]>([]);
   const [isComplete, setIsComplete] = useState(false);
@@ -42,17 +42,22 @@ export default function CourtRun() {
           
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
-          
+          let buffer = "";
+
           while (true) {
             const { value, done } = await reader.read();
             if (done) break;
-            
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n').filter(Boolean);
-            
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() ?? "";
+
             for (const line of lines) {
+              if (!line.startsWith("data:")) continue;
+              const jsonStr = line.slice(5).trim();
+              if (!jsonStr) continue;
               try {
-                const event = JSON.parse(line);
+                const event = JSON.parse(jsonStr);
                 if (event.type === "round") {
                   setRounds(prev => [...prev, event.data]);
                 } else if (event.type === "done") {
