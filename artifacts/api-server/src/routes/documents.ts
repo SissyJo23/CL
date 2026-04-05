@@ -51,13 +51,44 @@ async function ocrWithVision(buffer: Buffer, mimeType: string): Promise<string> 
   return msg.content[0]?.type === "text" ? msg.content[0].text : "";
 }
 
+async function ocrPdfWithAnthropic(buffer: Buffer): Promise<string> {
+  const base64 = buffer.toString("base64");
+  const msg = await anthropic.messages.create({
+    model: "claude-opus-4-5",
+    max_tokens: 8192,
+    messages: [{
+      role: "user",
+      content: [
+        {
+          type: "document",
+          source: {
+            type: "base64",
+            media_type: "application/pdf",
+            data: base64,
+          },
+        } as unknown as { type: "text"; text: string },
+        {
+          type: "text",
+          text: "Transcribe all text from this PDF document exactly as it appears. Return only the raw transcribed text, preserving structure and layout. Include all pages.",
+        },
+      ],
+    }],
+  });
+  return msg.content[0]?.type === "text" ? msg.content[0].text : "";
+}
+
 async function extractTextFromFile(file: Express.Multer.File): Promise<string> {
   const mime = file.mimetype;
   if (mime === "application/pdf" || file.originalname.toLowerCase().endsWith(".pdf")) {
-    const result = await pdfParse(file.buffer);
-    const pdfText = result.text?.trim() ?? "";
+    let pdfText = "";
+    try {
+      const result = await pdfParse(file.buffer);
+      pdfText = result.text?.trim() ?? "";
+    } catch {
+      pdfText = "";
+    }
     if (pdfText.length < 100) {
-      return await ocrWithVision(file.buffer, "image/jpeg");
+      return await ocrPdfWithAnthropic(file.buffer);
     }
     return pdfText;
   }
@@ -271,21 +302,9 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
       });
     }
 
-    await db
-      .update(documentsTable)
-      .set({ status: "analyzed", findingCount: insertedFindings.length, updatedAt: new Date() })
-      .where(eq(documentsTable.id, docId));
-
-    await db
-      .update(casesTable)
-      .set({ hasAnalysis: true, updatedAt: new Date() })
-      .where(eq(casesTable.id, caseId));
-
-    sendSse(res, { type: "done" });
-    res.end();
-
     if (insertedFindings.length > 0) {
       try {
+        sendSse(res, { type: "status", message: "Running cross-case matching..." });
         const otherCaseFindings = await db
           .select({
             id: findingsTable.id,
@@ -317,11 +336,26 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
               relevanceScore: String(match.relevanceScore),
             });
           }
+
+          sendSse(res, { type: "cross_case_done", count: crossMatches.length });
         }
       } catch (crossErr) {
         console.error("Cross-case matching failed (non-fatal):", crossErr);
       }
     }
+
+    await db
+      .update(documentsTable)
+      .set({ status: "analyzed", findingCount: insertedFindings.length, updatedAt: new Date() })
+      .where(eq(documentsTable.id, docId));
+
+    await db
+      .update(casesTable)
+      .set({ hasAnalysis: true, updatedAt: new Date() })
+      .where(eq(casesTable.id, caseId));
+
+    sendSse(res, { type: "done" });
+    res.end();
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     sendSse(res, { type: "error", message: msg });

@@ -65,6 +65,8 @@ export default function DocumentShow() {
             const event = JSON.parse(jsonStr);
             if (event.type === "finding") {
               setLiveFindings(prev => [...prev, event.data]);
+            } else if (event.type === "cross_case_done") {
+              queryClient.invalidateQueries({ queryKey: getListFindingsQueryKey(caseId, documentId) });
             } else if (event.type === "done") {
               setIsAnalyzing(false);
               queryClient.invalidateQueries({ queryKey: getGetDocumentQueryKey(caseId, documentId) });

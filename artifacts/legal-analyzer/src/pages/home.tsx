@@ -36,8 +36,8 @@ export default function Home() {
             )}
             {!isLoading && data?.case?.hasAnalysis && !data?.case?.hasMotion && (
               <Link href={`/cases/${data.case.id}/court/new`} className="w-full sm:w-auto">
-                <Button variant="ghost" size="lg" className="w-full sm:w-auto text-base h-14 px-8 rounded-full" data-testid="button-run-court">
-                  Run Court Simulator
+                <Button variant="ghost" size="lg" className="w-full sm:w-auto text-base h-14 px-8 rounded-full" data-testid="button-create-motion">
+                  Create Motion
                 </Button>
               </Link>
             )}
