@@ -277,3 +277,95 @@ Write the motion in full formal legal style. Every argument must cite specific p
 
 Return the complete motion text only — no JSON wrapping, no code fences. Begin with the case caption.`;
 }
+
+export async function runCrossCaseMatching(
+  newFindings: Array<{
+    id: number;
+    issueTitle: string;
+    transcriptExcerpt: string;
+    legalAnalysis: string;
+    documentId: number;
+  }>,
+  otherFindings: Array<{
+    id: number;
+    issueTitle: string;
+    transcriptExcerpt: string;
+    documentId: number;
+    documentTitle: string;
+    caseTitle: string;
+  }>,
+): Promise<
+  Array<{
+    newFindingId: number;
+    sourceDocumentId: number;
+    sourceDocumentTitle: string;
+    matchedPassage: string;
+    explanation: string;
+    relevanceScore: number;
+  }>
+> {
+  if (newFindings.length === 0 || otherFindings.length === 0) return [];
+
+  const prompt = `You are a legal cross-case analyst. Below are new legal findings from a document just analyzed, followed by existing findings from other cases in the system. Identify every meaningful cross-case match — where the same issue, pattern, or constitutional violation appears in another case's record.
+
+NEW FINDINGS:
+${newFindings
+  .map(
+    (f, i) =>
+      `[NEW_${i}] ID:${f.id} — "${f.issueTitle}"\nExcerpt: "${f.transcriptExcerpt.slice(0, 300)}"`,
+  )
+  .join("\n\n")}
+
+EXISTING FINDINGS FROM OTHER CASES:
+${otherFindings
+  .map(
+    (f, i) =>
+      `[OTHER_${i}] ID:${f.id} | Case: ${f.caseTitle} | Doc: "${f.documentTitle}" — "${f.issueTitle}"\nExcerpt: "${f.transcriptExcerpt.slice(0, 200)}"`,
+  )
+  .join("\n\n")}
+
+Return a JSON array of cross-case matches. Each match:
+{
+  "newFindingId": <id of the new finding>,
+  "otherFindingIndex": <index of the OTHER_ finding>,
+  "matchedPassage": "<the relevant passage from the other finding's excerpt>",
+  "explanation": "<why this cross-case pattern is legally significant>",
+  "relevanceScore": <0.0 to 1.0>
+}
+
+Only include matches with relevanceScore >= 0.6. Return [] if no strong matches. Return ONLY valid JSON array.`;
+
+  try {
+    const msg = await anthropic.messages.create({
+      model: "claude-opus-4-5",
+      max_tokens: 4096,
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const raw = msg.content[0]?.type === "text" ? msg.content[0].text : "[]";
+    const cleaned = raw.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "");
+    const matches = JSON.parse(cleaned) as Array<{
+      newFindingId: number;
+      otherFindingIndex: number;
+      matchedPassage: string;
+      explanation: string;
+      relevanceScore: number;
+    }>;
+
+    return matches
+      .filter((m) => m.otherFindingIndex >= 0 && m.otherFindingIndex < otherFindings.length)
+      .map((m) => {
+        const other = otherFindings[m.otherFindingIndex];
+        return {
+          newFindingId: m.newFindingId,
+          sourceDocumentId: other.documentId,
+          sourceDocumentTitle: `${other.caseTitle} — ${other.documentTitle}`,
+          matchedPassage: m.matchedPassage,
+          explanation: m.explanation,
+          relevanceScore: Math.min(1, Math.max(0, m.relevanceScore)),
+        };
+      });
+  } catch {
+    return [];
+  }
+}

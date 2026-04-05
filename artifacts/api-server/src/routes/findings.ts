@@ -105,7 +105,13 @@ router.patch(
     const [row] = await db
       .update(findingsTable)
       .set(updates)
-      .where(eq(findingsTable.id, id))
+      .where(
+        and(
+          eq(findingsTable.id, id),
+          eq(findingsTable.caseId, Number(req.params.caseId)),
+          eq(findingsTable.documentId, Number(req.params.documentId)),
+        ),
+      )
       .returning();
 
     if (!row) {
@@ -122,7 +128,17 @@ router.delete(
   "/cases/:caseId/documents/:documentId/findings/:id",
   async (req, res) => {
     const id = Number(req.params.id);
-    await db.delete(findingsTable).where(eq(findingsTable.id, id));
+    const caseId = Number(req.params.caseId);
+    const documentId = Number(req.params.documentId);
+    await db
+      .delete(findingsTable)
+      .where(
+        and(
+          eq(findingsTable.id, id),
+          eq(findingsTable.caseId, caseId),
+          eq(findingsTable.documentId, documentId),
+        ),
+      );
     res.status(204).send();
   },
 );

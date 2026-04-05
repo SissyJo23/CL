@@ -1,5 +1,6 @@
 import { useParams, Link } from "wouter";
 import { useGetCase, getGetCaseQueryKey, useListDocuments, getListDocumentsQueryKey, useCreateDocument } from "@workspace/api-client-react";
+import type { CreateDocumentBodyDocumentType } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
@@ -27,8 +28,11 @@ export default function CaseShow() {
 
   const [open, setOpen] = useState(false);
   const [docTitle, setDocTitle] = useState("");
-  const [docType, setDocType] = useState<string>("transcript");
+  const [docType, setDocType] = useState<CreateDocumentBodyDocumentType>("transcript");
   const [docContent, setDocContent] = useState("");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [inputMode, setInputMode] = useState<"paste" | "upload">("paste");
 
   const handleCreateDocument = () => {
     if (!docTitle || !docContent) {
@@ -37,7 +41,7 @@ export default function CaseShow() {
     }
 
     createDocument.mutate(
-      { caseId, data: { title: docTitle, documentType: docType as any, content: docContent } },
+      { caseId, data: { title: docTitle, documentType: docType, content: docContent } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
@@ -51,6 +55,41 @@ export default function CaseShow() {
         }
       }
     );
+  };
+
+  const handleUploadDocument = async () => {
+    if (!docTitle || !uploadFile) {
+      toast({ title: "Validation Error", description: "Title and file are required.", variant: "destructive" });
+      return;
+    }
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", uploadFile);
+      formData.append("title", docTitle);
+      formData.append("documentType", docType);
+
+      const res = await fetch(`/api/cases/${caseId}/documents/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Upload failed" }));
+        toast({ title: "Upload Error", description: err.error ?? "Upload failed", variant: "destructive" });
+        return;
+      }
+
+      queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
+      setOpen(false);
+      setDocTitle("");
+      setUploadFile(null);
+      toast({ title: "Document Uploaded", description: "Text was extracted and the document is ready." });
+    } catch {
+      toast({ title: "Upload Error", description: "Failed to upload file.", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -132,7 +171,7 @@ export default function CaseShow() {
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Type</label>
-                        <Select value={docType} onValueChange={setDocType}>
+                        <Select value={docType} onValueChange={(val) => setDocType(val as CreateDocumentBodyDocumentType)}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -150,18 +189,52 @@ export default function CaseShow() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Paste Text Content</label>
-                        <Textarea 
-                          value={docContent} 
-                          onChange={e => setDocContent(e.target.value)} 
-                          className="min-h-[200px] font-mono text-sm"
-                          placeholder="Paste document text here..."
-                        />
+                      <div className="flex rounded-lg border border-border overflow-hidden">
+                        <button
+                          className={`flex-1 py-2 text-sm font-medium transition-colors ${inputMode === "paste" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+                          onClick={() => setInputMode("paste")}
+                          type="button"
+                        >
+                          Paste Text
+                        </button>
+                        <button
+                          className={`flex-1 py-2 text-sm font-medium transition-colors ${inputMode === "upload" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+                          onClick={() => setInputMode("upload")}
+                          type="button"
+                        >
+                          Upload File
+                        </button>
                       </div>
-                      <Button className="w-full" onClick={handleCreateDocument} disabled={createDocument.isPending}>
-                        {createDocument.isPending ? "Adding..." : "Add Document"}
-                      </Button>
+                      {inputMode === "paste" ? (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Paste Text Content</label>
+                          <Textarea
+                            value={docContent}
+                            onChange={e => setDocContent(e.target.value)}
+                            className="min-h-[200px] font-mono text-sm"
+                            placeholder="Paste document text here..."
+                          />
+                          <Button className="w-full" onClick={handleCreateDocument} disabled={createDocument.isPending}>
+                            {createDocument.isPending ? "Adding..." : "Add Document"}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">File (PDF, DOCX, TXT, or image)</label>
+                          <Input
+                            type="file"
+                            accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp"
+                            onChange={e => setUploadFile(e.target.files?.[0] ?? null)}
+                            className="cursor-pointer"
+                          />
+                          {uploadFile && (
+                            <p className="text-xs text-muted-foreground">Selected: {uploadFile.name} ({(uploadFile.size / 1024).toFixed(0)} KB)</p>
+                          )}
+                          <Button className="w-full" onClick={handleUploadDocument} disabled={isUploading || !uploadFile}>
+                            {isUploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Extracting text...</> : "Upload & Extract"}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </DialogContent>
                 </Dialog>
