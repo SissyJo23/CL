@@ -113,6 +113,16 @@ router.post("/cases/:caseId/court-sessions/:id/run", async (req, res) => {
     return;
   }
 
+  if (session.status === "running") {
+    res.status(409).json({ error: "Session is already running." });
+    return;
+  }
+
+  if (session.status === "completed") {
+    res.status(409).json({ error: "Session has already completed. Create a new session to re-simulate." });
+    return;
+  }
+
   const [caseRow] = await db
     .select()
     .from(casesTable)

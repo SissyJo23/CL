@@ -191,6 +191,17 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
     return;
   }
 
+  if (doc.status === "analyzing") {
+    res.status(409).json({ error: "Analysis is already in progress for this document." });
+    return;
+  }
+
+  if (doc.status === "analyzed") {
+    await db.delete(findingsTable).where(
+      and(eq(findingsTable.documentId, docId), eq(findingsTable.caseId, caseId))
+    );
+  }
+
   const otherDocs = await db
     .select()
     .from(documentsTable)
