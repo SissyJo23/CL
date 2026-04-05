@@ -1,7 +1,7 @@
 import type { Finding, CrossCaseMatch } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Scale, BookOpen, Quote, ChevronDown, Link as LinkIcon, Loader2 } from "lucide-react";
+import { Pencil, Trash2, Scale, BookOpen, Quote, ChevronDown, Link as LinkIcon, Loader2, FileText } from "lucide-react";
 import { useListCategories, useUpdateFinding, useDeleteFinding } from "@workspace/api-client-react";
 import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -96,6 +96,13 @@ export default function FindingCard({ finding, caseId, documentId, onDeleted, on
             <p className="font-mono text-sm text-muted-foreground italic pl-2 leading-relaxed">
               "{finding.transcriptExcerpt}"
             </p>
+            {(finding.pageNumber != null || finding.lineNumber != null) && (
+              <div className="mt-2 pl-2 flex items-center gap-1 text-[10px] font-mono text-muted-foreground/70">
+                <FileText className="w-3 h-3" />
+                {finding.pageNumber != null && <span>p.{finding.pageNumber}</span>}
+                {finding.lineNumber != null && <span>l.{finding.lineNumber}</span>}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">

@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useEffect, useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ShieldCheck } from "lucide-react";
 
 export default function Navbar() {
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
@@ -21,6 +21,13 @@ export default function Navbar() {
           </Link>
         </div>
       </header>
+
+      <div className="bg-slate-800 border-b border-slate-700 px-4 py-2 flex items-center justify-center gap-2 text-xs text-slate-200 font-medium tracking-wide">
+        <ShieldCheck className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+        <span>PRIVILEGED &amp; CONFIDENTIAL — ATTORNEY WORK-PRODUCT — DO NOT DISCLOSE</span>
+        <ShieldCheck className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+      </div>
+
       {hasApiKey === false && (
         <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 flex items-center gap-3 text-sm text-amber-800">
           <AlertTriangle className="w-4 h-4 shrink-0" />

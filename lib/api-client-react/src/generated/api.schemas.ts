@@ -155,9 +155,22 @@ export interface Finding {
   /** @nullable */
   categoryId?: number | null;
   /** @nullable */
+  pageNumber?: number | null;
+  /** @nullable */
+  lineNumber?: number | null;
+  /** @nullable */
   userNotes?: string | null;
   crossCaseMatches: CrossCaseMatch[];
   createdAt: string;
+}
+
+export interface RedactTextBody {
+  text: string;
+}
+
+export interface RedactTextResponse {
+  redacted: string;
+  changesCount: number;
 }
 
 export interface UpdateFindingBody {

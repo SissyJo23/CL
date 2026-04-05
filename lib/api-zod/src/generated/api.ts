@@ -258,6 +258,8 @@ export const ListFindingsResponseItem = zod.object({
   courtRuling: zod.string().nullish(),
   materialSimilarity: zod.string().nullish(),
   categoryId: zod.number().nullish(),
+  pageNumber: zod.number().nullish(),
+  lineNumber: zod.number().nullish(),
   userNotes: zod.string().nullish(),
   crossCaseMatches: zod.array(
     zod.object({
@@ -300,6 +302,8 @@ export const GetFindingResponse = zod.object({
   courtRuling: zod.string().nullish(),
   materialSimilarity: zod.string().nullish(),
   categoryId: zod.number().nullish(),
+  pageNumber: zod.number().nullish(),
+  lineNumber: zod.number().nullish(),
   userNotes: zod.string().nullish(),
   crossCaseMatches: zod.array(
     zod.object({
@@ -347,6 +351,8 @@ export const UpdateFindingResponse = zod.object({
   courtRuling: zod.string().nullish(),
   materialSimilarity: zod.string().nullish(),
   categoryId: zod.number().nullish(),
+  pageNumber: zod.number().nullish(),
+  lineNumber: zod.number().nullish(),
   userNotes: zod.string().nullish(),
   crossCaseMatches: zod.array(
     zod.object({
@@ -628,6 +634,8 @@ export const ExportCaseResponse = zod.object({
       courtRuling: zod.string().nullish(),
       materialSimilarity: zod.string().nullish(),
       categoryId: zod.number().nullish(),
+      pageNumber: zod.number().nullish(),
+      lineNumber: zod.number().nullish(),
       userNotes: zod.string().nullish(),
       crossCaseMatches: zod.array(
         zod.object({

@@ -59,9 +59,13 @@ ${content}
 ${crossDocContext}
 ${categoryContext}
 
+CITATION REQUIREMENT: Every finding MUST include the exact page number and line number where the quoted text appears. If the document uses page/line headers like "Page 12, Line 15" or "P. 12 L. 15" or simply numbers like "12:15", extract those. If no explicit numbering exists, estimate based on document position. This is mandatory for legal verification.
+
 TASK: Return a JSON array of findings. Each finding must follow this exact structure:
 {
   "issueTitle": "Short descriptive title of the issue",
+  "pageNumber": <integer page number where this issue appears — REQUIRED, use best estimate if not labeled>,
+  "lineNumber": <integer line number on that page — REQUIRED, use best estimate if not labeled>,
   "transcriptExcerpt": "The exact quoted text from the document that supports this finding",
   "legalAnalysis": "Deep legal analysis explaining why this is significant, what right or standard it implicates, and how it could be raised on appeal or in a post-conviction motion",
   "categoryId": <integer ID from available categories, or null>,
@@ -101,6 +105,85 @@ MANDATORY COVERAGE — you must produce separate findings for:
 You must find ALL of these categories IF the content supports them. Do not skip categories because they seem unimportant — the defense determines importance, not you.
 
 Return ONLY a valid JSON array. No commentary before or after. No markdown code fences. Begin your response with [ and end with ].`;
+}
+
+export function buildChunkAnalysisPrompt(
+  documentType: string,
+  documentTitle: string,
+  chunk: string,
+  chunkIndex: number,
+  totalChunks: number,
+  chunkSummary: string,
+  otherDocuments: { id: number; title: string; content: string }[],
+  userCategories?: { id: number; name: string; description?: string | null }[],
+): string {
+  const docTypeLabel = DOCUMENT_TYPE_LABELS[documentType] ?? "Legal Document";
+  const pageOffset = chunkIndex * 10;
+
+  const priorContext = chunkSummary
+    ? `\n\nCONTEXT FROM PRIOR SECTIONS (pages 1–${pageOffset}):\n${chunkSummary}\n\nUse this context to identify cross-page inconsistencies and carry forward arguments.\n`
+    : "";
+
+  const crossDocContext =
+    otherDocuments.length > 0
+      ? `\n\nOTHER DOCUMENTS IN THIS CASE (for cross-reference):\n${otherDocuments
+          .map((d) => `--- [DOC_ID:${d.id}] ${d.title} ---\n${d.content.slice(0, 1500)}`)
+          .join("\n\n")}`
+      : "";
+
+  const categoryContext =
+    userCategories && userCategories.length > 0
+      ? `\n\nAVAILABLE ISSUE CATEGORIES:\n${userCategories
+          .map((c) => `  ID ${c.id}: "${c.name}"${c.description ? ` — ${c.description}` : ""}`)
+          .join("\n")}\n\nSet "categoryId" to the most applicable ID, or null.`
+      : "";
+
+  return `You are an expert legal analyst reviewing SECTION ${chunkIndex + 1} of ${totalChunks} of a ${docTypeLabel} titled "${documentTitle}" (approximately pages ${pageOffset + 1}–${pageOffset + 10}).
+${priorContext}
+CITATION REQUIREMENT: Every finding MUST include the exact page number and line number. Page numbers in this section start at approximately page ${pageOffset + 1}. If explicit page/line markers appear in the text (e.g., "Page 12, Line 15"), use those. Otherwise estimate based on position within this section.
+
+THIS SECTION TO ANALYZE:
+${chunk}
+${crossDocContext}
+${categoryContext}
+
+TASK: Return a JSON array of findings. Each finding must follow this exact structure:
+{
+  "issueTitle": "Short descriptive title of the issue",
+  "pageNumber": <integer page number — REQUIRED>,
+  "lineNumber": <integer line number on that page — REQUIRED>,
+  "transcriptExcerpt": "The exact quoted text from this section that supports this finding",
+  "legalAnalysis": "Deep legal analysis explaining why this is significant and how it could support post-conviction relief",
+  "categoryId": <integer ID from available categories, or null>,
+  "precedentName": "Name of most directly applicable case (or null)",
+  "precedentCitation": "Full citation (or null)",
+  "precedentType": "BINDING or PERSUASIVE (or null)",
+  "courtRuling": "What the precedent court held (or null)",
+  "materialSimilarity": "How the precedent facts are similar here (or null)",
+  "crossCaseMatches": []
+}
+
+Analyze EVERY element in this section exhaustively. Do not skip anything because it seems minor.
+
+Return ONLY a valid JSON array. No commentary. Begin with [ and end with ].`;
+}
+
+export async function buildChunkSummary(chunk: string, priorSummary: string): Promise<string> {
+  const prompt = `You are summarizing a section of a legal transcript for context carry-forward.
+${priorSummary ? `PRIOR SUMMARY:\n${priorSummary}\n\n` : ""}
+NEW SECTION:
+${chunk.slice(0, 8000)}
+
+Write a concise 3-5 sentence summary of: the key witnesses/parties mentioned, key facts established, any arguments or rulings made, and any notable legal issues raised. This will be used as context for analyzing the next section.
+
+Return only the summary text, no headings.`;
+
+  const msg = await anthropic.messages.create({
+    model: "claude-haiku-4-5",
+    max_tokens: 500,
+    messages: [{ role: "user", content: prompt }],
+  });
+  return msg.content[0]?.type === "text" ? msg.content[0].text : "";
 }
 
 export function buildCourtSimulationPrompt(params: {

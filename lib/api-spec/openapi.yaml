@@ -794,6 +794,10 @@ components:
           type: ["string", "null"]
         categoryId:
           type: ["integer", "null"]
+        pageNumber:
+          type: ["integer", "null"]
+        lineNumber:
+          type: ["integer", "null"]
         userNotes:
           type: ["string", "null"]
         crossCaseMatches:
@@ -832,6 +836,22 @@ components:
         - matchedPassage
         - explanation
         - relevanceScore
+
+    RedactTextBody:
+      type: object
+      properties:
+        text:
+          type: string
+      required: [text]
+
+    RedactTextResponse:
+      type: object
+      properties:
+        redacted:
+          type: string
+        changesCount:
+          type: integer
+      required: [redacted, changesCount]
 
     UpdateFindingBody:
       type: object

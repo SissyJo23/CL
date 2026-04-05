@@ -4,7 +4,8 @@ import pdfParse from "pdf-parse";
 import mammoth from "mammoth";
 import { db, documentsTable, insertDocumentSchema, findingsTable, crossCaseMatchesTable, casesTable, categoriesTable } from "@workspace/db";
 import { eq, and, desc, ne } from "drizzle-orm";
-import { anthropic, buildAnalysisPrompt, runCrossCaseMatching } from "../lib/anthropic";
+import { anthropic, buildAnalysisPrompt, buildChunkAnalysisPrompt, buildChunkSummary, runCrossCaseMatching } from "../lib/anthropic";
+import { redactText, splitIntoChunks } from "../lib/redact";
 
 const router = Router({ mergeParams: true });
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024, files: 10 } });
@@ -17,6 +18,18 @@ router.get("/cases/:caseId/documents", async (req, res) => {
     .where(eq(documentsTable.caseId, caseId))
     .orderBy(desc(documentsTable.createdAt));
   res.json(rows);
+});
+
+router.post("/redact", async (req, res) => {
+  const { text } = req.body as { text?: string };
+  if (typeof text !== "string") {
+    res.status(400).json({ error: "text field required" });
+    return;
+  }
+  const redacted = redactText(text);
+  const changesCount = (text.match(/\[REDACTED[^\]]*\]/g) ?? []).length;
+  const actualChanges = (redacted.match(/\[REDACTED[^\]]*\]/g) ?? []).length;
+  res.json({ redacted, changesCount: actualChanges });
 });
 
 router.post("/cases/:caseId/documents", async (req, res) => {
@@ -226,48 +239,71 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
     .where(eq(documentsTable.id, docId));
 
   try {
-    const prompt = buildAnalysisPrompt(
-      doc.documentType,
-      doc.title,
-      doc.content,
-      otherDocsForPrompt,
-      userCategories,
-    );
-
-    const message = await anthropic.messages.create({
-      model: "claude-opus-4-5",
-      max_tokens: 8192,
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    const rawText =
-      message.content[0]?.type === "text" ? message.content[0].text : "[]";
-
     const validCategoryIds = new Set(userCategories.map((c) => c.id));
+    const contentToAnalyze = redactText(doc.content);
+    const chunks = splitIntoChunks(contentToAnalyze);
+    const isChunked = chunks.length > 1;
 
-    let findings: {
+    type RawFinding = {
       issueTitle: string;
       transcriptExcerpt: string;
       legalAnalysis: string;
+      pageNumber?: number | null;
+      lineNumber?: number | null;
       categoryId?: number | null;
       precedentName?: string | null;
       precedentCitation?: string | null;
       precedentType?: string | null;
       courtRuling?: string | null;
       materialSimilarity?: string | null;
-    }[] = [];
+    };
 
-    try {
-      const cleaned = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "");
-      findings = JSON.parse(cleaned);
-    } catch {
-      sendSse(res, { type: "error", message: "Failed to parse AI response" });
-      await db
-        .update(documentsTable)
-        .set({ status: "error" })
-        .where(eq(documentsTable.id, docId));
-      res.end();
-      return;
+    const allFindings: RawFinding[] = [];
+    let chunkSummary = "";
+
+    for (const { chunk, chunkIndex, totalChunks } of chunks) {
+      if (isChunked) {
+        sendSse(res, {
+          type: "status",
+          message: `Analyzing section ${chunkIndex + 1} of ${totalChunks} (pages ~${chunkIndex * 10 + 1}–${(chunkIndex + 1) * 10})...`,
+        });
+      }
+
+      const prompt = isChunked
+        ? buildChunkAnalysisPrompt(
+            doc.documentType, doc.title, chunk, chunkIndex, totalChunks,
+            chunkSummary, otherDocsForPrompt, userCategories,
+          )
+        : buildAnalysisPrompt(
+            doc.documentType, doc.title, chunk, otherDocsForPrompt, userCategories,
+          );
+
+      const message = await anthropic.messages.create({
+        model: "claude-opus-4-5",
+        max_tokens: 8192,
+        messages: [{ role: "user", content: prompt }],
+      });
+
+      const rawText = message.content[0]?.type === "text" ? message.content[0].text : "[]";
+      let chunkFindings: RawFinding[] = [];
+
+      try {
+        const cleaned = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "");
+        chunkFindings = JSON.parse(cleaned);
+      } catch {
+        if (!isChunked) {
+          sendSse(res, { type: "error", message: "Failed to parse AI response" });
+          await db.update(documentsTable).set({ status: "error" }).where(eq(documentsTable.id, docId));
+          res.end();
+          return;
+        }
+      }
+
+      allFindings.push(...chunkFindings);
+
+      if (isChunked && chunkIndex < totalChunks - 1) {
+        chunkSummary = await buildChunkSummary(chunk, chunkSummary);
+      }
     }
 
     const insertedFindings: Array<{
@@ -278,7 +314,7 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
       documentId: number;
     }> = [];
 
-    for (const f of findings) {
+    for (const f of allFindings) {
       const resolvedCategoryId =
         f.categoryId != null && validCategoryIds.has(f.categoryId) ? f.categoryId : null;
 
@@ -291,6 +327,8 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
           transcriptExcerpt: f.transcriptExcerpt,
           legalAnalysis: f.legalAnalysis,
           categoryId: resolvedCategoryId,
+          pageNumber: typeof f.pageNumber === "number" ? f.pageNumber : null,
+          lineNumber: typeof f.lineNumber === "number" ? f.lineNumber : null,
           precedentName: f.precedentName ?? null,
           precedentCitation: f.precedentCitation ?? null,
           precedentType: f.precedentType ?? null,

@@ -32,6 +32,8 @@ export * from "./finding";
 export * from "./findingPrecedentType";
 export * from "./healthStatus";
 export * from "./motion";
+export * from "./redactTextBody";
+export * from "./redactTextResponse";
 export * from "./updateCaseBody";
 export * from "./updateCategoryBody";
 export * from "./updateFindingBody";

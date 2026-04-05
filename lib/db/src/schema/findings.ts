@@ -31,6 +31,8 @@ export const findingsTable = pgTable("findings", {
   categoryId: integer("category_id").references(() => categoriesTable.id, {
     onDelete: "set null",
   }),
+  pageNumber: integer("page_number"),
+  lineNumber: integer("line_number"),
   userNotes: text("user_notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
