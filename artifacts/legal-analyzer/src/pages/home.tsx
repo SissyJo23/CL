@@ -12,10 +12,26 @@ export default function Home() {
   const [demoCaseId, setDemoCaseId] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch("/api/demo")
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d?.caseId) setDemoCaseId(d.caseId); })
-      .catch(() => {});
+    let attempts = 0;
+    const tryFetch = () => {
+      fetch("/api/demo")
+        .then((r) => r.ok ? r.json() : null)
+        .then((d) => {
+          if (d?.caseId) {
+            setDemoCaseId(d.caseId);
+          } else if (attempts < 4) {
+            attempts++;
+            setTimeout(tryFetch, 1500);
+          }
+        })
+        .catch(() => {
+          if (attempts < 4) {
+            attempts++;
+            setTimeout(tryFetch, 1500);
+          }
+        });
+    };
+    tryFetch();
   }, []);
 
   const handleExploreDemo = () => {

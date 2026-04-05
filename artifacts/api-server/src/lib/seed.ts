@@ -450,7 +450,8 @@ export async function seedDemoCase(): Promise<void> {
 
     logger.info("Seeding demo case...");
 
-    const [demoCase] = await db
+    await db.transaction(async (tx) => {
+    const [demoCase] = await tx
       .insert(casesTable)
       .values({
         title: "State v. Marcus Johnson — DEMO",
@@ -463,7 +464,7 @@ export async function seedDemoCase(): Promise<void> {
       })
       .returning();
 
-    const [demoDoc] = await db
+    const [demoDoc] = await tx
       .insert(documentsTable)
       .values({
         caseId: demoCase.id,
@@ -475,7 +476,7 @@ export async function seedDemoCase(): Promise<void> {
       .returning();
 
     for (const f of DEMO_FINDINGS) {
-      await db
+      await tx
         .insert(findingsTable)
         .values({
           caseId: demoCase.id,
@@ -498,12 +499,12 @@ export async function seedDemoCase(): Promise<void> {
         });
     }
 
-    await db
+    await tx
       .update(documentsTable)
       .set({ findingCount: DEMO_FINDINGS.length })
       .where(eq(documentsTable.id, demoDoc.id));
 
-    const [session] = await db
+    const [session] = await tx
       .insert(courtSessionsTable)
       .values({
         caseId: demoCase.id,
@@ -521,7 +522,7 @@ export async function seedDemoCase(): Promise<void> {
       .returning();
 
     for (const r of DEMO_ROUNDS) {
-      await db.insert(courtRoundsTable).values({
+      await tx.insert(courtRoundsTable).values({
         sessionId: session.id,
         roundNumber: r.roundNumber,
         stateStrength: r.stateStrength,
@@ -532,7 +533,7 @@ export async function seedDemoCase(): Promise<void> {
       });
     }
 
-    await db.insert(motionsTable).values({
+    await tx.insert(motionsTable).values({
       caseId: demoCase.id,
       sessionId: session.id,
       title: "Motion for Post-Conviction Relief Pursuant to Wis. Stat. § 974.06 — State v. Marcus Johnson",
@@ -540,6 +541,7 @@ export async function seedDemoCase(): Promise<void> {
     });
 
     logger.info({ caseId: demoCase.id }, "Demo case seeded successfully");
+    }); // end transaction
   } catch (err) {
     logger.error({ err }, "Failed to seed demo case");
   }
