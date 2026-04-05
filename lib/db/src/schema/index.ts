@@ -1,4 +1,5 @@
 export * from "./cases";
+export * from "./case-strategies";
 export * from "./categories";
 export * from "./documents";
 export * from "./findings";

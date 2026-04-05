@@ -74,6 +74,11 @@ TASK: Return a JSON array of findings. Each finding must follow this exact struc
   "precedentType": "BINDING or PERSUASIVE (or null)",
   "courtRuling": "What the precedent court held, stated in one or two sentences (or null)",
   "materialSimilarity": "How the precedent facts are similar to the facts here (or null)",
+  "proceduralStatus": "Preserved | Defaulted | Unclear — whether this claim is likely accessible or procedurally barred based on the record",
+  "anticipatedBlock": "The specific argument the State/court will raise to defeat this finding (e.g., 'State will argue harmless error under Chapman v. California — error was cumulative of other evidence')",
+  "breakthroughArgument": "The specific counter-argument that gets past the anticipated block (e.g., 'Under Brecht v. Abrahamson, the error had a substantial and injurious effect because...')",
+  "legalVehicle": "The best filing vehicle for this claim — one of: Direct Appeal | § 974.06 Motion | Brady/Giglio Motion | Federal Habeas § 2254 | Actual Innocence Petition",
+  "survivability": "Strong | Moderate | Vulnerable — honest rating of likelihood this claim survives appellate review",
   "crossCaseMatches": [
     {
       "sourceDocumentId": <integer document id from the case>,
@@ -160,6 +165,11 @@ TASK: Return a JSON array of findings. Each finding must follow this exact struc
   "precedentType": "BINDING or PERSUASIVE (or null)",
   "courtRuling": "What the precedent court held (or null)",
   "materialSimilarity": "How the precedent facts are similar here (or null)",
+  "proceduralStatus": "Preserved | Defaulted | Unclear — whether this claim is likely accessible or procedurally barred based on the record",
+  "anticipatedBlock": "The specific argument the State/court will raise to defeat this finding",
+  "breakthroughArgument": "The specific counter-argument that gets past the anticipated block",
+  "legalVehicle": "The best filing vehicle — one of: Direct Appeal | § 974.06 Motion | Brady/Giglio Motion | Federal Habeas § 2254 | Actual Innocence Petition",
+  "survivability": "Strong | Moderate | Vulnerable — honest rating of likelihood this claim survives appellate review",
   "crossCaseMatches": []
 }
 
@@ -262,16 +272,27 @@ ${priorRoundsText}
 
 This is ROUND ${params.roundNumber} of the hearing.
 
+CRITICAL INSTRUCTIONS FOR THE STATE:
+The State MUST explicitly argue one or more of these procedural bars in addition to the merits:
+1. PROCEDURAL DEFAULT — argue that the claim was not properly preserved at trial or on direct appeal, and that no cause-and-prejudice or fundamental miscarriage of justice exception applies
+2. HARMLESS ERROR — argue under Chapman v. California (constitutional) or Brecht v. Abrahamson (habeas) that even if error occurred, it did not affect the outcome
+3. STRICKLAND PREJUDICE — for IAC claims, argue that even if counsel was deficient, there is no reasonable probability the outcome would have been different
+4. AEDPA DEFERENCE — for federal habeas, argue the state court's decision was not an unreasonable application of clearly established Supreme Court law
+The State should pick the strongest procedural argument(s) for each issue and lead with them before addressing the merits.
+
+CRITICAL INSTRUCTIONS FOR DEFENSE:
+Defense MUST directly respond to each procedural bar the State raises — not just argue the constitutional merits. Defense must demonstrate cause-and-prejudice, show actual prejudice under Brecht, counter AEDPA deference with specific SCOTUS authority, or explain why the claim was properly preserved.
+
 Generate this round of argument as a JSON object with this exact structure:
 {
   "stateStrength": "MINIMAL | MODERATE | STRONG | OVERWHELMING",
   "defenseBurden": "One sentence describing what defense must demonstrate this round",
-  "stateArgument": "The State's argument this round (2-4 paragraphs, citing specific facts and precedent, aggressive and well-reasoned)",
-  "courtCommentary": "The judge's commentary and questions (1-3 paragraphs, probing both sides, citing the applicable standard of review)",
-  "defenseResponse": "Defense counsel's response (2-4 paragraphs, directly engaging State's argument, citing specific record evidence and constitutional precedent)"
+  "stateArgument": "The State's argument this round (2-4 paragraphs, leading with procedural bars then merits, citing specific facts and precedent, aggressive and well-reasoned)",
+  "courtCommentary": "The judge's commentary and questions (1-3 paragraphs, probing both sides on procedural bars AND merits, citing the applicable standard of review)",
+  "defenseResponse": "Defense counsel's response (2-4 paragraphs, directly addressing each procedural bar raised by the State, then advancing constitutional claims with specific record citations)"
 }
 
-The arguments must be detailed, substantive, and legally precise. The State must actively try to show harmless error, procedural default, or lack of prejudice. Defense must advance constitutional claims with specific record citations. The judge must apply the correct standard of review.
+The arguments must be detailed, substantive, and legally precise. The judge must apply the correct standard of review.
 
 Return ONLY a valid JSON object. No commentary. No markdown. Begin with { and end with }.`;
 }
@@ -369,6 +390,65 @@ The motion must include:
 Write the motion in full formal legal style. Every argument must cite specific passages from the record and controlling precedent. Use the exact legal standards for the applicable motion type. This motion should be ready to file, not a template.
 
 Return the complete motion text only — no JSON wrapping, no code fences. Begin with the case caption.`;
+}
+
+export function buildCaseStrategyPrompt(params: {
+  caseTitle: string;
+  defendantName?: string | null;
+  findings: {
+    issueTitle: string;
+    legalAnalysis: string;
+    precedentName?: string | null;
+    precedentCitation?: string | null;
+    survivability?: string | null;
+    legalVehicle?: string | null;
+    anticipatedBlock?: string | null;
+    breakthroughArgument?: string | null;
+  }[];
+}): string {
+  const findingsText = params.findings
+    .map(
+      (f, i) =>
+        `ISSUE ${i + 1}: ${f.issueTitle}
+Analysis: ${f.legalAnalysis}
+${f.precedentName ? `Precedent: ${f.precedentName} (${f.precedentCitation})` : ""}
+${f.survivability ? `Survivability: ${f.survivability}` : ""}
+${f.legalVehicle ? `Best Vehicle: ${f.legalVehicle}` : ""}
+${f.anticipatedBlock ? `Anticipated Block: ${f.anticipatedBlock}` : ""}
+${f.breakthroughArgument ? `Breakthrough: ${f.breakthroughArgument}` : ""}`,
+    )
+    .join("\n\n");
+
+  return `You are a senior post-conviction appellate strategist. The case is: ${params.caseTitle}${params.defendantName ? ` (Defendant: ${params.defendantName})` : ""}.
+
+ALL FINDINGS FROM THE CASE RECORD:
+${findingsText}
+
+TASK: Generate two strategic documents.
+
+DOCUMENT 1 — CUMULATIVE ERROR BRIEF:
+Write a comprehensive argument (4-6 paragraphs) that takes all findings together and argues the combined cumulative effect denied the defendant a fundamentally fair trial, regardless of what each individual error is worth standing alone. This argument should:
+- Invoke the cumulative error doctrine (cite Alvarez v. Boyd, 225 F.3d 820 (7th Cir. 2000); United States v. Rivera, 900 F.2d 1462 (10th Cir. 1990); and any applicable state precedent)
+- Weave the individual errors into a unified narrative showing systematic denial of fair process
+- Argue that even if no single error is independently reversible, the combination is
+- Address how cumulative prejudice defeats harmless error analysis
+- Be written in full formal legal brief style, ready to excerpt into a filing
+
+DOCUMENT 2 — STRATEGIC ROADMAP:
+Write a prioritized, sequenced action plan (numbered list, 5-10 items) specifying:
+- Which claims to raise first, in which legal vehicle, in which order
+- Brief rationale for each sequencing decision (e.g., why some claims must be exhausted in state court before federal habeas)
+- Which claims are strongest procedurally and substantively (lead with those)
+- Which claims to bundle together and which to keep separate
+- What procedural steps must happen before which filings (exhaustion requirements, etc.)
+
+Return a JSON object with this exact structure:
+{
+  "cumulativeErrorBrief": "Full text of the cumulative error argument (paragraphs, formal legal style)",
+  "strategicRoadmap": "Full text of the strategic roadmap (numbered list, sequenced with rationale)"
+}
+
+Return ONLY valid JSON. No commentary. No markdown fences.`;
 }
 
 export async function runCrossCaseMatching(

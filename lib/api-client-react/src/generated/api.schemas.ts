@@ -22,6 +22,10 @@ export interface Case {
   notes?: string | null;
   hasAnalysis: boolean;
   hasMotion: boolean;
+  /** @nullable */
+  documentCount?: number | null;
+  /** @nullable */
+  findingCount?: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -53,6 +57,19 @@ export interface UpdateCaseBody {
 
 export interface CaseOrNull {
   case: Case | null;
+}
+
+export interface CaseStrategy {
+  id: number;
+  caseId: number;
+  cumulativeErrorBrief: string;
+  strategicRoadmap: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CaseStrategyOrNull {
+  strategy: CaseStrategy | null;
 }
 
 export type DocumentDocumentType =
@@ -160,6 +177,16 @@ export interface Finding {
   lineNumber?: number | null;
   /** @nullable */
   userNotes?: string | null;
+  /** @nullable */
+  proceduralStatus?: string | null;
+  /** @nullable */
+  anticipatedBlock?: string | null;
+  /** @nullable */
+  breakthroughArgument?: string | null;
+  /** @nullable */
+  legalVehicle?: string | null;
+  /** @nullable */
+  survivability?: string | null;
   crossCaseMatches: CrossCaseMatch[];
   createdAt: string;
 }

@@ -1,7 +1,7 @@
 import type { Finding, CrossCaseMatch } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Scale, BookOpen, Quote, ChevronDown, Link as LinkIcon, Loader2, FileText } from "lucide-react";
+import { Pencil, Trash2, Scale, BookOpen, Quote, ChevronDown, Link as LinkIcon, Loader2, FileText, ShieldAlert, Target, Swords, Route, BarChart3 } from "lucide-react";
 import { useListCategories, useUpdateFinding, useDeleteFinding } from "@workspace/api-client-react";
 import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -28,11 +28,32 @@ interface FindingCardProps {
   onUpdated?: (updated: Finding) => void;
 }
 
+const survivabilityStyles: Record<string, { badge: string; label: string }> = {
+  Strong: { badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300", label: "Strong" },
+  Moderate: { badge: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300", label: "Moderate" },
+  Vulnerable: { badge: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300", label: "Vulnerable" },
+};
+
+const proceduralStatusStyles: Record<string, string> = {
+  Preserved: "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800",
+  Defaulted: "text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800",
+  Unclear: "text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800",
+};
+
 export default function FindingCard({ finding, caseId, documentId, onDeleted, onUpdated }: FindingCardProps) {
   const { data: categories = [] } = useListCategories();
   const category = categories.find((c) => c.id === finding.categoryId);
   const [crossCaseOpen, setCrossCaseOpen] = useState(false);
+  const [strategicOpen, setStrategicOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+
+  const hasStrategicData = !!(
+    finding.proceduralStatus ||
+    finding.anticipatedBlock ||
+    finding.breakthroughArgument ||
+    finding.legalVehicle ||
+    finding.survivability
+  );
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(
     finding.categoryId != null ? String(finding.categoryId) : "none"
   );
@@ -146,6 +167,68 @@ export default function FindingCard({ finding, caseId, documentId, onDeleted, on
                 </div>
               )}
             </div>
+          )}
+
+          {hasStrategicData && (
+            <Collapsible open={strategicOpen} onOpenChange={setStrategicOpen} className="border border-amber-200 dark:border-amber-800/60 rounded-lg bg-amber-50/50 dark:bg-amber-900/10 overflow-hidden">
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-amber-100/50 dark:hover:bg-amber-900/20 transition-colors text-sm font-medium">
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-500" />
+                  <span className="text-amber-900 dark:text-amber-300 font-semibold">Strategic Analysis</span>
+                  {finding.survivability && (() => {
+                    const s = survivabilityStyles[finding.survivability ?? ""] ?? survivabilityStyles.Moderate;
+                    return <Badge className={cn("text-[10px] h-4 py-0 px-1.5 ml-1", s.badge)}>{s.label}</Badge>;
+                  })()}
+                </div>
+                <ChevronDown className={cn("w-4 h-4 text-amber-600 dark:text-amber-500 transition-transform", strategicOpen && "rotate-180")} />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="p-4 space-y-4 border-t border-amber-200 dark:border-amber-800/60">
+                  {finding.proceduralStatus && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                        <BarChart3 className="w-3.5 h-3.5" />
+                        Procedural Status
+                      </div>
+                      <span className={cn("inline-block text-xs font-medium px-2 py-0.5 rounded border", proceduralStatusStyles[finding.proceduralStatus] ?? "text-muted-foreground bg-muted")}>
+                        {finding.proceduralStatus}
+                      </span>
+                    </div>
+                  )}
+                  {finding.legalVehicle && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                        <Route className="w-3.5 h-3.5" />
+                        Best Legal Vehicle
+                      </div>
+                      <p className="text-sm text-foreground/90 font-medium">{finding.legalVehicle}</p>
+                    </div>
+                  )}
+                  {finding.anticipatedBlock && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-red-700 dark:text-red-400">
+                        <Target className="w-3.5 h-3.5" />
+                        Anticipated Block
+                      </div>
+                      <p className="text-sm text-foreground/80 leading-relaxed bg-red-50/50 dark:bg-red-900/10 p-3 rounded-lg border border-red-100 dark:border-red-900/30">
+                        {finding.anticipatedBlock}
+                      </p>
+                    </div>
+                  )}
+                  {finding.breakthroughArgument && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                        <Swords className="w-3.5 h-3.5" />
+                        Breakthrough Argument
+                      </div>
+                      <p className="text-sm text-foreground/80 leading-relaxed bg-emerald-50/50 dark:bg-emerald-900/10 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+                        {finding.breakthroughArgument}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           )}
 
           {finding.crossCaseMatches && finding.crossCaseMatches.length > 0 && (

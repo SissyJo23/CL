@@ -3,17 +3,36 @@ import { db } from "@workspace/db";
 import {
   casesTable,
   insertCaseSchema,
+  caseStrategiesTable,
+  findingsTable,
 } from "@workspace/db";
 import { documentsTable } from "@workspace/db";
 import { motionsTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
+import { anthropic, buildCaseStrategyPrompt } from "../lib/anthropic";
 
 const router = Router();
 
 router.get("/cases", async (_req, res) => {
   const rows = await db
-    .select()
+    .select({
+      id: casesTable.id,
+      title: casesTable.title,
+      defendantName: casesTable.defendantName,
+      caseNumber: casesTable.caseNumber,
+      jurisdiction: casesTable.jurisdiction,
+      notes: casesTable.notes,
+      hasAnalysis: casesTable.hasAnalysis,
+      hasMotion: casesTable.hasMotion,
+      createdAt: casesTable.createdAt,
+      updatedAt: casesTable.updatedAt,
+      documentCount: sql<number>`count(distinct ${documentsTable.id})::int`,
+      findingCount: sql<number>`count(distinct ${findingsTable.id})::int`,
+    })
     .from(casesTable)
+    .leftJoin(documentsTable, eq(documentsTable.caseId, casesTable.id))
+    .leftJoin(findingsTable, eq(findingsTable.caseId, casesTable.id))
+    .groupBy(casesTable.id)
     .orderBy(desc(casesTable.updatedAt));
   res.json(rows);
 });
@@ -87,6 +106,101 @@ router.delete("/cases/:id", async (req, res) => {
   const id = Number(req.params.id);
   await db.delete(casesTable).where(eq(casesTable.id, id));
   res.status(204).send();
+});
+
+router.get("/cases/:id/strategy", async (req, res) => {
+  const id = Number(req.params.id);
+  const [caseRow] = await db.select().from(casesTable).where(eq(casesTable.id, id));
+  if (!caseRow) {
+    res.status(404).json({ error: "Case not found" });
+    return;
+  }
+  const [strategy] = await db
+    .select()
+    .from(caseStrategiesTable)
+    .where(eq(caseStrategiesTable.caseId, id));
+  res.json({ strategy: strategy ?? null });
+});
+
+router.post("/cases/:id/strategy", async (req, res) => {
+  const id = Number(req.params.id);
+  const [caseRow] = await db.select().from(casesTable).where(eq(casesTable.id, id));
+  if (!caseRow) {
+    res.status(404).json({ error: "Case not found" });
+    return;
+  }
+
+  const findings = await db
+    .select()
+    .from(findingsTable)
+    .where(eq(findingsTable.caseId, id));
+
+  if (findings.length === 0) {
+    res.status(400).json({ error: "No findings found. Analyze documents first." });
+    return;
+  }
+
+  const prompt = buildCaseStrategyPrompt({
+    caseTitle: caseRow.title,
+    defendantName: caseRow.defendantName,
+    findings: findings.map((f) => ({
+      issueTitle: f.issueTitle,
+      legalAnalysis: f.legalAnalysis,
+      precedentName: f.precedentName,
+      precedentCitation: f.precedentCitation,
+      survivability: f.survivability,
+      legalVehicle: f.legalVehicle,
+      anticipatedBlock: f.anticipatedBlock,
+      breakthroughArgument: f.breakthroughArgument,
+    })),
+  });
+
+  const message = await anthropic.messages.create({
+    model: "claude-opus-4-5",
+    max_tokens: 8192,
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  const rawText = message.content[0]?.type === "text" ? message.content[0].text : "{}";
+  let strategyData: { cumulativeErrorBrief: string; strategicRoadmap: string };
+  try {
+    const cleaned = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "");
+    strategyData = JSON.parse(cleaned);
+  } catch {
+    res.status(500).json({ error: "Failed to parse AI strategy response" });
+    return;
+  }
+
+  const [existing] = await db
+    .select()
+    .from(caseStrategiesTable)
+    .where(eq(caseStrategiesTable.caseId, id));
+
+  let result;
+  if (existing) {
+    const [updated] = await db
+      .update(caseStrategiesTable)
+      .set({
+        cumulativeErrorBrief: strategyData.cumulativeErrorBrief,
+        strategicRoadmap: strategyData.strategicRoadmap,
+        updatedAt: new Date(),
+      })
+      .where(eq(caseStrategiesTable.caseId, id))
+      .returning();
+    result = updated;
+  } else {
+    const [inserted] = await db
+      .insert(caseStrategiesTable)
+      .values({
+        caseId: id,
+        cumulativeErrorBrief: strategyData.cumulativeErrorBrief,
+        strategicRoadmap: strategyData.strategicRoadmap,
+      })
+      .returning();
+    result = inserted;
+  }
+
+  res.json(result);
 });
 
 export default router;

@@ -256,6 +256,11 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
       precedentType?: string | null;
       courtRuling?: string | null;
       materialSimilarity?: string | null;
+      proceduralStatus?: string | null;
+      anticipatedBlock?: string | null;
+      breakthroughArgument?: string | null;
+      legalVehicle?: string | null;
+      survivability?: string | null;
     };
 
     const allFindings: RawFinding[] = [];
@@ -334,6 +339,11 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
           precedentType: f.precedentType ?? null,
           courtRuling: f.courtRuling ?? null,
           materialSimilarity: f.materialSimilarity ?? null,
+          proceduralStatus: f.proceduralStatus ?? null,
+          anticipatedBlock: f.anticipatedBlock ?? null,
+          breakthroughArgument: f.breakthroughArgument ?? null,
+          legalVehicle: f.legalVehicle ?? null,
+          survivability: f.survivability ?? null,
         })
         .returning();
 

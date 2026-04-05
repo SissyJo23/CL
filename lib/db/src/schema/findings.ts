@@ -34,6 +34,11 @@ export const findingsTable = pgTable("findings", {
   pageNumber: integer("page_number"),
   lineNumber: integer("line_number"),
   userNotes: text("user_notes"),
+  proceduralStatus: text("procedural_status"),
+  anticipatedBlock: text("anticipated_block"),
+  breakthroughArgument: text("breakthrough_argument"),
+  legalVehicle: text("legal_vehicle"),
+  survivability: text("survivability"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

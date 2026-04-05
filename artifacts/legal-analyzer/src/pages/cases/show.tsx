@@ -1,12 +1,12 @@
 import { useParams, Link } from "wouter";
-import { useGetCase, getGetCaseQueryKey, useListDocuments, getListDocumentsQueryKey, useCreateDocument } from "@workspace/api-client-react";
+import { useGetCase, getGetCaseQueryKey, useListDocuments, getListDocumentsQueryKey, useCreateDocument, useGenerateCaseStrategy, useGetCaseStrategy, getGetCaseStrategyQueryKey } from "@workspace/api-client-react";
 import type { CreateDocumentBodyDocumentType } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,10 +21,30 @@ export default function CaseShow() {
   const caseId = parseInt(params.id || "0", 10);
   const { data: currentCase, isLoading: caseLoading } = useGetCase(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseQueryKey(caseId) } });
   const { data: documents, isLoading: docsLoading } = useListDocuments(caseId, { query: { enabled: !!caseId, queryKey: getListDocumentsQueryKey(caseId) } });
+  const { data: strategyData, isLoading: strategyLoading } = useGetCaseStrategy(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseStrategyQueryKey(caseId) } });
   
   const createDocument = useCreateDocument();
+  const generateStrategy = useGenerateCaseStrategy();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const strategy = strategyData?.strategy;
+  const hasAnalysis = currentCase?.hasAnalysis;
+
+  const handleGenerateStrategy = () => {
+    generateStrategy.mutate(
+      { id: caseId },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetCaseStrategyQueryKey(caseId) });
+          toast({ title: "Case Strategy Generated", description: "Cumulative error brief and strategic roadmap are ready." });
+        },
+        onError: () => {
+          toast({ title: "Error", description: "Failed to generate strategy. Make sure documents have been analyzed first.", variant: "destructive" });
+        },
+      }
+    );
+  };
 
   const [open, setOpen] = useState(false);
   const [docTitle, setDocTitle] = useState("");
@@ -150,6 +170,70 @@ export default function CaseShow() {
             {currentCase.notes && (
               <div className="bg-muted/50 p-4 rounded-lg text-sm text-foreground/80 border border-border/50">
                 {currentCase.notes}
+              </div>
+            )}
+
+            {hasAnalysis && (
+              <div className="border border-amber-200 dark:border-amber-800/60 rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-4 bg-amber-50/60 dark:bg-amber-900/10 border-b border-amber-200 dark:border-amber-800/60">
+                  <div className="flex items-center gap-2">
+                    <Swords className="w-5 h-5 text-amber-600 dark:text-amber-500" />
+                    <h2 className="text-lg font-serif font-medium text-amber-900 dark:text-amber-200">Case Strategy</h2>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleGenerateStrategy}
+                    disabled={generateStrategy.isPending}
+                    className="border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-900/30"
+                  >
+                    {generateStrategy.isPending ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating...</>
+                    ) : strategy ? (
+                      <><RefreshCw className="w-4 h-4 mr-2" />Regenerate</>
+                    ) : (
+                      <><Swords className="w-4 h-4 mr-2" />Generate Strategy</>
+                    )}
+                  </Button>
+                </div>
+
+                {strategyLoading ? (
+                  <div className="p-5 space-y-3">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-5/6" />
+                  </div>
+                ) : strategy ? (
+                  <div className="divide-y divide-amber-100 dark:divide-amber-800/30">
+                    <div className="p-5 space-y-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                        <Swords className="w-4 h-4" />
+                        Cumulative Error Brief
+                      </div>
+                      <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                        {strategy.cumulativeErrorBrief}
+                      </div>
+                    </div>
+                    <div className="p-5 space-y-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                        <Map className="w-4 h-4" />
+                        Strategic Roadmap
+                      </div>
+                      <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                        {strategy.strategicRoadmap}
+                      </div>
+                    </div>
+                    <div className="px-5 py-2 bg-amber-50/30 dark:bg-amber-900/5 text-xs text-muted-foreground">
+                      Last generated: {format(new Date(strategy.updatedAt), "MMM d, yyyy 'at' h:mm a")}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center">
+                    <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                      Generate a cumulative error brief and prioritized strategic roadmap based on all findings in this case.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

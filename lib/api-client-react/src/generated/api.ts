@@ -20,6 +20,8 @@ import type {
   Case,
   CaseExport,
   CaseOrNull,
+  CaseStrategy,
+  CaseStrategyOrNull,
   Category,
   CourtSession,
   CourtSessionWithRounds,
@@ -587,6 +589,177 @@ export function useGetRecentCase<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetRecentCaseQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Generate cumulative error brief and strategic roadmap for a case
+ */
+export const getGenerateCaseStrategyUrl = (id: number) => {
+  return `/api/cases/${id}/strategy`;
+};
+
+export const generateCaseStrategy = async (
+  id: number,
+  options?: RequestInit,
+): Promise<CaseStrategy> => {
+  return customFetch<CaseStrategy>(getGenerateCaseStrategyUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getGenerateCaseStrategyMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateCaseStrategy>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof generateCaseStrategy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["generateCaseStrategy"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof generateCaseStrategy>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return generateCaseStrategy(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type GenerateCaseStrategyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof generateCaseStrategy>>
+>;
+
+export type GenerateCaseStrategyMutationError = ErrorType<void>;
+
+/**
+ * @summary Generate cumulative error brief and strategic roadmap for a case
+ */
+export const useGenerateCaseStrategy = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateCaseStrategy>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof generateCaseStrategy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getGenerateCaseStrategyMutationOptions(options));
+};
+
+/**
+ * @summary Get existing case strategy (cumulative error brief and roadmap)
+ */
+export const getGetCaseStrategyUrl = (id: number) => {
+  return `/api/cases/${id}/strategy`;
+};
+
+export const getCaseStrategy = async (
+  id: number,
+  options?: RequestInit,
+): Promise<CaseStrategyOrNull> => {
+  return customFetch<CaseStrategyOrNull>(getGetCaseStrategyUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCaseStrategyQueryKey = (id: number) => {
+  return [`/api/cases/${id}/strategy`] as const;
+};
+
+export const getGetCaseStrategyQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCaseStrategy>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCaseStrategy>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCaseStrategyQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCaseStrategy>>> = ({
+    signal,
+  }) => getCaseStrategy(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCaseStrategy>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetCaseStrategyQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCaseStrategy>>
+>;
+export type GetCaseStrategyQueryError = ErrorType<void>;
+
+/**
+ * @summary Get existing case strategy (cumulative error brief and roadmap)
+ */
+
+export function useGetCaseStrategy<
+  TData = Awaited<ReturnType<typeof getCaseStrategy>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCaseStrategy>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCaseStrategyQueryOptions(id, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

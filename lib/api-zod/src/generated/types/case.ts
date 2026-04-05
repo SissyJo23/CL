@@ -19,6 +19,10 @@ export interface Case {
   notes?: string | null;
   hasAnalysis: boolean;
   hasMotion: boolean;
+  /** @nullable */
+  documentCount?: number | null;
+  /** @nullable */
+  findingCount?: number | null;
   createdAt: Date;
   updatedAt: Date;
 }

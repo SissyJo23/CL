@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useEffect, useState } from "react";
-import { AlertTriangle, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ShieldCheck, FolderOpen } from "lucide-react";
 
 export default function Navbar() {
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
@@ -19,6 +19,12 @@ export default function Navbar() {
           <Link href="/" className="font-serif text-xl font-medium tracking-tight text-foreground transition-colors hover:text-primary">
             CaseLight
           </Link>
+          <nav className="flex items-center gap-4">
+            <Link href="/cases" className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              <FolderOpen className="w-4 h-4" />
+              My Cases
+            </Link>
+          </nav>
         </div>
       </header>
 

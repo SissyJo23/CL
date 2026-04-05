@@ -33,6 +33,16 @@ export interface Finding {
   lineNumber?: number | null;
   /** @nullable */
   userNotes?: string | null;
+  /** @nullable */
+  proceduralStatus?: string | null;
+  /** @nullable */
+  anticipatedBlock?: string | null;
+  /** @nullable */
+  breakthroughArgument?: string | null;
+  /** @nullable */
+  legalVehicle?: string | null;
+  /** @nullable */
+  survivability?: string | null;
   crossCaseMatches: CrossCaseMatch[];
   createdAt: Date;
 }

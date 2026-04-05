@@ -26,6 +26,8 @@ export const ListCasesResponseItem = zod.object({
   notes: zod.string().nullish(),
   hasAnalysis: zod.boolean(),
   hasMotion: zod.boolean(),
+  documentCount: zod.number().nullish(),
+  findingCount: zod.number().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -58,6 +60,8 @@ export const GetCaseResponse = zod.object({
   notes: zod.string().nullish(),
   hasAnalysis: zod.boolean(),
   hasMotion: zod.boolean(),
+  documentCount: zod.number().nullish(),
+  findingCount: zod.number().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -86,6 +90,8 @@ export const UpdateCaseResponse = zod.object({
   notes: zod.string().nullish(),
   hasAnalysis: zod.boolean(),
   hasMotion: zod.boolean(),
+  documentCount: zod.number().nullish(),
+  findingCount: zod.number().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -111,6 +117,45 @@ export const GetRecentCaseResponse = zod.object({
       notes: zod.string().nullish(),
       hasAnalysis: zod.boolean(),
       hasMotion: zod.boolean(),
+      documentCount: zod.number().nullish(),
+      findingCount: zod.number().nullish(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+    zod.null(),
+  ]),
+});
+
+/**
+ * @summary Generate cumulative error brief and strategic roadmap for a case
+ */
+export const GenerateCaseStrategyParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GenerateCaseStrategyResponse = zod.object({
+  id: zod.number(),
+  caseId: zod.number(),
+  cumulativeErrorBrief: zod.string(),
+  strategicRoadmap: zod.string(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Get existing case strategy (cumulative error brief and roadmap)
+ */
+export const GetCaseStrategyParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetCaseStrategyResponse = zod.object({
+  strategy: zod.union([
+    zod.object({
+      id: zod.number(),
+      caseId: zod.number(),
+      cumulativeErrorBrief: zod.string(),
+      strategicRoadmap: zod.string(),
       createdAt: zod.coerce.date(),
       updatedAt: zod.coerce.date(),
     }),
@@ -261,6 +306,11 @@ export const ListFindingsResponseItem = zod.object({
   pageNumber: zod.number().nullish(),
   lineNumber: zod.number().nullish(),
   userNotes: zod.string().nullish(),
+  proceduralStatus: zod.string().nullish(),
+  anticipatedBlock: zod.string().nullish(),
+  breakthroughArgument: zod.string().nullish(),
+  legalVehicle: zod.string().nullish(),
+  survivability: zod.string().nullish(),
   crossCaseMatches: zod.array(
     zod.object({
       sourceDocumentId: zod.number(),
@@ -305,6 +355,11 @@ export const GetFindingResponse = zod.object({
   pageNumber: zod.number().nullish(),
   lineNumber: zod.number().nullish(),
   userNotes: zod.string().nullish(),
+  proceduralStatus: zod.string().nullish(),
+  anticipatedBlock: zod.string().nullish(),
+  breakthroughArgument: zod.string().nullish(),
+  legalVehicle: zod.string().nullish(),
+  survivability: zod.string().nullish(),
   crossCaseMatches: zod.array(
     zod.object({
       sourceDocumentId: zod.number(),
@@ -354,6 +409,11 @@ export const UpdateFindingResponse = zod.object({
   pageNumber: zod.number().nullish(),
   lineNumber: zod.number().nullish(),
   userNotes: zod.string().nullish(),
+  proceduralStatus: zod.string().nullish(),
+  anticipatedBlock: zod.string().nullish(),
+  breakthroughArgument: zod.string().nullish(),
+  legalVehicle: zod.string().nullish(),
+  survivability: zod.string().nullish(),
   crossCaseMatches: zod.array(
     zod.object({
       sourceDocumentId: zod.number(),
@@ -587,6 +647,8 @@ export const ExportCaseResponse = zod.object({
     notes: zod.string().nullish(),
     hasAnalysis: zod.boolean(),
     hasMotion: zod.boolean(),
+    documentCount: zod.number().nullish(),
+    findingCount: zod.number().nullish(),
     createdAt: zod.coerce.date(),
     updatedAt: zod.coerce.date(),
   }),
@@ -637,6 +699,11 @@ export const ExportCaseResponse = zod.object({
       pageNumber: zod.number().nullish(),
       lineNumber: zod.number().nullish(),
       userNotes: zod.string().nullish(),
+      proceduralStatus: zod.string().nullish(),
+      anticipatedBlock: zod.string().nullish(),
+      breakthroughArgument: zod.string().nullish(),
+      legalVehicle: zod.string().nullish(),
+      survivability: zod.string().nullish(),
       crossCaseMatches: zod.array(
         zod.object({
           sourceDocumentId: zod.number(),
