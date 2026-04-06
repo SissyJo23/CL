@@ -158,7 +158,71 @@ export default function App() {
         </div>
       </section>
 
-      {/* 4. How it works */}
+      {/* 4. The Equalizer */}
+      <section className="py-32 px-6 bg-muted border-y border-border">
+        <div className="max-w-5xl mx-auto">
+          <FadeIn>
+            <div className="text-center mb-20">
+              <span className="text-secondary font-sans font-bold tracking-widest uppercase mb-4 text-sm block">The Four Scenarios</span>
+              <h2 className="text-4xl md:text-5xl font-serif text-foreground">What actually happens.</h2>
+            </div>
+          </FadeIn>
+
+          <div className="grid md:grid-cols-2 gap-6 mb-12">
+            <FadeIn delay={0.1} className="bg-background border border-border p-8 md:p-10">
+              <p className="text-xs font-sans uppercase tracking-widest text-muted-foreground mb-5">You search. You find nothing.</p>
+              <p className="font-serif text-lg text-foreground leading-relaxed">
+                Exhaustion. Tunnel vision. A cycle of re-reading and second-guessing. You
+                can't tell if you missed something on page 800 — or if there's nothing to find.
+              </p>
+            </FadeIn>
+
+            <FadeIn delay={0.15} className="bg-background border border-border p-8 md:p-10">
+              <p className="text-xs font-sans uppercase tracking-widest text-muted-foreground mb-5">You search. You find something.</p>
+              <p className="font-serif text-lg text-foreground leading-relaxed">
+                Adrenaline — then a wall. You have a discovery but no legal weight behind it.
+                Translating a finding into an argument a court will recognize is where most people get stuck.
+              </p>
+            </FadeIn>
+
+            <FadeIn delay={0.2} className="bg-background border border-border p-8 md:p-10">
+              <p className="text-xs font-sans uppercase tracking-widest text-muted-foreground mb-5">The attorney searches. Finds nothing.</p>
+              <p className="font-serif text-lg text-foreground leading-relaxed">
+                A steep bill and a dead-end letter. You paid for expertise and received confirmation
+                of fear — with fewer resources left to keep fighting.
+              </p>
+            </FadeIn>
+
+            <FadeIn delay={0.25} className="bg-background border border-border p-8 md:p-10">
+              <p className="text-xs font-sans uppercase tracking-widest text-muted-foreground mb-5">The attorney searches. Finds something.</p>
+              <p className="font-serif text-lg text-foreground leading-relaxed">
+                Discovery is just the beginning of the next billing cycle. Analysis. Drafting. Filing. Appearance.
+              </p>
+              <p className="font-serif text-lg text-foreground/60 mt-5 italic">
+                Your justice, sold back to you in six-minute increments.
+              </p>
+            </FadeIn>
+          </div>
+
+          <FadeIn delay={0.3}>
+            <div className="bg-primary text-primary-foreground p-10 md:p-16 text-center">
+              <span className="text-secondary font-sans text-xs uppercase tracking-widest mb-8 block">CaseLight</span>
+              <h3 className="font-serif text-3xl md:text-4xl mb-8 leading-snug">
+                One pass. Every finding. Categorized, weighted, and ready.
+              </h3>
+              <p className="font-sans text-primary-foreground/70 text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
+                Justice shouldn't be reserved for those who can afford 100 hours of manual labor to find it.
+                The facts are what matter — not how much you paid someone to surface them.
+              </p>
+              <p className="font-serif text-xl text-secondary italic">
+                Start at the finish line of discovery, not the starting blocks.
+              </p>
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* 5. How it works */}
       <section className="py-32 px-6 bg-background">
         <div className="max-w-6xl mx-auto">
           <FadeIn>
