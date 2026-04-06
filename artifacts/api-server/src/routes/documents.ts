@@ -191,6 +191,34 @@ function sendSse(res: Response, event: unknown) {
   res.write(`data: ${JSON.stringify(event)}\n\n`);
 }
 
+async function callAnthropicWithRetry(
+  params: Parameters<typeof anthropic.messages.create>[0],
+  onStatus: (msg: string) => void,
+  maxRetries = 3,
+): Promise<Awaited<ReturnType<typeof anthropic.messages.create>>> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await anthropic.messages.create(params);
+    } catch (err: unknown) {
+      const status = (err as { status?: number })?.status;
+      const headers = (err as { headers?: Record<string, string> })?.headers;
+      if (status === 429 && attempt < maxRetries) {
+        const retryAfterRaw = headers?.["retry-after"];
+        const waitSecs = retryAfterRaw && !isNaN(parseInt(retryAfterRaw, 10))
+          ? parseInt(retryAfterRaw, 10)
+          : 60;
+        for (let s = waitSecs; s > 0; s -= 10) {
+          onStatus(`Rate limit reached — retrying in ${s} second${s === 1 ? "" : "s"}…`);
+          await new Promise((r) => setTimeout(r, Math.min(10, s) * 1000));
+        }
+      } else {
+        throw err;
+      }
+    }
+  }
+  throw new Error("Max retries exceeded");
+}
+
 router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
   const caseId = Number(req.params.caseId);
   const docId = Number(req.params.id);
@@ -284,11 +312,10 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
             doc.documentType, doc.title, chunk, otherDocsForPrompt, userCategories,
           );
 
-      const message = await anthropic.messages.create({
-        model: "claude-opus-4-5",
-        max_tokens: 8192,
-        messages: [{ role: "user", content: prompt }],
-      });
+      const message = await callAnthropicWithRetry(
+        { model: "claude-opus-4-5", max_tokens: 8192, messages: [{ role: "user", content: prompt }] },
+        (msg) => sendSse(res, { type: "status", message: msg }),
+      );
 
       const rawText = message.content[0]?.type === "text" ? message.content[0].text : "[]";
       let chunkFindings: RawFinding[] = [];
@@ -455,8 +482,20 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
     res.end();
   } catch (err) {
     logger.error({ err, docId, caseId }, "Document analysis failed");
-    const msg = err instanceof Error ? err.message : "Unknown error";
-    sendSse(res, { type: "error", message: msg });
+    const status = (err as { status?: number })?.status;
+    let userMessage: string;
+    if (status === 429) {
+      userMessage = "Rate limit reached after multiple retries. Please wait a minute and try again.";
+    } else if (status === 401) {
+      userMessage = "API key is invalid or missing. Contact the administrator.";
+    } else if (status && status >= 500) {
+      userMessage = "The AI service is temporarily unavailable. Please try again shortly.";
+    } else if (err instanceof Error && err.message && !err.message.startsWith("{")) {
+      userMessage = err.message;
+    } else {
+      userMessage = "Analysis failed. Please try again.";
+    }
+    sendSse(res, { type: "error", message: userMessage });
     await db
       .update(documentsTable)
       .set({ status: "error" })
