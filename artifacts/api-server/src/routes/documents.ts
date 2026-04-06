@@ -301,19 +301,44 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
         const arrayEnd = cleaned.lastIndexOf("]");
         if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
           cleaned = cleaned.slice(arrayStart, arrayEnd + 1);
+        } else if (arrayStart !== -1) {
+          // No closing bracket — response was truncated; attempt partial recovery below
+          cleaned = cleaned.slice(arrayStart);
         }
         chunkFindings = JSON.parse(cleaned);
         if (!Array.isArray(chunkFindings)) chunkFindings = [];
       } catch (parseErr) {
-        logger.error({ err: parseErr, docId, chunkIndex, rawTextSnippet: rawText.slice(0, 300) }, "Failed to parse AI findings response");
-        if (!isChunked) {
-          sendSse(res, { type: "error", message: "Failed to parse AI response. Please try again." });
-          await db.update(documentsTable).set({ status: "error" }).where(eq(documentsTable.id, docId));
-          res.end();
-          return;
+        // Attempt partial recovery: the response may have been cut off mid-object
+        // due to hitting the model's output token limit. Salvage all complete findings.
+        let recovered = false;
+        try {
+          let partial = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "").trim();
+          const arrayStart = partial.indexOf("[");
+          if (arrayStart !== -1) partial = partial.slice(arrayStart);
+          // Walk backwards from end to find the last complete finding object
+          const lastComplete = partial.lastIndexOf("},");
+          if (lastComplete !== -1) {
+            const attempt = partial.slice(0, lastComplete + 1) + "]";
+            const parsed = JSON.parse(attempt);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              chunkFindings = parsed;
+              recovered = true;
+              logger.warn({ docId, chunkIndex, recovered: parsed.length }, "AI response truncated — recovered partial findings");
+              sendSse(res, { type: "status", message: `Response was truncated — recovered ${parsed.length} finding${parsed.length === 1 ? "" : "s"}. Analysis complete.` });
+            }
+          }
+        } catch { /* partial recovery also failed */ }
+
+        if (!recovered) {
+          logger.error({ err: parseErr, docId, chunkIndex, rawTextSnippet: rawText.slice(0, 300) }, "Failed to parse AI findings response");
+          if (!isChunked) {
+            sendSse(res, { type: "error", message: "Failed to parse AI response. Please try again." });
+            await db.update(documentsTable).set({ status: "error" }).where(eq(documentsTable.id, docId));
+            res.end();
+            return;
+          }
+          chunkFindings = [];
         }
-        // For chunked docs: skip the bad chunk and continue
-        chunkFindings = [];
       }
 
       allFindings.push(...chunkFindings);
