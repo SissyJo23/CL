@@ -43,14 +43,7 @@ export default function Home() {
       <Navbar />
       <main className="flex-1 flex flex-col items-center justify-center p-4">
         <div className="max-w-3xl w-full text-center space-y-8">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-foreground font-medium leading-tight">
-            The fight isn't over just because the gavel cracked.
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            CaseLight exists for the people left standing in the courthouse parking lot with a verdict that doesn't feel like justice. We read every line of every document, surface every legal issue, and draft the motions that keep the fight alive — because somewhere between the verdict and the silence, is the truth — and we will find it.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8 flex-wrap">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 flex-wrap">
             <Link href="/cases/new" className="w-full sm:w-auto">
               <Button size="lg" className="w-full sm:w-auto text-base h-14 px-8 rounded-full" data-testid="button-create-case">
                 Create Case
