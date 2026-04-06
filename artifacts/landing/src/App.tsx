@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { FileText, ChevronRight, Scale, Shield, BarChart3, Gavel, FileCheck, BrainCircuit, Activity } from "lucide-react";
+import { FileText, ChevronRight, Scale, Shield, BarChart3, Gavel, BrainCircuit, Activity } from "lucide-react";
 
 const APP_URL = "https://best-possible.replit.app";
 const DEMO_URL = "https://best-possible.replit.app/cases/1";
@@ -313,51 +313,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 7. Proof of Concept */}
-      <section className="py-32 px-6 bg-background">
-        <div className="max-w-5xl mx-auto">
-          <FadeIn>
-            <div className="text-center mb-20">
-              <h2 className="text-4xl md:text-5xl font-serif mb-4">Proof of Concept</h2>
-              <p className="text-muted-foreground font-sans">Tested against real appellate records.</p>
-            </div>
-          </FadeIn>
-
-          <div className="grid md:grid-cols-2 gap-8 mb-16">
-            <FadeIn delay={0.1} className="border border-border p-8 bg-muted relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4">
-                <span className="inline-block px-3 py-1 bg-border text-foreground text-xs font-sans uppercase tracking-widest">State Win</span>
-              </div>
-              <h3 className="text-xl font-serif mb-6 text-foreground">Test Case 1</h3>
-              <p className="text-muted-foreground font-sans leading-relaxed mb-6">
-                Demonstrated correct application of Escalona-Naranjo procedural bars; no merit found.
-              </p>
-              <div className="flex items-center text-sm font-sans text-foreground/70 group-hover:text-secondary transition-colors">
-                <FileCheck className="w-4 h-4 mr-2" /> Verified Accurate
-              </div>
-            </FadeIn>
-
-            <FadeIn delay={0.2} className="border border-border p-8 bg-muted relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4">
-                <span className="inline-block px-3 py-1 bg-secondary text-primary text-xs font-sans uppercase tracking-widest font-bold">Defense Win</span>
-              </div>
-              <h3 className="text-xl font-serif mb-6 text-foreground">Test Case 2</h3>
-              <p className="text-muted-foreground font-sans leading-relaxed mb-6">
-                Surfaced Brady violations, Strickland deficiency, Bangert plea colloquy defects; judge ordered a Machner hearing.
-              </p>
-              <div className="flex items-center text-sm font-sans text-foreground/70 group-hover:text-secondary transition-colors">
-                <FileCheck className="w-4 h-4 mr-2" /> Verified Accurate
-              </div>
-            </FadeIn>
-          </div>
-
-          <FadeIn delay={0.3} className="text-center">
-            <p className="text-xl font-serif text-muted-foreground italic">"The app doesn't pick sides. It reads the record."</p>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* 8. Footer */}
+      {/* 7. Footer */}
       <footer className="bg-primary text-primary-foreground py-16 px-6 border-t border-primary-foreground/10">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="text-center md:text-left">
