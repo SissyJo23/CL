@@ -6,15 +6,21 @@ import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map, RefreshCw, Play, ArrowRight } from "lucide-react";
+import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+
+type LiveStatus = {
+  phase: "running" | "done" | "error";
+  message: string;
+  findingCount: number;
+};
 
 export default function CaseShow() {
   const params = useParams();
@@ -34,6 +40,96 @@ export default function CaseShow() {
   const pendingDocs = (documents ?? []).filter((d) => d.status === "pending" || d.status === "error");
   const hasPendingDocs = pendingDocs.length > 0;
   const hasAnyFindings = (documents ?? []).some((d) => (d.findingCount ?? 0) > 0);
+
+  // Analyze All state
+  const [isRunningAll, setIsRunningAll] = useState(false);
+  const [liveStatuses, setLiveStatuses] = useState<Map<number, LiveStatus>>(new Map());
+  const [batchProgress, setBatchProgress] = useState<{ done: number; total: number } | null>(null);
+  const abortRef = useRef(false);
+
+  const setLive = (docId: number, update: Partial<LiveStatus>) => {
+    setLiveStatuses((prev) => {
+      const next = new Map(prev);
+      const cur = next.get(docId) ?? { phase: "running", message: "", findingCount: 0 };
+      next.set(docId, { ...cur, ...update });
+      return next;
+    });
+  };
+
+  const analyzeDocument = async (docId: number): Promise<void> => {
+    setLive(docId, { phase: "running", message: "Starting analysis…", findingCount: 0 });
+    try {
+      const response = await fetch(`/api/cases/${caseId}/documents/${docId}/analyze`, { method: "POST" });
+
+      if (!response.ok) {
+        let msg = "Analysis failed.";
+        try { const b = await response.json(); if (b?.error) msg = b.error; } catch { /* ignore */ }
+        setLive(docId, { phase: "error", message: msg });
+        return;
+      }
+
+      if (!response.body) throw new Error("No response body");
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let findingCount = 0;
+
+      while (true) {
+        if (abortRef.current) { reader.cancel(); return; }
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          const jsonStr = line.slice(5).trim();
+          if (!jsonStr) continue;
+          try {
+            const event = JSON.parse(jsonStr);
+            if (event.type === "finding") {
+              findingCount++;
+              setLive(docId, { phase: "running", message: `${findingCount} finding${findingCount === 1 ? "" : "s"} found…`, findingCount });
+            } else if (event.type === "status") {
+              setLive(docId, { message: event.message ?? "" });
+            } else if (event.type === "done") {
+              setLive(docId, { phase: "done", message: `${findingCount} finding${findingCount === 1 ? "" : "s"} extracted`, findingCount });
+            } else if (event.type === "error") {
+              setLive(docId, { phase: "error", message: event.message ?? "Analysis failed." });
+            }
+          } catch { /* ignore malformed SSE */ }
+        }
+      }
+    } catch {
+      setLive(docId, { phase: "error", message: "Connection lost during analysis." });
+    }
+  };
+
+  const handleAnalyzeAll = async () => {
+    const queue = (documents ?? []).filter((d) => d.status === "pending" || d.status === "error");
+    if (queue.length === 0) return;
+
+    abortRef.current = false;
+    setIsRunningAll(true);
+    setBatchProgress({ done: 0, total: queue.length });
+    setLiveStatuses(new Map());
+
+    let completed = 0;
+    for (const doc of queue) {
+      if (abortRef.current) break;
+      await analyzeDocument(doc.id);
+      completed++;
+      setBatchProgress({ done: completed, total: queue.length });
+    }
+
+    setIsRunningAll(false);
+    queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
+    queryClient.invalidateQueries({ queryKey: getGetCaseQueryKey(caseId) });
+    toast({
+      title: "Analysis Complete",
+      description: `All ${queue.length} document${queue.length === 1 ? "" : "s"} have been processed.`,
+    });
+  };
 
   const handleGenerateStrategy = () => {
     generateStrategy.mutate(
@@ -63,20 +159,15 @@ export default function CaseShow() {
       toast({ title: "Validation Error", description: "Title and content are required.", variant: "destructive" });
       return;
     }
-
     createDocument.mutate(
       { caseId, data: { title: docTitle, documentType: docType, content: docContent } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
-          setOpen(false);
-          setDocTitle("");
-          setDocContent("");
+          setOpen(false); setDocTitle(""); setDocContent("");
           toast({ title: "Document Added", description: "The document is now in the workspace." });
         },
-        onError: () => {
-          toast({ title: "Error", description: "Failed to add document.", variant: "destructive" });
-        },
+        onError: () => { toast({ title: "Error", description: "Failed to add document.", variant: "destructive" }); },
       },
     );
   };
@@ -89,27 +180,18 @@ export default function CaseShow() {
     setIsUploading(true);
     try {
       const formData = new FormData();
-      for (const file of uploadFiles) {
-        formData.append("files", file);
-      }
+      for (const file of uploadFiles) formData.append("files", file);
       formData.append("documentType", docType);
 
-      const res = await fetch(`/api/cases/${caseId}/documents/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
+      const res = await fetch(`/api/cases/${caseId}/documents/upload`, { method: "POST", body: formData });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "Upload failed" }));
         toast({ title: "Upload Error", description: err.error ?? "Upload failed", variant: "destructive" });
         return;
       }
-
       const created: { title: string }[] = await res.json().catch(() => []);
       queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
-      setOpen(false);
-      setDocTitle("");
-      setUploadFiles([]);
+      setOpen(false); setDocTitle(""); setUploadFiles([]);
       const count = created.length;
       toast({ title: count === 1 ? "Document Uploaded" : `${count} Documents Uploaded`, description: "Text extracted and documents are ready for analysis." });
     } catch {
@@ -119,28 +201,38 @@ export default function CaseShow() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "analyzed":
-        return (
-          <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
-            <CheckCircle2 className="w-3 h-3 mr-1" /> Analyzed
-          </Badge>
-        );
-      case "analyzing":
-        return (
-          <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
-            <Loader2 className="w-3 h-3 mr-1 animate-spin" /> Analyzing
-          </Badge>
-        );
-      case "error":
-        return (
-          <Badge variant="destructive">
-            <AlertCircle className="w-3 h-3 mr-1" /> Error
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline" className="text-muted-foreground">Pending</Badge>;
+  const getStatusBadge = (docId: number, dbStatus: string) => {
+    const live = liveStatuses.get(docId);
+    if (live) {
+      if (live.phase === "running") return (
+        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+          <Loader2 className="w-3 h-3 mr-1 animate-spin" /> Analyzing
+        </Badge>
+      );
+      if (live.phase === "done") return (
+        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
+          <CheckCircle2 className="w-3 h-3 mr-1" /> Analyzed
+        </Badge>
+      );
+      if (live.phase === "error") return (
+        <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" /> Error</Badge>
+      );
+    }
+    switch (dbStatus) {
+      case "analyzed": return (
+        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
+          <CheckCircle2 className="w-3 h-3 mr-1" /> Analyzed
+        </Badge>
+      );
+      case "analyzing": return (
+        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+          <Loader2 className="w-3 h-3 mr-1 animate-spin" /> Analyzing
+        </Badge>
+      );
+      case "error": return (
+        <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" /> Error</Badge>
+      );
+      default: return <Badge variant="outline" className="text-muted-foreground">Pending</Badge>;
     }
   };
 
@@ -219,7 +311,6 @@ export default function CaseShow() {
                     )}
                   </Button>
                 </div>
-
                 {strategyLoading ? (
                   <div className="p-5 space-y-3">
                     <Skeleton className="h-4 w-full" />
@@ -230,21 +321,15 @@ export default function CaseShow() {
                   <div className="divide-y divide-amber-100 dark:divide-amber-800/30">
                     <div className="p-5 space-y-3">
                       <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
-                        <Swords className="w-4 h-4" />
-                        Cumulative Error Brief
+                        <Swords className="w-4 h-4" /> Cumulative Error Brief
                       </div>
-                      <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
-                        {strategy.cumulativeErrorBrief}
-                      </div>
+                      <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{strategy.cumulativeErrorBrief}</div>
                     </div>
                     <div className="p-5 space-y-3">
                       <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
-                        <Map className="w-4 h-4" />
-                        Strategic Roadmap
+                        <MapIcon className="w-4 h-4" /> Strategic Roadmap
                       </div>
-                      <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
-                        {strategy.strategicRoadmap}
-                      </div>
+                      <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{strategy.strategicRoadmap}</div>
                     </div>
                     <div className="px-5 py-2 bg-amber-50/30 dark:bg-amber-900/5 text-xs text-muted-foreground">
                       Last generated: {format(new Date(strategy.updatedAt), "MMM d, yyyy 'at' h:mm a")}
@@ -282,9 +367,7 @@ export default function CaseShow() {
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Type</label>
                         <Select value={docType} onValueChange={(val) => setDocType(val as CreateDocumentBodyDocumentType)}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="transcript">Transcript</SelectItem>
                             <SelectItem value="police_report">Police Report</SelectItem>
@@ -302,28 +385,17 @@ export default function CaseShow() {
                       <div className="flex rounded-lg border border-border overflow-hidden">
                         <button
                           className={`flex-1 py-2 text-sm font-medium transition-colors ${inputMode === "paste" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
-                          onClick={() => setInputMode("paste")}
-                          type="button"
-                        >
-                          Paste Text
-                        </button>
+                          onClick={() => setInputMode("paste")} type="button"
+                        >Paste Text</button>
                         <button
                           className={`flex-1 py-2 text-sm font-medium transition-colors ${inputMode === "upload" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
-                          onClick={() => setInputMode("upload")}
-                          type="button"
-                        >
-                          Upload File
-                        </button>
+                          onClick={() => setInputMode("upload")} type="button"
+                        >Upload File</button>
                       </div>
                       {inputMode === "paste" ? (
                         <div className="space-y-2">
                           <label className="text-sm font-medium">Paste Text Content</label>
-                          <Textarea
-                            value={docContent}
-                            onChange={(e) => setDocContent(e.target.value)}
-                            className="min-h-[200px] font-mono text-sm"
-                            placeholder="Paste document text here..."
-                          />
+                          <Textarea value={docContent} onChange={(e) => setDocContent(e.target.value)} className="min-h-[200px] font-mono text-sm" placeholder="Paste document text here..." />
                           <Button className="w-full" onClick={handleCreateDocument} disabled={createDocument.isPending}>
                             {createDocument.isPending ? "Adding..." : "Add Document"}
                           </Button>
@@ -331,28 +403,14 @@ export default function CaseShow() {
                       ) : (
                         <div className="space-y-2">
                           <label className="text-sm font-medium">Files (PDF, DOCX, TXT, or image — multiple allowed)</label>
-                          <Input
-                            type="file"
-                            accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp"
-                            multiple
-                            onChange={(e) => setUploadFiles(Array.from(e.target.files ?? []))}
-                            className="cursor-pointer"
-                          />
+                          <Input type="file" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp" multiple onChange={(e) => setUploadFiles(Array.from(e.target.files ?? []))} className="cursor-pointer" />
                           {uploadFiles.length > 0 && (
                             <div className="text-xs text-muted-foreground space-y-0.5">
-                              {uploadFiles.map((f, i) => (
-                                <p key={i}>
-                                  {f.name} ({(f.size / 1024).toFixed(0)} KB)
-                                </p>
-                              ))}
+                              {uploadFiles.map((f, i) => <p key={i}>{f.name} ({(f.size / 1024).toFixed(0)} KB)</p>)}
                             </div>
                           )}
                           <Button className="w-full" onClick={handleUploadDocument} disabled={isUploading || uploadFiles.length === 0}>
-                            {isUploading ? (
-                              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Extracting text...</>
-                            ) : (
-                              `Upload & Extract${uploadFiles.length > 1 ? ` (${uploadFiles.length} files)` : ""}`
-                            )}
+                            {isUploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Extracting text...</> : `Upload & Extract${uploadFiles.length > 1 ? ` (${uploadFiles.length} files)` : ""}`}
                           </Button>
                         </div>
                       )}
@@ -362,38 +420,66 @@ export default function CaseShow() {
               </div>
 
               {!docsLoading && hasPendingDocs && (
-                <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-700 rounded-xl">
-                  <Play className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
-                      Step 1 — Analyze your documents
-                    </p>
-                    <p className="text-sm text-blue-700 dark:text-blue-400 mt-0.5">
-                      {pendingDocs.length === 1
-                        ? "1 document hasn't been analyzed yet."
-                        : `${pendingDocs.length} documents haven't been analyzed yet.`}{" "}
-                      Click a document below, then press "Run Analysis" to extract findings. Once analyzed, you can run the court simulator.
-                    </p>
+                <div className="rounded-xl border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/10 overflow-hidden">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4">
+                    <div className="flex items-start gap-3">
+                      <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
+                          {pendingDocs.length} document{pendingDocs.length === 1 ? "" : "s"} need analysis
+                        </p>
+                        <p className="text-xs text-blue-700 dark:text-blue-400 mt-0.5">
+                          Analyze all at once, or click any document to analyze it individually.
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={handleAnalyzeAll}
+                      disabled={isRunningAll}
+                      className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-500"
+                    >
+                      {isRunningAll ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Analyzing…</>
+                      ) : (
+                        <><Zap className="w-4 h-4 mr-2" />Analyze All</>
+                      )}
+                    </Button>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                  {isRunningAll && batchProgress && (
+                    <div className="px-4 pb-4 space-y-1.5">
+                      <div className="h-1.5 w-full rounded-full bg-blue-200 dark:bg-blue-800 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-blue-500 dark:bg-blue-400 transition-all duration-500"
+                          style={{ width: `${(batchProgress.done / batchProgress.total) * 100}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-blue-700 dark:text-blue-400">
+                        {batchProgress.done} of {batchProgress.total} complete
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
               {docsLoading ? (
                 <div className="space-y-3">
-                  {[1, 2].map((i) => (
-                    <Skeleton key={i} className="h-20 w-full" />
-                  ))}
+                  {[1, 2].map((i) => <Skeleton key={i} className="h-20 w-full" />)}
                 </div>
               ) : documents && documents.length > 0 ? (
                 <div className="grid gap-3">
                   {documents.map((doc) => {
-                    const needsAnalysis = doc.status === "pending" || doc.status === "error";
+                    const live = liveStatuses.get(doc.id);
+                    const isThisRunning = live?.phase === "running";
+                    const thisIsDone = live?.phase === "done";
+                    const needsAnalysis = !live && (doc.status === "pending" || doc.status === "error");
+                    const displayFindingCount = thisIsDone ? live.findingCount : doc.findingCount;
+
                     return (
                       <Link key={doc.id} href={`/cases/${caseId}/documents/${doc.id}`}>
-                        <div className="group flex items-center p-4 bg-card hover:bg-accent border border-border rounded-xl transition-all cursor-pointer">
-                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mr-4 text-muted-foreground group-hover:text-foreground transition-colors">
-                            <FileText className="w-5 h-5" />
+                        <div className={`group flex items-center p-4 bg-card border rounded-xl transition-all cursor-pointer ${isThisRunning ? "border-blue-300 dark:border-blue-600 bg-blue-50/30 dark:bg-blue-900/5" : "hover:bg-accent border-border"}`}>
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 transition-colors ${isThisRunning ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600" : "bg-muted text-muted-foreground group-hover:text-foreground"}`}>
+                            {isThisRunning ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5" />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="font-medium text-foreground truncate">{doc.title}</h3>
@@ -402,15 +488,18 @@ export default function CaseShow() {
                               <span>•</span>
                               <span>{format(new Date(doc.createdAt), "MMM d, yyyy")}</span>
                             </div>
+                            {isThisRunning && live.message && (
+                              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{live.message}</p>
+                            )}
                           </div>
                           <div className="flex flex-col items-end gap-2 ml-4 shrink-0">
-                            {getStatusBadge(doc.status)}
-                            {doc.status === "analyzed" && (
+                            {getStatusBadge(doc.id, doc.status)}
+                            {(doc.status === "analyzed" || thisIsDone) && displayFindingCount != null && (
                               <span className="text-xs font-medium bg-muted px-2 py-0.5 rounded-full">
-                                {doc.findingCount} findings
+                                {displayFindingCount} findings
                               </span>
                             )}
-                            {needsAnalysis && (
+                            {needsAnalysis && !isRunningAll && (
                               <span className="text-xs font-medium text-primary flex items-center gap-1 group-hover:underline">
                                 <Play className="w-3 h-3 fill-current" />
                                 Run Analysis
