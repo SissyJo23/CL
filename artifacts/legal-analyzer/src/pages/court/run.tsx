@@ -5,10 +5,12 @@ import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import type { CourtRound } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Gavel, FileText, ArrowRight } from "lucide-react";
+import { Loader2, Gavel, ArrowRight, AlertTriangle, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+
+const STUCK_TIMEOUT_MS = 10 * 60 * 1000;
 
 export default function CourtRun() {
   const params = useParams();
@@ -21,25 +23,62 @@ export default function CourtRun() {
   const [rounds, setRounds] = useState<CourtRound[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isStuck, setIsStuck] = useState(false);
   const { toast } = useToast();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hasStarted = useRef(false);
 
   useEffect(() => {
-    // If already complete from the API
-    if (sessionData?.session.status === 'completed') {
+    if (!sessionData) return;
+
+    if (sessionData.session.status === "completed") {
       setLocation(`/cases/${caseId}/court/${sessionId}`);
       return;
     }
 
-    if (sessionData && !isComplete && !error && rounds.length === 0) {
+    if (sessionData.session.status === "error") {
+      setIsStuck(true);
+      setError(true);
+      setErrorMessage("This simulation encountered an error.");
+      return;
+    }
+
+    if (sessionData.session.status === "running") {
+      const updatedAt = new Date(sessionData.session.updatedAt).getTime();
+      const age = Date.now() - updatedAt;
+      if (age > STUCK_TIMEOUT_MS) {
+        setIsStuck(true);
+        setError(true);
+        setErrorMessage("This simulation was interrupted (the server restarted while it was running). Please start a new simulation.");
+        return;
+      }
+    }
+
+    if (!isComplete && !error && !hasStarted.current) {
+      hasStarted.current = true;
       const runSimulation = async () => {
         try {
           const response = await fetch(`/api/cases/${caseId}/court-sessions/${sessionId}/run`, {
-            method: "POST"
+            method: "POST",
           });
-          
+
+          if (!response.ok) {
+            let msg = "Failed to start simulation.";
+            try {
+              const body = await response.json();
+              if (body?.error) msg = body.error;
+            } catch {
+              // ignore parse error
+            }
+            setError(true);
+            setErrorMessage(msg);
+            toast({ title: "Simulation Error", description: msg, variant: "destructive" });
+            return;
+          }
+
           if (!response.body) throw new Error("No response body");
-          
+
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
           let buffer = "";
@@ -59,15 +98,16 @@ export default function CourtRun() {
               try {
                 const event = JSON.parse(jsonStr);
                 if (event.type === "round") {
-                  setRounds(prev => [...prev, event.data]);
+                  setRounds((prev) => [...prev, event.data]);
                 } else if (event.type === "done") {
                   setIsComplete(true);
-                  // We delay redirect to let user read the last round
                 } else if (event.type === "error") {
                   setError(true);
-                  toast({ title: "Simulation Error", description: event.message || "Failed to complete simulation.", variant: "destructive" });
+                  const msg = event.message || "Failed to complete simulation.";
+                  setErrorMessage(msg);
+                  toast({ title: "Simulation Error", description: msg, variant: "destructive" });
                 }
-              } catch (e) {
+              } catch {
                 console.error("Failed to parse SSE event", line);
               }
             }
@@ -75,7 +115,9 @@ export default function CourtRun() {
         } catch (err) {
           console.error(err);
           setError(true);
-          toast({ title: "Connection Error", description: "Stream connection failed.", variant: "destructive" });
+          const msg = "Connection to the simulation was lost. Please try again.";
+          setErrorMessage(msg);
+          toast({ title: "Connection Error", description: msg, variant: "destructive" });
         }
       };
 
@@ -91,13 +133,26 @@ export default function CourtRun() {
 
   const getStrengthColor = (strength: string) => {
     switch (strength) {
-      case 'OVERWHELMING': return 'bg-red-100 text-red-800 border-red-200';
-      case 'STRONG': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'MODERATE': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'MINIMAL': return 'bg-blue-100 text-blue-800 border-blue-200';
-      default: return 'bg-muted text-muted-foreground';
+      case "OVERWHELMING": return "bg-red-100 text-red-800 border-red-200";
+      case "STRONG": return "bg-orange-100 text-orange-800 border-orange-200";
+      case "MODERATE": return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "MINIMAL": return "bg-blue-100 text-blue-800 border-blue-200";
+      default: return "bg-muted text-muted-foreground";
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[100dvh] flex flex-col bg-background">
+        <Navbar />
+        <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
+          <Skeleton className="h-10 w-1/2 mb-4" />
+          <Skeleton className="h-64 w-full" />
+        </main>
+        <Disclaimer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
@@ -106,14 +161,14 @@ export default function CourtRun() {
         <div className="flex items-center justify-between border-b border-border pb-6 mb-6 shrink-0">
           <div>
             <h1 className="text-2xl font-serif font-medium flex items-center gap-3">
-              <Gavel className="w-6 h-6" /> 
+              <Gavel className="w-6 h-6" />
               Active Simulation
             </h1>
             <p className="text-muted-foreground mt-1 font-mono text-xs uppercase tracking-wider">
-              {sessionData?.session.simulationMode.replace('_', ' ')}
+              {sessionData?.session.simulationMode.replace(/_/g, " ")}
             </p>
           </div>
-          
+
           <div className="flex items-center gap-3">
             {!isComplete && !error ? (
               <Badge variant="secondary" className="bg-blue-100 text-blue-800 px-3 py-1 text-sm">
@@ -130,6 +185,27 @@ export default function CourtRun() {
           </div>
         </div>
 
+        {error && (
+          <div className="mb-6 flex items-start gap-4 p-5 bg-destructive/5 border border-destructive/20 rounded-xl">
+            <AlertTriangle className="w-6 h-6 text-destructive shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-foreground mb-1">Simulation Interrupted</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{errorMessage}</p>
+              <div className="flex gap-3 mt-4">
+                <Link href={`/cases/${caseId}/court/new`}>
+                  <Button size="sm">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Start New Simulation
+                  </Button>
+                </Link>
+                <Link href={`/cases/${caseId}`}>
+                  <Button variant="outline" size="sm">Back to Case</Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto pr-2 space-y-8 pb-12">
           {rounds.map((round) => (
             <div key={round.id} className="bg-card border border-border rounded-xl overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -142,7 +218,7 @@ export default function CourtRun() {
                   </Badge>
                 </div>
               </div>
-              
+
               <div className="p-6 space-y-8">
                 <div className="space-y-2">
                   <h3 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
@@ -161,7 +237,7 @@ export default function CourtRun() {
                       "{round.stateArgument}"
                     </p>
                   </div>
-                  
+
                   <div className="bg-primary/5 rounded-lg p-4 border border-primary/10">
                     <h3 className="text-xs font-bold uppercase tracking-widest text-primary mb-3">The Defense</h3>
                     <p className="text-sm text-foreground/80 leading-relaxed font-serif">
@@ -182,13 +258,21 @@ export default function CourtRun() {
               </div>
             </div>
           ))}
-          
-          {!isComplete && !error && rounds.length > 0 && (
+
+          {!isComplete && !error && (
             <div className="flex justify-center p-8">
               <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
             </div>
           )}
-          
+
+          {isComplete && !error && (
+            <div className="flex justify-center pt-4">
+              <Button size="lg" onClick={() => setLocation(`/cases/${caseId}/court/${sessionId}`)}>
+                View Full Verdict & Motion <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          )}
+
           <div ref={scrollRef} />
         </div>
       </main>

@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map, RefreshCw } from "lucide-react";
+import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map, RefreshCw, Play, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,7 +22,7 @@ export default function CaseShow() {
   const { data: currentCase, isLoading: caseLoading } = useGetCase(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseQueryKey(caseId) } });
   const { data: documents, isLoading: docsLoading } = useListDocuments(caseId, { query: { enabled: !!caseId, queryKey: getListDocumentsQueryKey(caseId) } });
   const { data: strategyData, isLoading: strategyLoading } = useGetCaseStrategy(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseStrategyQueryKey(caseId) } });
-  
+
   const createDocument = useCreateDocument();
   const generateStrategy = useGenerateCaseStrategy();
   const queryClient = useQueryClient();
@@ -30,6 +30,10 @@ export default function CaseShow() {
 
   const strategy = strategyData?.strategy;
   const hasAnalysis = currentCase?.hasAnalysis;
+
+  const pendingDocs = (documents ?? []).filter((d) => d.status === "pending" || d.status === "error");
+  const hasPendingDocs = pendingDocs.length > 0;
+  const hasAnyFindings = (documents ?? []).some((d) => (d.findingCount ?? 0) > 0);
 
   const handleGenerateStrategy = () => {
     generateStrategy.mutate(
@@ -42,7 +46,7 @@ export default function CaseShow() {
         onError: () => {
           toast({ title: "Error", description: "Failed to generate strategy. Make sure documents have been analyzed first.", variant: "destructive" });
         },
-      }
+      },
     );
   };
 
@@ -72,8 +76,8 @@ export default function CaseShow() {
         },
         onError: () => {
           toast({ title: "Error", description: "Failed to add document.", variant: "destructive" });
-        }
-      }
+        },
+      },
     );
   };
 
@@ -118,11 +122,23 @@ export default function CaseShow() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "analyzed":
-        return <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100"><CheckCircle2 className="w-3 h-3 mr-1"/> Analyzed</Badge>;
+        return (
+          <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
+            <CheckCircle2 className="w-3 h-3 mr-1" /> Analyzed
+          </Badge>
+        );
       case "analyzing":
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"><Loader2 className="w-3 h-3 mr-1 animate-spin"/> Analyzing</Badge>;
+        return (
+          <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+            <Loader2 className="w-3 h-3 mr-1 animate-spin" /> Analyzing
+          </Badge>
+        );
       case "error":
-        return <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1"/> Error</Badge>;
+        return (
+          <Badge variant="destructive">
+            <AlertCircle className="w-3 h-3 mr-1" /> Error
+          </Badge>
+        );
       default:
         return <Badge variant="outline" className="text-muted-foreground">Pending</Badge>;
     }
@@ -153,17 +169,24 @@ export default function CaseShow() {
                   {currentCase.jurisdiction && <span>Jurisdiction: <span className="font-medium text-foreground">{currentCase.jurisdiction}</span></span>}
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 shrink-0">
                 <Button variant="outline" size="sm" onClick={() => window.print()}>
                   <Download className="w-4 h-4 mr-2" />
                   Export
                 </Button>
-                <Link href={`/cases/${caseId}/court/new`}>
-                  <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                {hasAnyFindings ? (
+                  <Link href={`/cases/${caseId}/court/new`}>
+                    <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                      <Scale className="w-4 h-4 mr-2" />
+                      Run Court Simulator
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button size="sm" disabled title="Analyze at least one document first">
                     <Scale className="w-4 h-4 mr-2" />
                     Run Court Simulator
                   </Button>
-                </Link>
+                )}
               </div>
             </div>
 
@@ -254,7 +277,7 @@ export default function CaseShow() {
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Title</label>
-                        <Input value={docTitle} onChange={e => setDocTitle(e.target.value)} placeholder="e.g. Day 1 Trial Transcript" />
+                        <Input value={docTitle} onChange={(e) => setDocTitle(e.target.value)} placeholder="e.g. Day 1 Trial Transcript" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Type</label>
@@ -297,7 +320,7 @@ export default function CaseShow() {
                           <label className="text-sm font-medium">Paste Text Content</label>
                           <Textarea
                             value={docContent}
-                            onChange={e => setDocContent(e.target.value)}
+                            onChange={(e) => setDocContent(e.target.value)}
                             className="min-h-[200px] font-mono text-sm"
                             placeholder="Paste document text here..."
                           />
@@ -312,18 +335,24 @@ export default function CaseShow() {
                             type="file"
                             accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp"
                             multiple
-                            onChange={e => setUploadFiles(Array.from(e.target.files ?? []))}
+                            onChange={(e) => setUploadFiles(Array.from(e.target.files ?? []))}
                             className="cursor-pointer"
                           />
                           {uploadFiles.length > 0 && (
                             <div className="text-xs text-muted-foreground space-y-0.5">
                               {uploadFiles.map((f, i) => (
-                                <p key={i}>{f.name} ({(f.size / 1024).toFixed(0)} KB)</p>
+                                <p key={i}>
+                                  {f.name} ({(f.size / 1024).toFixed(0)} KB)
+                                </p>
                               ))}
                             </div>
                           )}
                           <Button className="w-full" onClick={handleUploadDocument} disabled={isUploading || uploadFiles.length === 0}>
-                            {isUploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Extracting text...</> : `Upload & Extract${uploadFiles.length > 1 ? ` (${uploadFiles.length} files)` : ""}`}
+                            {isUploading ? (
+                              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Extracting text...</>
+                            ) : (
+                              `Upload & Extract${uploadFiles.length > 1 ? ` (${uploadFiles.length} files)` : ""}`
+                            )}
                           </Button>
                         </div>
                       )}
@@ -332,37 +361,66 @@ export default function CaseShow() {
                 </Dialog>
               </div>
 
+              {!docsLoading && hasPendingDocs && (
+                <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-700 rounded-xl">
+                  <Play className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
+                      Step 1 — Analyze your documents
+                    </p>
+                    <p className="text-sm text-blue-700 dark:text-blue-400 mt-0.5">
+                      {pendingDocs.length === 1
+                        ? "1 document hasn't been analyzed yet."
+                        : `${pendingDocs.length} documents haven't been analyzed yet.`}{" "}
+                      Click a document below, then press "Run Analysis" to extract findings. Once analyzed, you can run the court simulator.
+                    </p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                </div>
+              )}
+
               {docsLoading ? (
                 <div className="space-y-3">
-                  {[1,2].map(i => <Skeleton key={i} className="h-20 w-full" />)}
+                  {[1, 2].map((i) => (
+                    <Skeleton key={i} className="h-20 w-full" />
+                  ))}
                 </div>
               ) : documents && documents.length > 0 ? (
                 <div className="grid gap-3">
-                  {documents.map(doc => (
-                    <Link key={doc.id} href={`/cases/${caseId}/documents/${doc.id}`}>
-                      <div className="group flex items-center p-4 bg-card hover:bg-accent border border-border rounded-xl transition-all cursor-pointer">
-                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mr-4 text-muted-foreground group-hover:text-foreground transition-colors">
-                          <FileText className="w-5 h-5" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-foreground truncate">{doc.title}</h3>
-                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                            <span className="capitalize">{doc.documentType.replace('_', ' ')}</span>
-                            <span>•</span>
-                            <span>{format(new Date(doc.createdAt), 'MMM d, yyyy')}</span>
+                  {documents.map((doc) => {
+                    const needsAnalysis = doc.status === "pending" || doc.status === "error";
+                    return (
+                      <Link key={doc.id} href={`/cases/${caseId}/documents/${doc.id}`}>
+                        <div className="group flex items-center p-4 bg-card hover:bg-accent border border-border rounded-xl transition-all cursor-pointer">
+                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mr-4 text-muted-foreground group-hover:text-foreground transition-colors">
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-foreground truncate">{doc.title}</h3>
+                            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                              <span className="capitalize">{doc.documentType.replace("_", " ")}</span>
+                              <span>•</span>
+                              <span>{format(new Date(doc.createdAt), "MMM d, yyyy")}</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2 ml-4 shrink-0">
+                            {getStatusBadge(doc.status)}
+                            {doc.status === "analyzed" && (
+                              <span className="text-xs font-medium bg-muted px-2 py-0.5 rounded-full">
+                                {doc.findingCount} findings
+                              </span>
+                            )}
+                            {needsAnalysis && (
+                              <span className="text-xs font-medium text-primary flex items-center gap-1 group-hover:underline">
+                                <Play className="w-3 h-3 fill-current" />
+                                Run Analysis
+                              </span>
+                            )}
                           </div>
                         </div>
-                        <div className="flex flex-col items-end gap-2 ml-4">
-                          {getStatusBadge(doc.status)}
-                          {doc.status === 'analyzed' && (
-                            <span className="text-xs font-medium bg-muted px-2 py-0.5 rounded-full">
-                              {doc.findingCount} findings
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
+                      </Link>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-16 border-2 border-dashed border-border rounded-xl bg-muted/20">

@@ -4,6 +4,8 @@ import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { seedDemoCase } from "./lib/seed";
+import { db, courtSessionsTable } from "@workspace/db";
+import { eq, lt, and } from "drizzle-orm";
 
 const app: Express = express();
 
@@ -32,8 +34,31 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 
+async function recoverStuckSessions(): Promise<void> {
+  try {
+    const cutoff = new Date(Date.now() - 10 * 60 * 1000);
+    const result = await db
+      .update(courtSessionsTable)
+      .set({ status: "error", updatedAt: new Date() })
+      .where(
+        and(
+          eq(courtSessionsTable.status, "running"),
+          lt(courtSessionsTable.updatedAt, cutoff),
+        ),
+      )
+      .returning({ id: courtSessionsTable.id });
+    if (result.length > 0) {
+      logger.info({ count: result.length, ids: result.map((r) => r.id) }, "Reset stuck court sessions to error");
+    }
+  } catch (err) {
+    logger.error({ err }, "Failed to recover stuck sessions");
+  }
+}
+
 seedDemoCase().catch((err) => {
   logger.error({ err }, "Demo seed failed");
 });
+
+recoverStuckSessions();
 
 export default app;
