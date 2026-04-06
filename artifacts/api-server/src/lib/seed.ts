@@ -1,4 +1,4 @@
-import { db, casesTable, documentsTable, findingsTable, crossCaseMatchesTable, courtSessionsTable, courtRoundsTable, motionsTable } from "@workspace/db";
+import { db, casesTable, documentsTable, findingsTable, crossCaseMatchesTable, courtSessionsTable, courtRoundsTable, motionsTable, categoriesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { logger } from "./logger";
 
@@ -435,6 +435,62 @@ CERTIFICATE OF SERVICE
 
 I hereby certify that a copy of this motion has been served upon the Milwaukee County District Attorney's Office by first-class mail on this ___ day of _________, 20__.`;
 
+export async function seedCategories(): Promise<void> {
+  const STANDARD_CATEGORIES: { name: string; badgeLabel: string; description: string; color: string }[] = [
+    { name: "Miranda/5th Amendment", badgeLabel: "Miranda", description: "Violations of Miranda rights and Fifth Amendment self-incrimination protections", color: "red" },
+    { name: "Brady/Giglio", badgeLabel: "Brady", description: "Suppression of exculpatory or impeachment evidence by the prosecution", color: "orange" },
+    { name: "IAC — Trial Counsel", badgeLabel: "IAC Trial", description: "Ineffective assistance of trial counsel under Strickland v. Washington", color: "yellow" },
+    { name: "IAC — Appellate Counsel", badgeLabel: "IAC Appeal", description: "Ineffective assistance of appellate counsel", color: "yellow" },
+    { name: "Prosecutorial Misconduct", badgeLabel: "Pros. Misconduct", description: "Improper conduct by the prosecution during trial or investigation", color: "red" },
+    { name: "4th Amendment", badgeLabel: "4th Amend.", description: "Unlawful searches and seizures in violation of the Fourth Amendment", color: "blue" },
+    { name: "Confrontation Clause", badgeLabel: "Confrontation", description: "Violations of the Sixth Amendment right to confront witnesses", color: "blue" },
+    { name: "Jury Instructions", badgeLabel: "Jury Instr.", description: "Erroneous or misleading jury instructions affecting the verdict", color: "purple" },
+    { name: "Chain of Custody", badgeLabel: "Chain of Custody", description: "Breaks or irregularities in evidence chain of custody", color: "gray" },
+    { name: "Eyewitness Identification", badgeLabel: "Eyewitness ID", description: "Unreliable or improperly obtained eyewitness identifications", color: "orange" },
+    { name: "Coerced Confession", badgeLabel: "Coerced Conf.", description: "Confessions obtained through coercion, duress, or improper inducement", color: "red" },
+    { name: "Sentencing Error", badgeLabel: "Sentencing", description: "Legal errors in sentencing, including improper enhancements or calculations", color: "purple" },
+    { name: "Jury Selection/Batson", badgeLabel: "Batson", description: "Discriminatory use of peremptory challenges under Batson v. Kentucky", color: "teal" },
+    { name: "Forensic/Scientific Evidence", badgeLabel: "Forensic", description: "Issues with forensic or scientific evidence reliability and admissibility", color: "green" },
+    { name: "Newly Discovered Evidence", badgeLabel: "New Evidence", description: "Evidence discovered after trial that could affect the verdict", color: "green" },
+    { name: "Actual Innocence", badgeLabel: "Actual Innocence", description: "Claims of factual innocence supported by new or overlooked evidence", color: "green" },
+    { name: "Double Jeopardy", badgeLabel: "Double Jeopardy", description: "Prosecution or punishment in violation of double jeopardy protections", color: "blue" },
+    { name: "Speedy Trial", badgeLabel: "Speedy Trial", description: "Violations of the Sixth Amendment right to a speedy trial", color: "blue" },
+    { name: "Government Informant", badgeLabel: "Informant", description: "Issues with undisclosed or unreliable government informants", color: "orange" },
+    { name: "Due Process", badgeLabel: "Due Process", description: "Violations of procedural or substantive due process rights", color: "blue" },
+    { name: "Expert Witness", badgeLabel: "Expert Witness", description: "Improper admission or exclusion of expert witness testimony", color: "gray" },
+    { name: "Cumulative Error", badgeLabel: "Cumulative Error", description: "Prejudice resulting from the cumulative effect of multiple trial errors", color: "purple" },
+    { name: "Plea Voluntariness", badgeLabel: "Plea", description: "Challenges to the knowing or voluntary nature of a guilty plea", color: "yellow" },
+    { name: "Conflict of Interest", badgeLabel: "Conflict", description: "Defense counsel operating under an actual or potential conflict of interest", color: "red" },
+  ];
+
+  try {
+    const existing = await db
+      .select({ name: categoriesTable.name, badgeLabel: categoriesTable.badgeLabel })
+      .from(categoriesTable);
+
+    const existingNamesLower = existing.map((r) => r.name.toLowerCase());
+    const existingBadgesLower = existing.map((r) => r.badgeLabel.toLowerCase());
+
+    const toInsert = STANDARD_CATEGORIES.filter((cat) => {
+      const nameLower = cat.name.toLowerCase();
+      const badgeLower = cat.badgeLabel.toLowerCase();
+      const nameMatch = existingNamesLower.some((n) => n.includes(nameLower) || nameLower.includes(n));
+      const badgeMatch = existingBadgesLower.some((b) => b.includes(badgeLower) || badgeLower.includes(b));
+      return !nameMatch && !badgeMatch;
+    });
+
+    if (toInsert.length === 0) {
+      logger.info("All standard categories already exist — skipping category seed");
+      return;
+    }
+
+    await db.insert(categoriesTable).values(toInsert);
+    logger.info({ count: toInsert.length }, "Seeded standard categories");
+  } catch (err) {
+    logger.error({ err }, "Failed to seed categories");
+  }
+}
+
 export async function seedDemoCase(): Promise<void> {
   try {
     const existing = await db
@@ -444,7 +500,84 @@ export async function seedDemoCase(): Promise<void> {
       .limit(1);
 
     if (existing.length > 0) {
-      logger.info({ caseId: existing[0].id }, "Demo case already exists — skipping seed");
+      const caseId = existing[0].id;
+
+      const demoDoc = await db
+        .select({ id: documentsTable.id, status: documentsTable.status, findingCount: documentsTable.findingCount })
+        .from(documentsTable)
+        .where(eq(documentsTable.caseId, caseId))
+        .limit(1)
+        .then((rows) => rows[0] ?? null);
+
+      const needsRestore =
+        !demoDoc ||
+        demoDoc.status === "error" ||
+        demoDoc.status === "pending" ||
+        (demoDoc.findingCount ?? 0) === 0;
+
+      if (!needsRestore) {
+        logger.info({ caseId }, "Demo case already exists and is healthy — skipping seed");
+        return;
+      }
+
+      logger.info({ caseId }, "Demo case is corrupted — restoring findings and status...");
+
+      await db.transaction(async (tx) => {
+        let docId: number;
+
+        if (!demoDoc) {
+          const [newDoc] = await tx
+            .insert(documentsTable)
+            .values({
+              caseId,
+              title: "Trial Transcript — Day 3, June 14, 2018",
+              documentType: "transcript",
+              content: DEMO_TRANSCRIPT,
+              status: "analyzed",
+            })
+            .returning();
+          docId = newDoc.id;
+        } else {
+          docId = demoDoc.id;
+          await tx
+            .delete(findingsTable)
+            .where(eq(findingsTable.documentId, docId));
+        }
+
+        for (const f of DEMO_FINDINGS) {
+          await tx.insert(findingsTable).values({
+            caseId,
+            documentId: docId,
+            issueTitle: f.issueTitle,
+            transcriptExcerpt: f.transcriptExcerpt,
+            legalAnalysis: f.legalAnalysis,
+            pageNumber: f.pageNumber,
+            lineNumber: f.lineNumber,
+            precedentName: f.precedentName,
+            precedentCitation: f.precedentCitation,
+            precedentType: f.precedentType,
+            courtRuling: f.courtRuling,
+            materialSimilarity: f.materialSimilarity,
+            proceduralStatus: f.proceduralStatus,
+            anticipatedBlock: f.anticipatedBlock,
+            breakthroughArgument: f.breakthroughArgument,
+            legalVehicle: f.legalVehicle,
+            survivability: f.survivability,
+          });
+        }
+
+        await tx
+          .update(documentsTable)
+          .set({ status: "analyzed", findingCount: DEMO_FINDINGS.length })
+          .where(eq(documentsTable.id, docId));
+
+        await tx
+          .update(casesTable)
+          .set({ hasAnalysis: true })
+          .where(eq(casesTable.id, caseId));
+      });
+
+      logger.info({ caseId }, "Demo case restored successfully");
       return;
     }
 

@@ -3,7 +3,7 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
-import { seedDemoCase } from "./lib/seed";
+import { seedDemoCase, seedCategories } from "./lib/seed";
 import { db, courtSessionsTable, documentsTable } from "@workspace/db";
 import { eq, lt, and } from "drizzle-orm";
 
@@ -78,6 +78,10 @@ async function recoverStuckDocuments(): Promise<void> {
 
 seedDemoCase().catch((err) => {
   logger.error({ err }, "Demo seed failed");
+});
+
+seedCategories().catch((err) => {
+  logger.error({ err }, "Category seed failed");
 });
 
 recoverStuckSessions();
