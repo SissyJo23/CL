@@ -13,6 +13,7 @@ import CourtRun from "@/pages/court/run";
 import CourtShow from "@/pages/court/show";
 import MotionShow from "@/pages/motions/show";
 import MotionList from "@/pages/motions/list";
+import About from "@/pages/about";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/cases/:caseId/court/:id" component={CourtShow} />
       <Route path="/cases/:caseId/motions" component={MotionList} />
       <Route path="/cases/:caseId/motions/:id" component={MotionShow} />
+      <Route path="/about" component={About} />
       <Route component={NotFound} />
     </Switch>
   );
