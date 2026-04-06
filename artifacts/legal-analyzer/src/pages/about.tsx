@@ -129,6 +129,27 @@ export default function About() {
           </div>
         </section>
 
+        <section className="py-16 px-4 border-b border-border/50 bg-foreground text-background">
+          <div className="max-w-3xl mx-auto text-center space-y-6">
+            <p className="font-serif text-3xl sm:text-4xl font-semibold leading-snug">
+              "Not a proofreader."
+            </p>
+            <p className="text-base sm:text-lg leading-relaxed opacity-80 max-w-2xl mx-auto">
+              CaseLight doesn't fix grammar or polish language. It finds the moments when the
+              legal system may have failed — procedural violations, withheld evidence, unchallenged
+              constitutional errors, rights that were never enforced.
+            </p>
+            <p className="text-base sm:text-lg leading-relaxed opacity-80 max-w-2xl mx-auto">
+              Whether those failures were intentional or accidental doesn't change what they are.
+              What matters is that they belong in the record — and that the person affected has
+              the ability to bring them to the court's attention.
+            </p>
+            <p className="font-serif text-xl italic opacity-60 pt-2">
+              That is what CaseLight does.
+            </p>
+          </div>
+        </section>
+
         <section className="py-16 px-4 border-b border-border/50">
           <div className="max-w-3xl mx-auto">
             <blockquote className="relative rounded-xl border border-border/60 bg-slate-50 dark:bg-slate-900/40 p-8 sm:p-10">

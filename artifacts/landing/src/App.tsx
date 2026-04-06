@@ -133,7 +133,32 @@ export default function App() {
         </div>
       </section>
 
-      {/* 3. How it works */}
+      {/* 3. Not a Proofreader */}
+      <section className="py-24 md:py-32 px-6 bg-background border-b border-border">
+        <div className="max-w-4xl mx-auto">
+          <FadeIn>
+            <p className="font-sans text-xs tracking-widest uppercase text-muted-foreground mb-8 text-center">What CaseLight Is</p>
+            <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl text-foreground leading-[1.15] mb-10">
+              Not a proofreader.
+            </h2>
+            <p className="text-lg md:text-xl text-muted-foreground font-sans leading-relaxed mb-6 max-w-3xl">
+              CaseLight doesn't fix grammar or polish language. It finds the moments when the legal
+              system may have failed — procedural violations, withheld evidence, unchallenged
+              constitutional errors, rights that were never enforced.
+            </p>
+            <p className="text-lg md:text-xl text-muted-foreground font-sans leading-relaxed mb-10 max-w-3xl">
+              Whether those failures were intentional or accidental doesn't change what they are.
+              What matters is that they belong in the record — and that the person affected has the
+              ability to bring them to the court's attention.
+            </p>
+            <p className="font-serif text-xl md:text-2xl text-foreground italic">
+              That is what CaseLight does.
+            </p>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* 4. How it works */}
       <section className="py-32 px-6 bg-background">
         <div className="max-w-6xl mx-auto">
           <FadeIn>
@@ -179,7 +204,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 4. Three Feature Pillars */}
+      {/* 5. Three Feature Pillars */}
       <section className="py-32 px-6 bg-muted border-y border-border">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-3 gap-12">
@@ -210,7 +235,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 5. Integrity Statement */}
+      {/* 6. Integrity Statement */}
       <section className="bg-primary text-primary-foreground py-32 px-6 text-center">
         <div className="max-w-4xl mx-auto">
           <FadeIn>
@@ -224,7 +249,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 6. Proof of Concept */}
+      {/* 7. Proof of Concept */}
       <section className="py-32 px-6 bg-background">
         <div className="max-w-5xl mx-auto">
           <FadeIn>
@@ -268,7 +293,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 7. Footer */}
+      {/* 8. Footer */}
       <footer className="bg-primary text-primary-foreground py-16 px-6 border-t border-primary-foreground/10">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="text-center md:text-left">
