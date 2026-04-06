@@ -419,6 +419,16 @@ export default function CaseShow() {
                 </Dialog>
               </div>
 
+              {!docsLoading && !hasAnyFindings && documents && documents.length > 0 && (
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/40 border border-border text-sm">
+                  <span className="font-semibold text-foreground whitespace-nowrap">Step 1</span>
+                  <span className="text-muted-foreground">Analyze documents to extract findings</span>
+                  <span className="text-muted-foreground mx-1">→</span>
+                  <span className="font-semibold text-muted-foreground whitespace-nowrap">Step 2</span>
+                  <span className="text-muted-foreground">Run the court simulator</span>
+                </div>
+              )}
+
               {!docsLoading && hasPendingDocs && (
                 <div className="rounded-xl border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/10 overflow-hidden">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4">
@@ -433,18 +443,30 @@ export default function CaseShow() {
                         </p>
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      onClick={handleAnalyzeAll}
-                      disabled={isRunningAll}
-                      className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-500"
-                    >
-                      {isRunningAll ? (
-                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Analyzing…</>
-                      ) : (
-                        <><Zap className="w-4 h-4 mr-2" />Analyze All</>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {isRunningAll && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => { abortRef.current = true; }}
+                          className="border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-600 dark:text-blue-300"
+                        >
+                          Stop
+                        </Button>
                       )}
-                    </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleAnalyzeAll}
+                        disabled={isRunningAll}
+                        className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-500"
+                      >
+                        {isRunningAll ? (
+                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Analyzing…</>
+                        ) : (
+                          <><Zap className="w-4 h-4 mr-2" />Analyze All</>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                   {isRunningAll && batchProgress && (
                     <div className="px-4 pb-4 space-y-1.5">

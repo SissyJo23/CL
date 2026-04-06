@@ -24,7 +24,6 @@ export default function CourtRun() {
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [isStuck, setIsStuck] = useState(false);
   const { toast } = useToast();
   const scrollRef = useRef<HTMLDivElement>(null);
   const hasStarted = useRef(false);
@@ -38,9 +37,8 @@ export default function CourtRun() {
     }
 
     if (sessionData.session.status === "error") {
-      setIsStuck(true);
       setError(true);
-      setErrorMessage("This simulation encountered an error.");
+      setErrorMessage("This simulation encountered an error and could not be completed.");
       return;
     }
 
@@ -48,9 +46,8 @@ export default function CourtRun() {
       const updatedAt = new Date(sessionData.session.updatedAt).getTime();
       const age = Date.now() - updatedAt;
       if (age > STUCK_TIMEOUT_MS) {
-        setIsStuck(true);
         setError(true);
-        setErrorMessage("This simulation was interrupted (the server restarted while it was running). Please start a new simulation.");
+        setErrorMessage("This simulation was interrupted when the server restarted. Please start a new simulation.");
         return;
       }
     }
