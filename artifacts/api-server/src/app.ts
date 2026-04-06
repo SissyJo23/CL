@@ -4,7 +4,7 @@ import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { seedDemoCase } from "./lib/seed";
-import { db, courtSessionsTable } from "@workspace/db";
+import { db, courtSessionsTable, documentsTable } from "@workspace/db";
 import { eq, lt, and } from "drizzle-orm";
 
 const app: Express = express();
@@ -55,10 +55,32 @@ async function recoverStuckSessions(): Promise<void> {
   }
 }
 
+async function recoverStuckDocuments(): Promise<void> {
+  try {
+    const cutoff = new Date(Date.now() - 5 * 60 * 1000);
+    const result = await db
+      .update(documentsTable)
+      .set({ status: "error", updatedAt: new Date() })
+      .where(
+        and(
+          eq(documentsTable.status, "analyzing"),
+          lt(documentsTable.updatedAt, cutoff),
+        ),
+      )
+      .returning({ id: documentsTable.id });
+    if (result.length > 0) {
+      logger.info({ count: result.length, ids: result.map((r) => r.id) }, "Reset stuck analyzing documents to error");
+    }
+  } catch (err) {
+    logger.error({ err }, "Failed to recover stuck documents");
+  }
+}
+
 seedDemoCase().catch((err) => {
   logger.error({ err }, "Demo seed failed");
 });
 
 recoverStuckSessions();
+recoverStuckDocuments();
 
 export default app;

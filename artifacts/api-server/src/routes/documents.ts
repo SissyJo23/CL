@@ -6,6 +6,7 @@ import { db, documentsTable, insertDocumentSchema, findingsTable, crossCaseMatch
 import { eq, and, desc, ne } from "drizzle-orm";
 import { anthropic, buildAnalysisPrompt, buildChunkAnalysisPrompt, buildChunkSummary, runCrossCaseMatching } from "../lib/anthropic";
 import { redactText, splitIntoChunks } from "../lib/redact";
+import { logger } from "../lib/logger";
 
 const router = Router({ mergeParams: true });
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024, files: 10 } });
@@ -293,15 +294,26 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
       let chunkFindings: RawFinding[] = [];
 
       try {
-        const cleaned = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "");
+        // Strip markdown code fences first
+        let cleaned = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "").trim();
+        // Extract the JSON array even if Claude adds explanatory text before/after
+        const arrayStart = cleaned.indexOf("[");
+        const arrayEnd = cleaned.lastIndexOf("]");
+        if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
+          cleaned = cleaned.slice(arrayStart, arrayEnd + 1);
+        }
         chunkFindings = JSON.parse(cleaned);
-      } catch {
+        if (!Array.isArray(chunkFindings)) chunkFindings = [];
+      } catch (parseErr) {
+        logger.error({ err: parseErr, docId, chunkIndex, rawTextSnippet: rawText.slice(0, 300) }, "Failed to parse AI findings response");
         if (!isChunked) {
-          sendSse(res, { type: "error", message: "Failed to parse AI response" });
+          sendSse(res, { type: "error", message: "Failed to parse AI response. Please try again." });
           await db.update(documentsTable).set({ status: "error" }).where(eq(documentsTable.id, docId));
           res.end();
           return;
         }
+        // For chunked docs: skip the bad chunk and continue
+        chunkFindings = [];
       }
 
       allFindings.push(...chunkFindings);
@@ -416,6 +428,7 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
     sendSse(res, { type: "done" });
     res.end();
   } catch (err) {
+    logger.error({ err, docId, caseId }, "Document analysis failed");
     const msg = err instanceof Error ? err.message : "Unknown error";
     sendSse(res, { type: "error", message: msg });
     await db
