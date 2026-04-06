@@ -536,7 +536,7 @@ export default function CaseShow() {
                                 <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{live.message}</p>
                               )}
                             </div>
-                            <div className="flex flex-col items-end gap-2 ml-4 shrink-0">
+                            <div className="flex flex-col items-end gap-2 ml-4 shrink-0 pr-8">
                               {getStatusBadge(doc.id, doc.status)}
                               {(doc.status === "analyzed" || thisIsDone) && displayFindingCount != null && (
                                 <span className="text-xs font-medium bg-muted px-2 py-0.5 rounded-full">

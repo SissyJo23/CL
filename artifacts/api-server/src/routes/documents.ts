@@ -337,6 +337,7 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
             res.end();
             return;
           }
+          // For chunked docs: skip the bad chunk and continue
           chunkFindings = [];
         }
       }
