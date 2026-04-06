@@ -144,3 +144,29 @@
     @apply font-serif tracking-tight;
   }
 }
+
+@media print {
+  /* Hide chrome */
+  header, footer, .no-print { display: none !important; }
+
+  /* Page margins */
+  @page { margin: 0.75in; size: letter portrait; }
+
+  /* White background, black text */
+  body { background: white !important; color: black !important; }
+
+  /* Prevent cards and round blocks from splitting across pages */
+  .print-block { page-break-inside: avoid; break-inside: avoid; }
+
+  /* Collapse the two-column State/Defense grid to single column */
+  .print-single-col { grid-template-columns: 1fr !important; }
+
+  /* Remove shadows and borders for cleaner print */
+  * { box-shadow: none !important; }
+
+  /* Ensure links don't show URLs */
+  a::after { content: none !important; }
+
+  /* Force full width */
+  main, .container { max-width: 100% !important; width: 100% !important; }
+}

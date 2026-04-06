@@ -3,7 +3,7 @@ import { useGetCourtSession, getGetCourtSessionQueryKey, useGetCase, getGetCaseQ
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Gavel, Award, Scale, FileText } from "lucide-react";
+import { ArrowLeft, Gavel, Award, Scale, FileText, Printer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -47,20 +47,26 @@ export default function CourtShow() {
     <div className="min-h-[100dvh] flex flex-col bg-background">
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl space-y-8">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between no-print">
           <Link href={`/cases/${caseId}`} className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Case Workspace
           </Link>
           
-          {caseData?.hasMotion && (
-            <Link href={`/cases/${caseId}/motions`}>
-              <Button variant="outline" size="sm">
-                <FileText className="w-4 h-4 mr-2" />
-                View Generated Motion
-              </Button>
-            </Link>
-          )}
+          <div className="flex items-center gap-2">
+            {caseData?.hasMotion && (
+              <Link href={`/cases/${caseId}/motions`}>
+                <Button variant="outline" size="sm">
+                  <FileText className="w-4 h-4 mr-2" />
+                  View Generated Motion
+                </Button>
+              </Link>
+            )}
+            <Button variant="outline" size="sm" onClick={() => window.print()}>
+              <Printer className="w-4 h-4 mr-2" />
+              Print / Save PDF
+            </Button>
+          </div>
         </div>
 
         <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
@@ -103,7 +109,7 @@ export default function CourtShow() {
           
           <div className="space-y-8">
             {rounds.map((round) => (
-              <div key={round.id} className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+              <div key={round.id} className="print-block bg-card border border-border rounded-xl overflow-hidden shadow-sm">
                 <div className="bg-muted/50 p-4 border-b border-border flex items-center justify-between">
                   <div className="font-serif font-medium text-lg">Round {round.roundNumber}</div>
                   <div className="flex items-center gap-3">
@@ -125,7 +131,7 @@ export default function CourtShow() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 print-single-col gap-6">
                     <div className="bg-destructive/5 rounded-lg p-4 border border-destructive/10">
                       <h3 className="text-xs font-bold uppercase tracking-widest text-destructive mb-3">The State</h3>
                       <p className="text-sm text-foreground/80 leading-relaxed font-serif">

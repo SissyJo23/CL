@@ -1,12 +1,12 @@
 import { useParams, Link } from "wouter";
-import { useGetCase, getGetCaseQueryKey, useListDocuments, getListDocumentsQueryKey, useCreateDocument, useDeleteDocument, useGenerateCaseStrategy, useGetCaseStrategy, getGetCaseStrategyQueryKey } from "@workspace/api-client-react";
+import { useGetCase, getGetCaseQueryKey, useListDocuments, getListDocumentsQueryKey, useCreateDocument, useDeleteDocument, useListCourtSessions, getListCourtSessionsQueryKey, useGenerateCaseStrategy, useGetCaseStrategy, getGetCaseStrategyQueryKey } from "@workspace/api-client-react";
 import type { CreateDocumentBodyDocumentType } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2 } from "lucide-react";
+import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -28,6 +28,7 @@ export default function CaseShow() {
   const { data: currentCase, isLoading: caseLoading } = useGetCase(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseQueryKey(caseId) } });
   const { data: documents, isLoading: docsLoading } = useListDocuments(caseId, { query: { enabled: !!caseId, queryKey: getListDocumentsQueryKey(caseId) } });
   const { data: strategyData, isLoading: strategyLoading } = useGetCaseStrategy(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseStrategyQueryKey(caseId) } });
+  const { data: courtSessions } = useListCourtSessions(caseId, { query: { enabled: !!caseId, queryKey: getListCourtSessionsQueryKey(caseId) } });
 
   const createDocument = useCreateDocument();
   const deleteDocument = useDeleteDocument();
@@ -361,6 +362,40 @@ export default function CaseShow() {
                     </p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {courtSessions && courtSessions.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Gavel className="w-5 h-5 text-muted-foreground" />
+                  <h2 className="text-xl font-serif font-medium">Simulation History</h2>
+                </div>
+                <div className="grid gap-2">
+                  {courtSessions.map((s) => (
+                    <Link key={s.id} href={`/cases/${caseId}/court/${s.id}`}>
+                      <div className="group flex items-center p-4 bg-card border border-border rounded-xl hover:bg-accent transition-all cursor-pointer">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 shrink-0 ${s.defenseWon ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}>
+                          <Scale className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground truncate">{s.verdictRating ?? "Simulation"}</p>
+                          <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                            <Clock className="w-3 h-3" />
+                            <span>{format(new Date(s.createdAt), "MMM d, yyyy 'at' h:mm a")}</span>
+                            <span>•</span>
+                            <span className="capitalize">{s.simulationMode.replace("_", " ")}</span>
+                            <span>•</span>
+                            <span>{s.totalRounds} rounds</span>
+                          </div>
+                        </div>
+                        <div className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ml-3 ${s.defenseWon ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}>
+                          {s.defenseWon ? "Defense Win" : "State Win"}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
 
