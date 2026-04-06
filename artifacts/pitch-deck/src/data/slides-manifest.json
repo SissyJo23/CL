@@ -1,0 +1,66 @@
+[
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567801",
+    "position": 1,
+    "filepath": "src/pages/slides/Slide1Title.tsx",
+    "title": "CaseLight",
+    "description": "Hero title slide with courtroom image and tagline",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567802",
+    "position": 2,
+    "filepath": "src/pages/slides/Slide2Problem.tsx",
+    "title": "The Problem",
+    "description": "1 in 3 post-conviction motions dismissed on procedural grounds",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567803",
+    "position": 3,
+    "filepath": "src/pages/slides/Slide3HowItWorks.tsx",
+    "title": "How It Works",
+    "description": "Three-step flow: Upload, Analyze, Simulate",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567804",
+    "position": 4,
+    "filepath": "src/pages/slides/Slide4FindingClassifier.tsx",
+    "title": "The Finding Classifier",
+    "description": "Line-by-line audit across 24 legal categories",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567805",
+    "position": 5,
+    "filepath": "src/pages/slides/Slide5CumulativeError.tsx",
+    "title": "Cumulative Error + Strategic Roadmap",
+    "description": "Cumulative Error Brief and Prioritized Strategic Roadmap",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567806",
+    "position": 6,
+    "filepath": "src/pages/slides/Slide6CourtSimulator.tsx",
+    "title": "The Court Simulator",
+    "description": "4+ adversarial rounds, skeptical judge, multiple motion modes",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567807",
+    "position": 7,
+    "filepath": "src/pages/slides/Slide7Integrity.tsx",
+    "title": "The Integrity Pitch",
+    "description": "Full-bleed dark quote slide on precision, not a win button",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567808",
+    "position": 8,
+    "filepath": "src/pages/slides/Slide8Closing.tsx",
+    "title": "Closing",
+    "description": "CaseLight wordmark, live URL, call to action",
+    "speakerNotes": ""
+  }
+]
