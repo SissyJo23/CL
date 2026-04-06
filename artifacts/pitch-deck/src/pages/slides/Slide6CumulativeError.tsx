@@ -1,4 +1,4 @@
-export default function Slide5CumulativeError() {
+export default function Slide6CumulativeError() {
   return (
     <div className="relative w-screen h-screen overflow-hidden" style={{ background: "#0D1524" }}>
       <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, #0D1524 0%, #1A2336 50%, #0D1524 100%)" }} />

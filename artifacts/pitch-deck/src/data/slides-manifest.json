@@ -12,7 +12,7 @@
     "position": 2,
     "filepath": "src/pages/slides/Slide2Problem.tsx",
     "title": "The Problem",
-    "description": "1 in 3 post-conviction motions dismissed on procedural grounds",
+    "description": "Most post-conviction motions dismissed on procedural grounds before merits heard",
     "speakerNotes": ""
   },
   {
@@ -24,41 +24,49 @@
     "speakerNotes": ""
   },
   {
-    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567804",
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567809",
     "position": 4,
-    "filepath": "src/pages/slides/Slide4FindingClassifier.tsx",
+    "filepath": "src/pages/slides/Slide4BeforeAfter.tsx",
+    "title": "Before / After",
+    "description": "Source document transcript input versus categorized, cited, weighted findings output",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567804",
+    "position": 5,
+    "filepath": "src/pages/slides/Slide5FindingClassifier.tsx",
     "title": "The Finding Classifier",
     "description": "Line-by-line audit across 24 legal categories",
     "speakerNotes": ""
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567805",
-    "position": 5,
-    "filepath": "src/pages/slides/Slide5CumulativeError.tsx",
+    "position": 6,
+    "filepath": "src/pages/slides/Slide6CumulativeError.tsx",
     "title": "Cumulative Error + Strategic Roadmap",
     "description": "Cumulative Error Brief and Prioritized Strategic Roadmap",
     "speakerNotes": ""
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567806",
-    "position": 6,
-    "filepath": "src/pages/slides/Slide6CourtSimulator.tsx",
+    "position": 7,
+    "filepath": "src/pages/slides/Slide7CourtSimulator.tsx",
     "title": "The Court Simulator",
-    "description": "4+ adversarial rounds, skeptical judge, multiple motion modes",
+    "description": "4+ adversarial rounds, skeptical judge, multiple motion modes, proof-of-concept results",
     "speakerNotes": ""
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567807",
-    "position": 7,
-    "filepath": "src/pages/slides/Slide7Integrity.tsx",
+    "position": 8,
+    "filepath": "src/pages/slides/Slide8Integrity.tsx",
     "title": "The Integrity Pitch",
-    "description": "Full-bleed dark quote slide on precision, not a win button",
+    "description": "Full-bleed dark quote slide on precision, not a win button, supported by State Win result",
     "speakerNotes": ""
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567808",
-    "position": 8,
-    "filepath": "src/pages/slides/Slide8Closing.tsx",
+    "position": 9,
+    "filepath": "src/pages/slides/Slide9Closing.tsx",
     "title": "Closing",
     "description": "CaseLight wordmark, live URL, call to action",
     "speakerNotes": ""

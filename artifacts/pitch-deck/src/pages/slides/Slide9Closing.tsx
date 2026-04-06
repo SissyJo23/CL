@@ -1,4 +1,4 @@
-export default function Slide8Closing() {
+export default function Slide9Closing() {
   return (
     <div className="relative w-screen h-screen overflow-hidden" style={{ background: "linear-gradient(160deg, #1A2336 0%, #0D1524 100%)" }}>
       <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 60%, rgba(201,168,76,0.07) 0%, transparent 65%)" }} />

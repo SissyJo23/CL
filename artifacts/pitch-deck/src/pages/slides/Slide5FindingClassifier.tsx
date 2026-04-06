@@ -1,4 +1,4 @@
-export default function Slide4FindingClassifier() {
+export default function Slide5FindingClassifier() {
   return (
     <div className="relative w-screen h-screen overflow-hidden" style={{ background: "linear-gradient(160deg, #1A2336 0%, #0D1524 100%)" }}>
       <div className="absolute top-0 left-0 w-full h-[0.3vh] bg-accent opacity-20" />

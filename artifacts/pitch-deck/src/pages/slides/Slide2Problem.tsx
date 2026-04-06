@@ -28,14 +28,11 @@ export default function Slide2Problem() {
 
         <div className="flex flex-col justify-center items-center ml-auto w-[40vw]">
           <div className="border border-accent border-opacity-30 p-[3vw]" style={{ background: "rgba(201,168,76,0.04)" }}>
-            <p className="font-display font-black text-accent leading-none tracking-tighter" style={{ fontSize: "11vw" }}>
-              1 in 3
+            <p className="font-body font-medium text-primary leading-snug" style={{ fontSize: "1.7vw" }}>
+              Most post-conviction motions are denied before the merits are ever heard —
             </p>
-            <p className="font-body font-medium text-primary mt-[2vh] leading-snug" style={{ fontSize: "1.7vw" }}>
-              post-conviction motions dismissed on procedural grounds
-            </p>
-            <p className="font-body font-light text-muted mt-[1.5vh]" style={{ fontSize: "1.5vw" }}>
-              before the merits are ever heard
+            <p className="font-body font-light text-muted mt-[2vh] leading-relaxed" style={{ fontSize: "1.6vw" }}>
+              dismissed on procedural grounds that a thorough pre-filing review would have caught.
             </p>
           </div>
         </div>
