@@ -572,7 +572,12 @@ export default function CaseShow() {
                     </Button>
                   </Link>
                 </div>
-              ) : (
+              ) : pathwayResult?.status === "error" ? (
+                <div className="p-6 flex items-center gap-3 text-sm text-muted-foreground">
+                  <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
+                  <span>Could not load federal readiness data. <Link href={`/cases/${caseId}/relief`}><span className="text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">Try the full pathway page →</span></Link></span>
+                </div>
+              ) : pathwayResult?.status === "ok" ? (
                 <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                   {/* Block 1: Exhaustion Ladder */}
                   <div className="space-y-2 md:col-span-2">
