@@ -22,7 +22,7 @@ const putBodySchema = z.object({
 
 const router = Router({ mergeParams: true });
 
-type SupportedState = "WI" | "IL" | "MN";
+type SupportedState = "WI" | "IL" | "MN" | "IN" | "IA";
 
 type LadderRung = {
   step: number;
@@ -210,6 +210,118 @@ const STATE_DATA: Record<SupportedState, StateData> = {
     executivePromptInstructions: "Include two Minnesota executive options: (a) Governor's Pardon and Pardon Extraordinary via the Minnesota Board of Pardons (Governor + AG + Chief Justice), (b) Sentence Commutation via the Board of Pardons (unanimous vote required). Describe each accurately for Minnesota.",
     administrativePromptInstructions: "Include three Minnesota administrative options: (a) Supervised Release (parole equivalent) from MN DOC, (b) Challenge Incarceration Program (CIP boot camp), (c) Work Release / Transitional Release. Describe each accurately for Minnesota.",
   },
+
+  IN: {
+    name: "Indiana",
+    circuit: "7th Circuit",
+    ladder: [
+      { step: 1, court: "IN Trial Court", description: "Trial court — post-conviction petition under Indiana Post-Conviction Rule 1 (P-C.R. 1), or motion to correct erroneous sentence" },
+      { step: 2, court: "IN Court of Appeals", description: "Intermediate appellate court — direct appeal or appeal from post-conviction denial" },
+      { step: 3, court: "IN Supreme Court", description: "Discretionary transfer — petition to transfer (P-T.R.)" },
+      { step: 4, court: "U.S. District Court (N.D. or S.D. Ind.)", description: "Federal habeas under 28 U.S.C. § 2254 — requires full exhaustion of Indiana state remedies" },
+      { step: 5, court: "7th Circuit Court of Appeals", description: "Federal appellate review — requires certificate of appealability (COA)" },
+      { step: 6, court: "U.S. Supreme Court", description: "Certiorari — discretionary; only for federal constitutional questions" },
+    ],
+    executiveOptions: [
+      {
+        option: "Governor's Pardon",
+        body: "Indiana Governor / Indiana Parole Board",
+        description: "An Indiana pardon forgives the offense and may restore civil rights. The Indiana Parole Board investigates pardon applications and forwards a recommendation to the Governor. The Governor has sole authority to grant or deny. A pardon does not automatically expunge the conviction record but supports subsequent expungement petitions under Indiana's Second Chance Law.",
+        eligibilityNote: "No mandatory waiting period; typically sought post-release; Board considers rehabilitation, offense circumstances, and community impact.",
+      },
+      {
+        option: "Sentence Commutation",
+        body: "Indiana Governor / Indiana Parole Board",
+        description: "Commutation reduces an active sentence without removing the underlying conviction. The Indiana Parole Board reviews commutation petitions and forwards a recommendation to the Governor. Applications must demonstrate extraordinary rehabilitation, terminal illness, or compelling manifest-injustice circumstances.",
+        eligibilityNote: "May be sought while incarcerated; Governor has broad discretion; Parole Board recommendation is advisory only.",
+      },
+      {
+        option: "Expungement under Indiana Second Chance Law",
+        body: "Indiana Trial Court",
+        description: "Indiana's Second Chance Law (Ind. Code § 35-38-9) allows eligible individuals to petition the trial court to expunge certain arrest records, convictions, and related records. Felony D/Level 6 convictions may be expunged after 8 years; higher-level felonies require 10 years. A pardon may shorten the waiting period and support the petition.",
+        eligibilityNote: "Not available for certain violent felonies, sex offenses, or offenses with victim injury; waiting periods and eligibility vary by offense level.",
+      },
+    ],
+    administrativeOptions: [
+      {
+        option: "Credit Time / Educational Credit",
+        body: "Indiana Department of Correction",
+        description: "Indiana awards credit time that reduces a sentence based on the offense class and conduct. Educational credit time is available for earning a GED, high school diploma, or postsecondary degree while incarcerated. Credit time accrual rates depend on the credit class assigned by IDOC and can significantly shorten the time served.",
+        eligibilityNote: "Excludes certain violent and sex offenders from enhanced credit time; credit class determined at sentencing and may be reduced for disciplinary violations.",
+      },
+      {
+        option: "Parole / Supervised Release",
+        body: "Indiana Parole Board",
+        description: "The Indiana Parole Board has authority to grant discretionary parole for offenders serving sentences imposed before July 1, 1977, and for certain categories of offenders under newer statutes. Most post-1977 offenders serve a fixed term and are released to a period of mandatory supervised release (MSR), monitored by IDOC parole officers.",
+        eligibilityNote: "Discretionary parole is limited to pre-1977 sentences or specific statutory categories; MSR applies automatically upon release for most current offenders.",
+      },
+      {
+        option: "Work Release / Community Transition Program",
+        body: "Indiana Department of Correction",
+        description: "Indiana's Community Transition Program (CTP) allows eligible offenders to transition to community supervision 365 days before their release date, residing in a community corrections facility or on home detention with electronic monitoring. The program emphasizes employment, family reintegration, and reduced recidivism.",
+        eligibilityNote: "Excludes sex offenders, certain violent felons, and those with escape or detainer holds; IDOC determines eligibility based on risk assessment and institutional conduct.",
+      },
+    ],
+    ladderPromptInstructions: "Assess each of the 6 Indiana ladder steps (IN Trial Court → IN Court of Appeals → IN Supreme Court → U.S. District Court (N.D. or S.D. Ind.) → 7th Circuit → SCOTUS). Indiana post-conviction petitions are governed by Post-Conviction Rule 1 (P-C.R. 1). Mark steps Completed if prior proceedings are evident in the record. Mark the next available step Available. Pending steps cannot yet be reached. Blocked steps have procedural bars.",
+    executivePromptInstructions: "Include three Indiana executive options: (a) Governor's Pardon via the Indiana Parole Board, (b) Sentence Commutation via the Indiana Parole Board and Governor, (c) Expungement under Indiana's Second Chance Law (Ind. Code § 35-38-9). Describe each accurately for Indiana.",
+    administrativePromptInstructions: "Include three Indiana administrative options: (a) Credit Time and Educational Credit from IDOC, (b) Parole / Mandatory Supervised Release via the Indiana Parole Board, (c) Work Release / Community Transition Program (CTP). Describe each accurately for Indiana.",
+  },
+
+  IA: {
+    name: "Iowa",
+    circuit: "8th Circuit",
+    ladder: [
+      { step: 1, court: "IA District Court", description: "Trial court — application for post-conviction relief under Iowa Code § 822.2 (Iowa Post-Conviction Relief Act)" },
+      { step: 2, court: "IA Court of Appeals", description: "Intermediate appellate court — direct appeal or appeal from post-conviction denial; assignment by Iowa Supreme Court" },
+      { step: 3, court: "IA Supreme Court", description: "Discretionary review — application for further review" },
+      { step: 4, court: "U.S. District Court (N.D. or S.D. Iowa)", description: "Federal habeas under 28 U.S.C. § 2254 — requires full exhaustion of Iowa state remedies" },
+      { step: 5, court: "8th Circuit Court of Appeals", description: "Federal appellate review — requires certificate of appealability (COA)" },
+      { step: 6, court: "U.S. Supreme Court", description: "Certiorari — discretionary; only for federal constitutional questions" },
+    ],
+    executiveOptions: [
+      {
+        option: "Governor's Pardon / Clemency",
+        body: "Iowa Governor / Iowa Board of Parole",
+        description: "The Iowa Governor has sole authority to grant pardons, commutations, reprieves, and remissions of fines and forfeitures. The Iowa Board of Parole investigates clemency applications and forwards a recommendation. A pardon forgives the offense and restores certain civil rights including the right to vote, which is automatically restored upon completion of sentence in Iowa.",
+        eligibilityNote: "No mandatory waiting period post-discharge; Board considers rehabilitation, offense circumstances, and victim impact; Governor retains full discretion.",
+      },
+      {
+        option: "Sentence Commutation",
+        body: "Iowa Governor / Iowa Board of Parole",
+        description: "Commutation reduces an active sentence without removing the conviction. The Iowa Board of Parole reviews commutation petitions and submits a recommendation to the Governor. Applications must demonstrate extraordinary rehabilitation, terminal illness, or manifest injustice. Commutation of a life sentence to a term of years makes the individual eligible for parole consideration.",
+        eligibilityNote: "May be sought while incarcerated; Governor has broad discretion; Board recommendation is advisory; life sentences require specific finding of changed circumstances.",
+      },
+      {
+        option: "Felony Conviction Set-Aside / Expungement",
+        body: "Iowa District Court",
+        description: "Iowa allows expungement of certain criminal records, particularly for dismissed charges, deferred judgments, and some misdemeanor convictions. Iowa Code § 901C.2 permits expungement of felony convictions under limited circumstances. A set-aside under Iowa Code § 907.9 may be available for probationers who successfully complete supervision, removing some collateral consequences.",
+        eligibilityNote: "Felony expungement is narrowly available; deferred judgment set-aside requires successful completion of probation; sex offenses and violent felonies are generally excluded.",
+      },
+    ],
+    administrativeOptions: [
+      {
+        option: "Parole",
+        body: "Iowa Board of Parole",
+        description: "The Iowa Board of Parole reviews eligible incarcerated individuals and may grant parole based on rehabilitation, risk assessment, release plan, and victim impact. Parole hearings are conducted in person or by video. The Board sets supervision conditions and may revoke parole for violations. Iowa uses a risk-needs-responsivity model for parole decisions.",
+        eligibilityNote: "Certain violent offenders must serve a mandatory minimum before parole eligibility; sex offenders face additional registration and supervision requirements upon release.",
+      },
+      {
+        option: "Work Release / Residential Facility",
+        body: "Iowa Department of Corrections",
+        description: "Iowa DOC may transfer eligible offenders to residential correctional facilities (RCFs) or work release centers for the final portion of their sentence. Residents may leave the facility for employment, education, or treatment while residing under supervision. Successful participation supports parole consideration and community reintegration.",
+        eligibilityNote: "Excludes certain violent and sex offenders; DOC risk assessment and facility bed availability determine eligibility; institutional conduct record is reviewed.",
+      },
+      {
+        option: "Earned Time / Good Time Credit",
+        body: "Iowa Department of Corrections",
+        description: "Iowa awards earned time credits that reduce an offender's sentence based on participation in programming, education, and positive institutional conduct. Credits are tracked by the IDOC and applied toward the parole eligibility date. Disciplinary violations may result in forfeiture of earned credits.",
+        eligibilityNote: "Most offenders are eligible for earned time; rates and caps vary by offense; certain mandatory-minimum sentences limit the effect of earned time credits.",
+      },
+    ],
+    ladderPromptInstructions: "Assess each of the 6 Iowa ladder steps (IA District Court → IA Court of Appeals → IA Supreme Court → U.S. District Court (N.D. or S.D. Iowa) → 8th Circuit Court of Appeals → SCOTUS). Iowa post-conviction relief is governed by Iowa Code § 822 (Post-Conviction Relief Act). Mark steps Completed if prior proceedings are evident in the record. Mark the next available step Available. Pending steps cannot yet be reached. Blocked steps have procedural bars.",
+    executivePromptInstructions: "Include three Iowa executive options: (a) Governor's Pardon via the Iowa Board of Parole, (b) Sentence Commutation via the Iowa Board of Parole and Governor, (c) Felony set-aside or expungement under Iowa Code § 901C.2 / § 907.9. Describe each accurately for Iowa.",
+    administrativePromptInstructions: "Include three Iowa administrative options: (a) Parole from the Iowa Board of Parole, (b) Work Release / Residential Correctional Facility placement, (c) Earned Time / Good Time credit from Iowa DOC. Describe each accurately for Iowa.",
+  },
 };
 
 const SUPPORTED_STATES = Object.keys(STATE_DATA) as SupportedState[];
@@ -242,6 +354,23 @@ function detectJurisdiction(jurisdiction: string | null): SupportedState | null 
     lower.includes("(mn)") ||
     lower.includes("minneapolis") || lower.includes("st. paul") || lower.includes("saint paul")
   ) return "MN";
+
+  if (
+    lower.includes("indiana") ||
+    lower === "in" || lower === "ind" || lower === "ind." ||
+    lower.startsWith("ind ") || lower.startsWith("ind.") ||
+    lower.includes(", in") || lower.includes(" in,") ||
+    lower.includes("(in)") || lower.includes("(ind)") ||
+    lower.includes("indianapolis")
+  ) return "IN";
+
+  if (
+    lower.includes("iowa") ||
+    lower === "ia" ||
+    lower.startsWith("ia ") || lower.includes(", ia") || lower.includes(" ia,") ||
+    lower.includes("(ia)") ||
+    lower.includes("des moines")
+  ) return "IA";
 
   return null;
 }
