@@ -58,7 +58,7 @@ export default function CaseList() {
 
         {/* State filter pills — only shown when 2+ distinct states are present */}
         {!isLoading && showFilterBar && (
-          <div className="flex flex-wrap items-center gap-2 mb-5">
+          <div className="flex items-center gap-2 mb-5 overflow-x-auto pb-0.5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {filterOptions.map((opt) => {
               const count = stateCounts[opt] ?? 0;
               const isActive = activeFilter === opt;
@@ -66,7 +66,7 @@ export default function CaseList() {
                 <button
                   key={opt}
                   onClick={() => setActiveFilter(opt)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                  className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                     isActive
                       ? "bg-foreground text-background border-foreground"
                       : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-foreground"
