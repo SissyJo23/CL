@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useUserMode, type UserMode } from "@/contexts/UserModeContext";
 import { MODE_LABELS } from "@/lib/modeContent";
+import { parseJurisdictionBadge } from "@/lib/jurisdictionBadge";
 
 const MODE_ICONS: Record<UserMode, React.ReactNode> = {
   inmate: <User className="w-3 h-3" />,
@@ -115,55 +116,6 @@ type PathwayResult =
 function truncateSentences(text: string, n: number): string {
   const sentences = text.match(/[^.!?]+[.!?]+/g) ?? [text];
   return sentences.slice(0, n).join(" ").trim();
-}
-
-// NOTE: Detection patterns mirror detectJurisdiction() in
-// artifacts/api-server/src/routes/relief.ts and list.tsx — keep in sync.
-type JurisdictionBadge = { displayText: string; circuit: string | null };
-
-function parseJurisdictionBadge(jurisdiction: string | null | undefined): JurisdictionBadge | null {
-  if (!jurisdiction) return null;
-  const lower = jurisdiction.toLowerCase().trim();
-
-  let stateName: string | null = null;
-  let circuit: string | null = null;
-
-  if (
-    lower.includes("wisconsin") ||
-    lower === "wi" || lower === "wis" || lower === "wis." ||
-    lower.startsWith("wi ") || lower.startsWith("wis ") || lower.startsWith("wis.") ||
-    lower.includes(", wi") || lower.includes(" wi,") ||
-    lower.includes("(wi)") || lower.includes("(wis)")
-  ) { stateName = "Wisconsin"; circuit = "7th Circuit"; }
-  else if (
-    lower.includes("illinois") ||
-    lower === "il" || lower === "ill" || lower === "ill." ||
-    lower.startsWith("il ") || lower.startsWith("ill ") ||
-    lower.includes(", il") || lower.includes(" il,") ||
-    lower.includes("(il)") || lower.includes("(ill)") ||
-    lower.includes("cook county") || lower.includes("chicago")
-  ) { stateName = "Illinois"; circuit = "7th Circuit"; }
-  else if (
-    lower.includes("minnesota") ||
-    lower === "mn" ||
-    lower.startsWith("mn ") || lower.includes(", mn") || lower.includes(" mn,") ||
-    lower.includes("(mn)") ||
-    lower.includes("minneapolis") || lower.includes("st. paul") || lower.includes("saint paul")
-  ) { stateName = "Minnesota"; circuit = "8th Circuit"; }
-
-  if (stateName) {
-    const firstPart = jurisdiction.split(",")[0].trim();
-    const cleanLocation = firstPart
-      .replace(/\s+(circuit court|district court|superior court|municipal court|county court|court)\s*$/i, "")
-      .trim();
-    return { displayText: `${cleanLocation} · ${stateName}`, circuit };
-  }
-
-  const looksReal =
-    jurisdiction.includes(",") ||
-    /county|court|district|circuit|judicial|parish|borough/i.test(jurisdiction);
-  if (!looksReal) return null;
-  return { displayText: jurisdiction, circuit: null };
 }
 
 type LiveStatus = {
