@@ -39,8 +39,8 @@ export default function CaseList() {
     }
   }, [activeFilter, stateCounts]);
 
-  // Show filter bar as soon as at least one case is loaded
-  const showFilterBar = !isLoading && (cases ?? []).length > 0;
+  // Show filter bar only when cases span 2+ distinct states
+  const showFilterBar = !isLoading && filterOptions.length > 2;
 
   // Apply filter
   const filteredCases = (cases ?? []).filter((c) => {
@@ -66,7 +66,7 @@ export default function CaseList() {
         </div>
 
         {/* State filter pills — only shown when 2+ distinct states are present */}
-        {!isLoading && showFilterBar && (
+        {showFilterBar && (
           <div className="flex flex-nowrap md:flex-wrap items-center gap-2 mb-5 overflow-x-auto md:overflow-visible pb-0.5 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {filterOptions.map((opt) => {
               const count = stateCounts[opt] ?? 0;
