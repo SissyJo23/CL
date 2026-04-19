@@ -10,13 +10,13 @@ import { Plus, FolderOpen, CheckCircle2, Scale, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { detectStateName, parseJurisdictionBadge } from "@/lib/jurisdictionBadge";
 
-type FilterState = "All" | "Wisconsin" | "Illinois" | "Minnesota" | "Other";
+type FilterState = "All" | "Wisconsin" | "Illinois" | "Indiana" | "Minnesota" | "Iowa" | "Michigan" | "Ohio" | "Other";
 
 export default function CaseList() {
   const { data: cases, isLoading } = useListCases();
   const [activeFilter, setActiveFilter] = useState<FilterState>("All");
 
-  // Compute per-state counts (all 5 categories always present)
+  // Compute per-state counts (all 9 categories always present)
   const stateCounts = (cases ?? []).reduce<Record<FilterState, number>>(
     (acc, c) => {
       const s = detectStateName(c.jurisdiction);
@@ -24,11 +24,11 @@ export default function CaseList() {
       acc["All"] = (acc["All"] ?? 0) + 1;
       return acc;
     },
-    { All: 0, Wisconsin: 0, Illinois: 0, Minnesota: 0, Other: 0 },
+    { All: 0, Wisconsin: 0, Illinois: 0, Indiana: 0, Minnesota: 0, Iowa: 0, Michigan: 0, Ohio: 0, Other: 0 },
   );
 
   // Fixed pill set — always the same order, counts may be 0
-  const filterOptions: FilterState[] = ["All", "Wisconsin", "Illinois", "Minnesota", "Other"];
+  const filterOptions: FilterState[] = ["All", "Wisconsin", "Illinois", "Indiana", "Minnesota", "Iowa", "Michigan", "Ohio", "Other"];
 
   // Show filter bar as soon as at least one case is loaded
   const showFilterBar = !isLoading && (cases ?? []).length > 0;
