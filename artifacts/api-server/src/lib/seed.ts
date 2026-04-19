@@ -1956,3 +1956,755 @@ export async function seedOhioDemoCase(): Promise<void> {
     logger.error({ err }, "Failed to seed Ohio demo case");
   }
 }
+// ─────────────────────────────────────────────────────────────────
+// INDIANA DEMO CASE
+// ─────────────────────────────────────────────────────────────────
+
+const IN_DEMO_CASE_NUMBER = "DEMO-IN-2020F000391";
+
+const IN_DEMO_TRANSCRIPT = `STATE OF INDIANA
+MARION COUNTY SUPERIOR COURT
+CRIMINAL DIVISION 6
+
+STATE OF INDIANA,
+    Plaintiff,
+
+    vs.                                             Case No. 49D06-2001-F1-000391
+
+TERRELL DAMON MITCHELL,
+    Defendant.
+
+TRANSCRIPT OF JURY TRIAL — DAY 2
+Honorable Sandra L. Pemberton, Presiding
+September 8, 2020
+
+Appearances:
+    For the State: Deputy Prosecutor Kevin Atchison
+    For the Defense: Attorney Marlene Houck
+    Court Reporter: Barbara Delacroix
+
+---
+
+THE COURT: We are back on the record in State versus Terrell Mitchell. All parties present. Mr. Atchison, you may proceed.
+
+MR. ATCHISON: Thank you, Your Honor. The State calls Detective Luis Fuentes.
+
+DIRECT EXAMINATION BY MR. ATCHISON:
+
+Page 18, Line 1
+Q: Detective Fuentes, you were the lead investigator in this case?
+A: Yes, sir. I'm assigned to the IMPD Violent Crimes Unit.
+
+Q: Can you describe your contact with the defendant on January 14, 2020?
+A: We brought Mr. Mitchell in for questioning at around 2 a.m. after responding to the shooting at 3402 North College Avenue. He had been identified by a bystander.
+
+Q: Did you advise him of his rights?
+A: I did. I read him the Miranda card at the start of the interview.
+
+Q: Did he waive those rights?
+A: Initially, yes. He signed the form and we started talking.
+
+Page 18, Line 22
+Q: At some point did the defendant say something about an attorney?
+A: About forty minutes in he said something like, "I think I need a lawyer before I say more." I told him he could have one if he wanted but asked if he wanted to keep talking since he was helping himself. He shrugged and kept talking.
+
+Q: And he did continue to talk?
+A: For another twenty-two minutes, yes. He gave us his account of where he was.
+
+Page 19, Line 8
+Q: What did he tell you about his whereabouts on the night of January 13th?
+A: He said he was at his cousin's place on East 38th Street. But he couldn't give us the cousin's full name or contact info right away.
+
+Q: Did you follow up on that alibi?
+A: We made one attempt to contact an individual at the address he described, but no one answered. We didn't pursue it further because the eyewitness identification was solid.
+
+Page 19, Line 24
+Q: What was the nature of that eyewitness identification?
+A: A Marcus Delray witnessed the shooting from approximately thirty feet away under a parking lot light. He identified Terrell Mitchell in a photo array the next morning with high confidence. He picked him out immediately.
+
+Page 20, Line 6
+Q: No further questions.
+
+THE COURT: Cross, Ms. Houck?
+
+Page 20, Line 9
+CROSS-EXAMINATION BY MS. HOUCK:
+
+Q: Detective, when Mr. Mitchell said he thought he needed a lawyer, what were your exact words back to him?
+A: I told him he could have one, but I also said he was helping himself by talking and asked if he wanted to continue.
+
+Q: You told a man who just invoked the right to counsel that he was "helping himself" by continuing to speak?
+A: I informed him of his options.
+
+Q: Did you stop the interview at that point?
+A: He indicated he wanted to keep talking.
+
+Page 20, Line 22
+Q: You testified that you made one attempt to verify his alibi at East 38th Street and stopped when no one answered?
+A: Correct.
+
+Q: Did you attempt to contact his cousin — a LaShonda Mitchell — on any subsequent day?
+A: I don't have a record of that.
+
+Q: Did anyone in your unit follow up on the alibi in the weeks before trial?
+A: The investigation was essentially complete at the time of arrest given the eyewitness identification.
+
+Page 21, Line 10
+Q: Detective, isn't it true that LaShonda Mitchell filed a statement with the Marion County Public Defender's office six weeks before this trial stating that Terrell Mitchell was at her apartment the entire night of January 13th?
+A: I became aware of that filing, yes.
+
+Q: And you took no action to re-evaluate the eyewitness identification in light of that corroborated alibi?
+A: The State had already made its charging decision.
+
+Page 21, Line 28
+MS. HOUCK: No further questions.
+
+THE COURT: Redirect?
+
+MR. ATCHISON: Briefly.
+
+REDIRECT BY MR. ATCHISON:
+
+Page 22, Line 3
+Q: Detective, Marcus Delray identified Mr. Mitchell under good lighting conditions at close range, correct?
+A: He did.
+
+Q: And Mr. Mitchell's account of his whereabouts was vague and uncorroborated at the time of arrest?
+A: He couldn't name or locate his cousin initially.
+
+THE COURT: Witness excused. Call your next witness, Mr. Atchison.
+
+MR. ATCHISON: The State calls Marcus Delray.
+
+Page 23, Line 1
+DIRECT EXAMINATION BY MR. ATCHISON:
+
+Q: Mr. Delray, where were you on the night of January 13, 2020?
+A: I was in the parking lot of the Marathon station on North College. I was getting gas.
+
+Q: Did you see the shooting?
+A: Yes. I heard an argument first and then two shots. I was maybe thirty feet away under the light pole.
+
+Q: Did you see the shooter?
+A: I saw his face when he turned after the shots. Clear as day. He looked right at me.
+
+Q: Did you identify that person later?
+A: Yes, I picked him out of a photo array the next day. It was him — the defendant.
+
+Page 23, Line 22
+Q: No further questions.
+
+CROSS-EXAMINATION BY MS. HOUCK:
+
+Q: Mr. Delray, how long did you see the shooter's face?
+A: Maybe two, three seconds.
+
+Q: And this was at 1:30 in the morning?
+A: The parking lot light was on.
+
+Q: Were you ever told by anyone before the photo array that police had a suspect?
+A: I don't — the officer said something about it being routine.
+
+Page 24, Line 7
+Q: Did the officer administer the photo array, or was it someone else?
+A: The same detective who interviewed me. Detective Fuentes.
+
+Q: The lead detective on the case administered the photo array to the only eyewitness?
+A: I guess, yes.
+
+MS. HOUCK: Nothing further.
+
+[JURY VERDICT: GUILTY — September 9, 2020 — Attempted Murder (Level 1 Felony)]
+
+THE COURT: Verdict accepted. Sentencing set for November 12, 2020. Mr. Mitchell is remanded to custody.
+
+[END OF TRANSCRIPT]
+Certified by: Barbara Delacroix, Official Court Reporter
+`;
+
+const IN_DEMO_FINDINGS = [
+  {
+    issueTitle: "Miranda Violation — Continued Interrogation After Ambiguous Invocation of Right to Counsel",
+    transcriptExcerpt: "He said something like, 'I think I need a lawyer before I say more.' I told him he could have one if he wanted but asked if he wanted to keep talking since he was helping himself.",
+    legalAnalysis: "Mitchell stated 'I think I need a lawyer before I say more' — a statement that, under Davis v. United States, 512 U.S. 452 (1994), falls squarely into the zone requiring at minimum a clarifying question before interrogation continues. Rather than stop or clarify, Detective Fuentes explicitly encouraged continued questioning by telling Mitchell he was 'helping himself' by talking. The Seventh Circuit has consistently held that officers may not use persuasive tactics to overcome or undermine an invocation — even an ambiguous one — by framing continued cooperation as beneficial to the suspect. Under Edwards v. Arizona, 451 U.S. 477 (1981), once a suspect invokes the right to counsel, questioning must cease. Even accepting Davis's ambiguity rule, Fuentes had an obligation to clarify and stop; instead he applied coercive pressure. The twenty-two minutes of post-invocation statements, which included Mitchell's inability to provide his cousin's contact details immediately, were used to undermine his alibi at trial.",
+    pageNumber: 18,
+    lineNumber: 22,
+    precedentName: "Edwards v. Arizona",
+    precedentCitation: "451 U.S. 477 (1981)",
+    precedentType: "BINDING",
+    courtRuling: "Once a suspect requests counsel, interrogation must cease until counsel is present or the suspect reinitiates communication; police may not employ tactics designed to persuade a suspect to abandon the invocation.",
+    materialSimilarity: "Fuentes did not stop questioning after Mitchell's invocation — he actively encouraged continuation by suggesting Mitchell was helping himself. The post-invocation statements included the vague alibi account that the prosecution used to undermine credibility at trial. Suppression of those twenty-two minutes of testimony would have removed the prosecution's principal tool for attacking Mitchell's alibi claim.",
+    proceduralStatus: "Preserved",
+    anticipatedBlock: "State will argue Mitchell's statement was ambiguous under Davis v. United States and that Fuentes's response was a permissible clarifying question rather than continued interrogation. State will also argue that any error was harmless given the eyewitness identification by Delray.",
+    breakthroughArgument: "Fuentes did not ask a clarifying question — he affirmatively told Mitchell that talking was in his best interest and then continued the interview for twenty-two minutes. Under Missouri v. Seibert, 542 U.S. 600 (2004), two-step interrogation tactics that exploit ambiguity to continue questioning after a request for counsel are unconstitutional. The harmless-error argument fails because the alibi vagueness elicited in those twenty-two minutes was central to the prosecution's narrative at trial; without it, the alibi (subsequently confirmed by LaShonda Mitchell) stands unimpeached.",
+    legalVehicle: "Indiana Post-Conviction Rule 1 (P-C.R. 1) Petition",
+    survivability: "Strong",
+  },
+  {
+    issueTitle: "Ineffective Assistance of Counsel — Failure to Investigate and Present LaShonda Mitchell's Alibi Testimony",
+    transcriptExcerpt: "LaShonda Mitchell filed a statement with the Marion County Public Defender's office six weeks before this trial stating that Terrell Mitchell was at her apartment the entire night of January 13th. [...] The State had already made its charging decision.",
+    legalAnalysis: "Defense counsel Marlene Houck was in possession of a sworn alibi statement from LaShonda Mitchell — corroborating that the defendant was at her East 38th Street apartment the entire night of the shooting — six weeks before trial. Houck cross-examined Detective Fuentes about the statement but did not call LaShonda Mitchell as a defense witness and presented no alibi defense to the jury. Under Strickland v. Washington, 466 U.S. 668 (1984), the failure to call a known, available alibi witness whose testimony directly contradicts the prosecution's timeline is classic deficient performance. Indiana courts applying Strickland in P-C.R. 1 proceedings have consistently held that counsel's failure to present an alibi witness she was aware of — where no reasonable strategic justification exists — satisfies the deficiency prong. The prejudice prong is met because LaShonda Mitchell's testimony, combined with the identification problems in the Delray photo array, creates a reasonable probability of a different verdict.",
+    pageNumber: 21,
+    lineNumber: 10,
+    precedentName: "Strickland v. Washington",
+    precedentCitation: "466 U.S. 668 (1984)",
+    precedentType: "BINDING",
+    courtRuling: "Counsel's performance is deficient when it falls below an objective standard of reasonableness; prejudice is established where there is a reasonable probability that, but for counsel's deficient performance, the result of the proceeding would have been different.",
+    materialSimilarity: "Houck had the alibi statement six weeks before trial. She used it only to impeach Fuentes's investigation — she never produced the alibi witness herself. LaShonda Mitchell was available, willing, and directly exculpatory. The prosecution's case rested on a single eyewitness identification made after a non-blind array administered by the lead detective. A credible alibi from a family member at a fixed address would have created significant reasonable doubt.",
+    proceduralStatus: "Unclear",
+    anticipatedBlock: "State will argue the decision not to call LaShonda Mitchell was a strategic one — family member alibi witnesses can be perceived as biased and may hurt more than they help. State will also argue that the jury heard the alibi theory through Houck's cross of Fuentes, so the omission was not prejudicial.",
+    breakthroughArgument: "A post-conviction affidavit from LaShonda Mitchell confirming her availability and willingness to testify eliminates the strategic-choice defense. Cross-examining a detective about an alibi is not a substitute for the alibi witness — the jury never heard LaShonda Mitchell's firsthand account under oath. Under Indiana's P-C.R. 1, an affidavit from the uncalled witness is the standard vehicle for establishing IAC prejudice and Houck's failure to investigate beyond the written statement (e.g., locking in testimony before trial) independently constitutes deficiency.",
+    legalVehicle: "Indiana Post-Conviction Rule 1 (P-C.R. 1) Petition",
+    survivability: "Strong",
+  },
+  {
+    issueTitle: "Fourth Amendment — Non-Blind Photo Array: Lead Detective Administered Identification Procedure",
+    transcriptExcerpt: "The same detective who interviewed me. Detective Fuentes. [...] The lead detective on the case administered the photo array to the only eyewitness.",
+    legalAnalysis: "Marcus Delray's identification of Terrell Mitchell was the cornerstone of the prosecution's case. The photo array was administered by Detective Fuentes — the lead detective who had already identified Mitchell as the suspect and who conducted the arrest. Courts following Perry v. New Hampshire, 565 U.S. 228 (2012), and the due process reliability framework recognize that non-blind administrator bias is one of the most documented causes of eyewitness misidentification. In a non-blind procedure, the detective knows which photograph depicts the suspect and can — even unconsciously — cue the witness through tone, pause, or body language. Fuentes also made a comment to Delray that the array was 'routine,' which courts have found suggestive. While Indiana does not yet have a mandatory blind-administration statute equivalent to Minnesota's, the Seventh Circuit has recognized that due process reliability hearings are required where the totality of circumstances surrounding identification renders it unreliable. Delray's viewing conditions — 2 a.m., thirty feet, two to three seconds — compounded by the non-blind, non-independent array creates a substantial due process claim.",
+    pageNumber: 24,
+    lineNumber: 7,
+    precedentName: "Perry v. New Hampshire",
+    precedentCitation: "565 U.S. 228 (2012)",
+    precedentType: "BINDING",
+    courtRuling: "The Due Process Clause requires courts to assess eyewitness identification reliability when police arranged the suggestive circumstances; courts must evaluate the totality of the circumstances including viewing conditions, administrator independence, and suggestive comments.",
+    materialSimilarity: "The only witness who placed Mitchell at the scene gave a three-second identification in poor viewing conditions, through an array administered by the very detective who had already concluded Mitchell was the perpetrator. The combination of administrator knowledge, suggestive framing ('routine'), and poor observation conditions meets the threshold for a reliability challenge that trial counsel failed to pursue with an expert or a suppression motion.",
+    proceduralStatus: "Unclear",
+    anticipatedBlock: "State will argue Perry limits due process review to cases of police-arranged suggestiveness, and that Fuentes's administration — while non-blind — was not affirmatively suggestive. State will also argue that Delray's immediate pick was spontaneous and confidence high, satisfying the Manson v. Brathwaite reliability factors.",
+    breakthroughArgument: "Fuentes's comment that the procedure was 'routine' is an affirmative suggestive act under the post-Perry framework — it minimizes the gravity of the decision, reducing the witness's deliberative scrutiny. Counsel's failure to move to suppress or retain a eyewitness identification expert constitutes IAC under Strickland because the non-blind administrator issue is settled social science and well within the scope of competent criminal defense in a Level 1 felony case. Post-conviction expert testimony on eyewitness reliability, combined with the alibi, creates cumulative grounds for relief under P-C.R. 1.",
+    legalVehicle: "Indiana Post-Conviction Rule 1 (P-C.R. 1) Petition",
+    survivability: "Moderate",
+  },
+  {
+    issueTitle: "Ineffective Assistance — Failure to Move to Suppress Post-Invocation Statements",
+    transcriptExcerpt: "He said something like, 'I think I need a lawyer before I say more.' I told him he could have one if he wanted but asked if he wanted to keep talking since he was helping himself. He shrugged and kept talking. For another twenty-two minutes.",
+    legalAnalysis: "The trial record establishes on its face that Detective Fuentes continued interrogating Mitchell for twenty-two minutes after Mitchell stated he thought he needed a lawyer. Counsel Houck filed no motion to suppress the post-invocation statements before trial, did not raise the issue at trial, and did not preserve it for direct appeal. Under Strickland, the failure to move to suppress evidence where the suppression claim is apparent from the record and has a likelihood of success constitutes deficient performance. Indiana courts in P-C.R. 1 proceedings have held that an attorney who reviews the interrogation record and fails to identify an obvious Edwards violation renders constitutionally deficient assistance. The prejudice is clear: Fuentes's testimony about Mitchell's vague and uncertain alibi account — drawn entirely from the post-invocation twenty-two minutes — was the primary basis for the prosecution's attack on Mitchell's credibility before the jury.",
+    pageNumber: 20,
+    lineNumber: 22,
+    precedentName: "Missouri v. Seibert",
+    precedentCitation: "542 U.S. 600 (2004)",
+    precedentType: "BINDING",
+    courtRuling: "Two-step interrogation techniques designed to undermine Miranda protections, including tactics that exploit an ambiguous invocation to continue questioning, violate the Fifth Amendment; statements obtained by such methods must be suppressed.",
+    materialSimilarity: "The post-invocation period is precisely when Mitchell's inability to immediately name or locate his cousin was elicited. That portion of Fuentes's testimony was the prosecution's single most effective tool for attacking the alibi at trial. Had counsel filed a suppression motion, the State would have had to defend Fuentes's conduct — and likely would have failed under Edwards and Seibert.",
+    proceduralStatus: "Defaulted",
+    anticipatedBlock: "The State will argue procedural default — the suppression issue was not raised before or during trial and is therefore waived for P-C.R. 1 review. Under Daniels v. State (Indiana), failure to raise a suppression issue before trial constitutes waiver absent cause and prejudice.",
+    breakthroughArgument: "Cause for the procedural default is ineffective assistance of trial counsel — Houck's failure to identify and litigate the obvious Edwards issue is itself the P-C.R. 1 ground. Under Murray v. Carrier, 477 U.S. 478 (1986), IAC constitutes cause to overcome procedural default. The IAC claim on the suppression failure and the IAC claim on the alibi witness combine as a cumulative prejudice argument: both deficiencies flow from the same pattern of inadequate investigation, and their combined effect destroyed the defense.",
+    legalVehicle: "Indiana Post-Conviction Rule 1 (P-C.R. 1) Petition",
+    survivability: "Moderate",
+  },
+];
+
+const IN_DEMO_ROUNDS = [
+  {
+    roundNumber: 1,
+    stateStrength: "MODERATE",
+    defenseBurden: "Defense must establish that the post-invocation interrogation violated Edwards v. Arizona and that counsel's failure to move to suppress it fell below the Strickland standard of reasonableness.",
+    stateArgument: "Your Honor, the State addresses the Miranda/Edwards claim at threshold. Under Davis v. United States, 512 U.S. 452 (1994), an ambiguous request for counsel does not trigger the Edwards bright-line rule — officers may ask clarifying questions before ceasing interrogation. Mitchell's statement — 'I think I need a lawyer before I say more' — is precisely the kind of ambiguous statement Davis addresses. Detective Fuentes asked whether Mitchell wanted to continue, and Mitchell made the choice to keep talking. That is permissible clarification, not coercive continuation.\n\nOn the IAC claim: Houck's decision not to file a suppression motion reflects a strategic judgment. A suppression hearing risked drawing additional attention to the post-invocation statements, which Mitchell largely used to explain (however vaguely) his whereabouts. There was a plausible argument that those statements, taken as a whole, assisted Mitchell more than hurt him. Under Strickland's strong deference to strategic choices, this Court should not second-guess that judgment.\n\nFinally, any error was harmless. The eyewitness identification of Marcus Delray — made in adequate lighting at thirty feet, with high stated confidence — independently supports the verdict.",
+    courtCommentary: "Counsel, I have some significant questions about the Davis clarifying-question doctrine as applied here. Fuentes's response was not a clarifying question — it was an affirmative encouragement to keep talking. He told Mitchell he was 'helping himself.' That is not 'do you want an attorney or not?' — that is a persuasion tactic. Under the Seventh Circuit's reading of Missouri v. Seibert, there is a meaningful distinction between clarification and inducement.\n\nOn harmless error: I'm troubled by the framing. The post-invocation twenty-two minutes produced the vague alibi account that the State used extensively to undermine Mitchell's credibility. If those statements are suppressed, the alibi picture looks materially different — especially given the LaShonda Mitchell statement Defense has flagged.\n\nI want to hear from the State specifically: what is the trial record evidence of prejudice from the eyewitness ID alone, independent of the post-invocation statements?",
+    defenseResponse: "Your Honor, Fuentes's conduct goes beyond clarification. He told a man who said he needed a lawyer that he was helping himself by continuing to talk — and then interrogated him for twenty-two more minutes. That is textbook Seibert: a tactic designed to neutralize an invocation by reframing cooperation as self-beneficial. The Seventh Circuit in United States v. Lee, 413 F.3d 622 (7th Cir. 2005), recognized that officers may not use strategic encouragement to continue interrogation after an invocation.\n\nOn harmless error: the post-invocation twenty-two minutes are where Mitchell's inability to immediately produce his cousin's name and address was established. That testimony was used explicitly at closing argument to attack his alibi as fabricated. LaShonda Mitchell's statement — which Fuentes never followed up on after the initial unanswered knock — directly corroborates the alibi. Without the post-invocation vagueness, the prosecution's alibi attack collapses.\n\nOn the IAC/suppression-motion issue: the suppression claim was apparent on the face of the interrogation video. A Level 1 felony defense attorney reviewing that video and failing to file an Edwards motion is not making a strategy call — she is making an oversight. We ask the Court to find that both the underlying constitutional violation and the IAC claim are well-founded on this record.",
+  },
+  {
+    roundNumber: 2,
+    stateStrength: "WEAK",
+    defenseBurden: "Defense must establish that the failure to call LaShonda Mitchell as an alibi witness satisfies both prongs of Strickland: deficient performance and a reasonable probability of a different verdict.",
+    stateArgument: "Your Honor, the State turns to the alibi witness IAC claim. The decision whether to call a particular witness is quintessentially strategic. LaShonda Mitchell is Mitchell's cousin — a family member with every incentive to provide a false alibi. Juries are well aware of the potential bias of family member alibi witnesses. Defense counsel Houck made a reasonable strategic decision to highlight the alibi through cross-examination of Detective Fuentes — effectively blaming the police for not investigating the alibi — rather than risk the jury discounting or disbelieving LaShonda Mitchell's testimony on bias grounds.\n\nFurthermore, on prejudice: Marcus Delray's identification was confident and immediate. He saw the shooter face-to-face under a parking lot light at thirty feet. Even crediting LaShonda Mitchell's testimony, the jury would have had to weigh a family member's account against a disinterested eyewitness's high-confidence identification. There is no reasonable probability the verdict would have differed.",
+    courtCommentary: "I find the State's strategic-choice argument unpersuasive on this record. The cross-examination of a detective is not a substitute for the alibi witness. Jurors cannot weigh what they do not hear — they heard a police officer acknowledge that someone claimed Mitchell was elsewhere; they did not hear that person testify under oath and be subjected to cross-examination. A corroborated alibi from a witness who can speak to Mitchell's presence throughout the night is categorically different from an impeachment point on cross.\n\nOn prejudice: the eyewitness identification was made through a non-blind array administered by the lead detective at 2 a.m. after a two-to-three-second observation. I do not share the State's confidence in its strength. If the alibi had been before the jury and the identification's methodological problems had been surfaced through expert testimony, the calculus changes substantially.\n\nDefense, I want you to address one specific question: does the record establish that LaShonda Mitchell was available and willing to testify at the time of trial — not just that she filed a statement with the public defender's office?",
+    defenseResponse: "Your Honor, LaShonda Mitchell filed her sworn statement with the public defender's office six weeks before trial. The statement identifies her by name, address, and relationship. Post-conviction counsel has obtained an affidavit from LaShonda Mitchell confirming she was available, willing, and never contacted by trial counsel about testifying. Houck did not reach out to LaShonda Mitchell before trial — she relied on the written statement without ever speaking to the witness or assessing her as a trial witness.\n\nUnder Indiana's P-C.R. 1 framework and Strickland, the failure to interview a known alibi witness before deciding not to call her is independently deficient. The strategic-choice defense requires that counsel actually made an informed choice — here, Houck made no choice because she never evaluated the witness. She used the statement as an impeachment prop without investigating its potential as live testimony.\n\nOn prejudice: the combination of the alibi testimony, the identification methodology issues, and the suppressed post-invocation statements creates a record where no reasonable juror could feel the confidence this verdict required. We respectfully urge this Court to grant relief.",
+  },
+  {
+    roundNumber: 3,
+    stateStrength: "WEAK",
+    defenseBurden: "Defense must establish cumulative prejudice from the combined IAC failures and the Miranda violation, demonstrating a reasonable probability of a different verdict under Strickland's prejudice standard.",
+    stateArgument: "Your Honor, even accepting some deficiency in counsel's performance, the State submits that cumulative prejudice analysis cannot transform individually insufficient claims into a winning one. This Court must find a reasonable probability of a different verdict — not merely that things could have gone differently. Marcus Delray's identification was confident. The jury deliberated and convicted. The alibi, even presented through LaShonda Mitchell's testimony, involves a family member with obvious motive to lie. The State asks this Court to affirm the conviction.",
+    courtCommentary: "I have heard three rounds of argument in this proceeding, and my assessment is as follows: the State's position grows less tenable with each round. The Miranda violation is supported by the record. The alibi-witness IAC is supported by the uncontested fact that trial counsel never interviewed LaShonda Mitchell before deciding not to call her. The photo array methodology issue, while perhaps not independently sufficient, adds force to the cumulative prejudice analysis.\n\nThis Court is not permitted under Strickland to dismiss a claim simply because a jury convicted. The question is whether confidence in the verdict is undermined by the constitutional failures. Here, I find that it is. The prosecution's case rested on a single eyewitness identification made through a non-blind array, bolstered by post-invocation statements obtained after an apparent Edwards violation. The alibi was never presented to the jury. These are not peripheral errors — they are structural failures that affected the core of the trial.\n\nI am prepared to grant relief. I invite final statements from each party.",
+    defenseResponse: "Your Honor, we thank the Court for its careful review of this record. Terrell Mitchell has maintained his innocence since the night of his arrest. The constitutional violations here are not technical — they are the kind of failures that produced the most troubling category of wrongful conviction: a case where the defendant had a corroborated alibi that the jury never heard, where the sole identification was obtained through a procedure known to produce unreliable results, and where statements made after an invocation of the right to counsel were used to undermine the alibi the defendant did try to present.\n\nWe ask this Court to vacate the conviction and remand for a new trial. At a retrial with LaShonda Mitchell's testimony, with the post-invocation statements suppressed, and with proper attention to the photo array methodology, we are confident that the evidence of Terrell Mitchell's innocence will be fully presented to a jury for the first time.",
+  },
+];
+
+const IN_DEMO_VERDICT_SUMMARY = `After three rounds of argument in this Indiana Post-Conviction Rule 1 proceeding, this Court finds that the conviction of Terrell Damon Mitchell cannot stand.
+
+The Miranda/Edwards violation is well-established on this record. Detective Fuentes did not ask a clarifying question after Mitchell stated he needed a lawyer — he told Mitchell that continued cooperation would help him and then interrogated him for twenty-two additional minutes. That conduct falls outside the Davis clarification exception and within the coercive interrogation pattern condemned by Missouri v. Seibert. The statements obtained during those twenty-two minutes — specifically Mitchell's inability to immediately produce his cousin's name and contact information — were used by the prosecution at trial to portray the alibi as fabricated. Trial counsel's failure to move to suppress these statements was not a strategic choice; it was an oversight that constitutes deficient performance under Strickland.
+
+The alibi witness IAC finding is equally clear. LaShonda Mitchell filed a sworn statement with the public defender's office six weeks before trial. Trial counsel never interviewed her, never assessed her as a trial witness, and presented no alibi defense. The decision not to call a known, available, corroborating alibi witness — made without any investigation of that witness — cannot be characterized as strategy. It is deficiency, and the prejudice is manifest: the jury convicted on a single non-blind eyewitness identification without hearing a word from the one person who could place the defendant elsewhere at the time of the crime.
+
+The cumulative effect of these failures — post-invocation interrogation used to undermine the alibi, and the alibi witness never called — destroyed the defense. This Court has no confidence in the verdict.
+
+RULING: The conviction of Terrell Damon Mitchell is VACATED. The matter is remanded for a new trial. The State is ordered to show cause within 30 days why the post-invocation statements should not be suppressed in any retrial. DEFENSE WIN.`;
+
+async function seedInCourtSimulation(tx: Parameters<Parameters<typeof db.transaction>[0]>[0], caseId: number, docId: number): Promise<void> {
+  const [session] = await tx.insert(courtSessionsTable).values({
+    caseId,
+    simulationMode: "postconviction_974",
+    skepticMode: true,
+    expandedRecord: false,
+    pleaQuestionnaireNotes: null,
+    documentIds: JSON.stringify([docId]),
+    status: "completed",
+    verdictRating: "DEFENSE WIN",
+    verdictSummary: IN_DEMO_VERDICT_SUMMARY,
+    defenseWon: true,
+    totalRounds: IN_DEMO_ROUNDS.length,
+  }).returning();
+  for (const r of IN_DEMO_ROUNDS) {
+    await tx.insert(courtRoundsTable).values({
+      sessionId: session.id,
+      roundNumber: r.roundNumber,
+      stateStrength: r.stateStrength,
+      defenseBurden: r.defenseBurden,
+      stateArgument: r.stateArgument,
+      courtCommentary: r.courtCommentary,
+      defenseResponse: r.defenseResponse,
+    });
+  }
+}
+
+export async function seedIndianaDemoCase(): Promise<void> {
+  try {
+    const existing = await db
+      .select({ id: casesTable.id })
+      .from(casesTable)
+      .where(eq(casesTable.caseNumber, IN_DEMO_CASE_NUMBER))
+      .limit(1);
+
+    if (existing.length > 0) {
+      const caseId = existing[0].id;
+      const demoDoc = await db
+        .select({ id: documentsTable.id, status: documentsTable.status, findingCount: documentsTable.findingCount })
+        .from(documentsTable)
+        .where(eq(documentsTable.caseId, caseId))
+        .limit(1)
+        .then((rows) => rows[0] ?? null);
+
+      const needsRestore = !demoDoc || demoDoc.status === "error" || demoDoc.status === "pending" || (demoDoc.findingCount ?? 0) === 0;
+      if (!needsRestore) {
+        const existingSession = await db
+          .select({ id: courtSessionsTable.id })
+          .from(courtSessionsTable)
+          .where(eq(courtSessionsTable.caseId, caseId))
+          .limit(1)
+          .then((rows) => rows[0] ?? null);
+        if (!existingSession) {
+          logger.info({ caseId }, "Indiana demo case missing court simulation — seeding session...");
+          await db.transaction(async (tx) => {
+            await seedInCourtSimulation(tx, caseId, demoDoc!.id);
+          });
+          logger.info({ caseId }, "Indiana demo court simulation seeded");
+        } else {
+          logger.info({ caseId }, "Indiana demo case already exists and is healthy — skipping seed");
+        }
+        return;
+      }
+
+      logger.info({ caseId }, "Indiana demo case is corrupted — restoring...");
+      await db.transaction(async (tx) => {
+        let docId: number;
+        if (!demoDoc) {
+          const [newDoc] = await tx.insert(documentsTable).values({ caseId, title: "Jury Trial Transcript — Day 2, September 8, 2020", documentType: "transcript", content: IN_DEMO_TRANSCRIPT, status: "analyzed" }).returning();
+          docId = newDoc.id;
+        } else {
+          docId = demoDoc.id;
+          await tx.delete(findingsTable).where(eq(findingsTable.documentId, docId));
+        }
+        for (const f of IN_DEMO_FINDINGS) {
+          await tx.insert(findingsTable).values({ caseId, documentId: docId, issueTitle: f.issueTitle, transcriptExcerpt: f.transcriptExcerpt, legalAnalysis: f.legalAnalysis, pageNumber: f.pageNumber, lineNumber: f.lineNumber, precedentName: f.precedentName, precedentCitation: f.precedentCitation, precedentType: f.precedentType, courtRuling: f.courtRuling, materialSimilarity: f.materialSimilarity, proceduralStatus: f.proceduralStatus, anticipatedBlock: f.anticipatedBlock, breakthroughArgument: f.breakthroughArgument, legalVehicle: f.legalVehicle, survivability: f.survivability });
+        }
+        await tx.update(documentsTable).set({ status: "analyzed", findingCount: IN_DEMO_FINDINGS.length }).where(eq(documentsTable.id, docId));
+        await tx.update(casesTable).set({ hasAnalysis: true }).where(eq(casesTable.id, caseId));
+        await tx.delete(courtSessionsTable).where(eq(courtSessionsTable.caseId, caseId));
+        await seedInCourtSimulation(tx, caseId, docId);
+      });
+      logger.info({ caseId }, "Indiana demo case restored");
+      return;
+    }
+
+    logger.info("Seeding Indiana demo case...");
+    await db.transaction(async (tx) => {
+      const [inCase] = await tx.insert(casesTable).values({
+        title: "State v. Terrell Mitchell — IN DEMO",
+        defendantName: "Terrell Damon Mitchell",
+        caseNumber: IN_DEMO_CASE_NUMBER,
+        jurisdiction: "Marion County Superior Court, Criminal Division 6, State of Indiana",
+        notes: "DEMO CASE — Indiana post-conviction example showcasing the Indiana P-C.R. 1 relief pathway, 7th Circuit federal ladder, and Indiana-specific executive relief options including the Parole Board pardon process and Second Chance Law expungement.",
+        hasAnalysis: true,
+        hasMotion: false,
+      }).returning();
+
+      const [inDoc] = await tx.insert(documentsTable).values({
+        caseId: inCase.id,
+        title: "Jury Trial Transcript — Day 2, September 8, 2020",
+        documentType: "transcript",
+        content: IN_DEMO_TRANSCRIPT,
+        status: "analyzed",
+      }).returning();
+
+      for (const f of IN_DEMO_FINDINGS) {
+        await tx.insert(findingsTable).values({ caseId: inCase.id, documentId: inDoc.id, issueTitle: f.issueTitle, transcriptExcerpt: f.transcriptExcerpt, legalAnalysis: f.legalAnalysis, pageNumber: f.pageNumber, lineNumber: f.lineNumber, precedentName: f.precedentName, precedentCitation: f.precedentCitation, precedentType: f.precedentType, courtRuling: f.courtRuling, materialSimilarity: f.materialSimilarity, proceduralStatus: f.proceduralStatus, anticipatedBlock: f.anticipatedBlock, breakthroughArgument: f.breakthroughArgument, legalVehicle: f.legalVehicle, survivability: f.survivability });
+      }
+
+      await tx.update(documentsTable).set({ findingCount: IN_DEMO_FINDINGS.length }).where(eq(documentsTable.id, inDoc.id));
+      await seedInCourtSimulation(tx, inCase.id, inDoc.id);
+      logger.info({ caseId: inCase.id }, "Indiana demo case seeded successfully");
+    });
+  } catch (err) {
+    logger.error({ err }, "Failed to seed Indiana demo case");
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// IOWA DEMO CASE
+// ─────────────────────────────────────────────────────────────────
+
+const IA_DEMO_CASE_NUMBER = "DEMO-IA-2019FECR001847";
+
+const IA_DEMO_TRANSCRIPT = `STATE OF IOWA
+IOWA DISTRICT COURT FOR POLK COUNTY
+
+STATE OF IOWA,
+    Plaintiff,
+
+    vs.                                             Case No. FECR319847
+
+DENISE RENÉE CARVER,
+    Defendant.
+
+TRANSCRIPT OF JURY TRIAL — DAY 3
+Honorable Thomas R. Callahan, Presiding
+November 19, 2019
+
+Appearances:
+    For the State: Assistant County Attorney Patricia Morrow
+    For the Defense: Attorney Gregory Stahl
+    Court Reporter: Anne-Marie Wieczorek
+
+---
+
+THE COURT: We're back on the record. Ms. Morrow, call your next witness.
+
+MS. MORROW: The State calls Agent Dale Whitmore.
+
+DIRECT EXAMINATION BY MS. MORROW:
+
+Page 31, Line 1
+Q: Agent Whitmore, you were the case agent for the Iowa Division of Narcotics Enforcement in this investigation?
+A: Yes, I supervised the confidential informant operation targeting the defendant.
+
+Q: Can you describe the operation?
+A: We deployed Confidential Informant 44 — CI-44 — to make a series of controlled buys from the defendant beginning in August 2019. CI-44 made three successful purchases of methamphetamine, each recorded and documented.
+
+Q: What happened after the controlled buys?
+A: We executed a search warrant on the defendant's residence at 4721 Southeast 14th Street on October 9, 2019. We recovered 312 grams of methamphetamine, a digital scale, and $8,400 in cash.
+
+Page 31, Line 22
+Q: Did CI-44 testify in this case?
+A: CI-44 is not testifying in exchange for the work performed — that was the agreement. The recordings speak for themselves.
+
+Q: Were there any concerns about CI-44's reliability?
+A: None that affected our investigation. CI-44 had been used in two prior cases with successful prosecutions.
+
+Page 32, Line 9
+Q: No further questions.
+
+CROSS-EXAMINATION BY MR. STAHL:
+
+Q: Agent Whitmore, is CI-44's identity known to defense counsel?
+A: That information was protected under Iowa Code § 80.13 as law enforcement sensitive.
+
+Q: So the defense has never been told who made these recorded purchases?
+A: The recordings were disclosed. The informant's identity was protected.
+
+Page 32, Line 22
+Q: Did CI-44 provide any written statement about the transactions?
+A: CI-44 provided post-buy debriefs to me.
+
+Q: Were those debrief reports produced to the defense?
+A: The relevant portions were summarized in my report.
+
+Q: The actual debrief reports — the documents CI-44 signed — were those produced?
+A: Those are law enforcement sensitive.
+
+Page 33, Line 8
+Q: Agent Whitmore, did CI-44 at any point express doubt about whether the person who made the sales was in fact Denise Carver?
+A: I — CI-44 expressed some uncertainty after the third buy, yes.
+
+Q: CI-44 expressed uncertainty about the seller's identity after the third buy?
+A: It was resolved internally.
+
+Q: "Resolved internally" — meaning what?
+A: I reviewed the recording and concluded the identification was sound.
+
+Page 33, Line 24
+Q: So CI-44 told you there was uncertainty about who made the sale and you resolved that uncertainty yourself?
+A: The recording corroborates the identification.
+
+Q: Was CI-44's uncertainty documented in the debrief report?
+A: I don't recall the exact wording.
+
+Q: Was the fact that CI-44 expressed post-transaction doubt about the seller's identity disclosed to defense counsel in any form?
+A: I don't believe that specific statement was separately disclosed.
+
+Page 34, Line 12
+MR. STAHL: Your Honor, at this time the defense requests an immediate production of the full CI-44 debrief reports, including any statements about identification uncertainty.
+
+MS. MORROW: Your Honor, those materials are protected under Iowa's informant privilege statute.
+
+THE COURT: I will review the documents in camera. We'll take a short recess.
+
+[RECESS]
+
+THE COURT: I have reviewed the CI-44 debrief materials in camera. I find that they are law enforcement sensitive and will not be produced to defense at this stage. However, Agent Whitmore's testimony about CI-44's uncertainty is now before the jury.
+
+Page 35, Line 1
+MR. STAHL: Your Honor, we renew our objection. The Brady obligation requires disclosure of all exculpatory information in the State's possession, including CI-44's uncertainty about whether Denise Carver was the seller.
+
+THE COURT: Your objection is noted and preserved.
+
+MR. STAHL: Defense has no further questions of this witness at this time.
+
+THE COURT: Any redirect?
+
+MS. MORROW: Briefly.
+
+REDIRECT BY MS. MORROW:
+
+Page 35, Line 12
+Q: Agent Whitmore, the recordings of the controlled buys — those were verified to be authentic?
+A: Yes. They were recorded on agency-issued equipment, handled by me, and the chain of custody is documented.
+
+Q: And after reviewing the recording following CI-44's uncertainty, you were satisfied the seller in the recording was the defendant?
+A: I was.
+
+THE COURT: Witness excused.
+
+[JURY VERDICT: GUILTY — November 20, 2019 — Delivery of a Controlled Substance (Methamphetamine) — Class B Felony]
+
+THE COURT: Verdict recorded. Sentencing scheduled for January 14, 2020. Defendant is remanded.
+
+[END OF TRANSCRIPT]
+Certified by: Anne-Marie Wieczorek, Official Court Reporter
+`;
+
+const IA_DEMO_FINDINGS = [
+  {
+    issueTitle: "Brady Violation — Suppression of CI-44's Post-Transaction Identification Doubt",
+    transcriptExcerpt: "CI-44 expressed some uncertainty after the third buy, yes. [...] I don't believe that specific statement was separately disclosed.",
+    legalAnalysis: "Agent Whitmore conceded on cross-examination that after the third controlled buy, CI-44 expressed uncertainty about whether the seller was in fact Denise Carver. This uncertainty — the informant's own post-transaction doubt about the identity of the person who made the drug sale — was never disclosed to defense counsel. Under Brady v. Maryland, 373 U.S. 83 (1963), the prosecution has a constitutional duty to disclose all evidence favorable to the accused that is material to guilt or punishment. CI-44's uncertainty is not merely impeachment material — it directly attacks the foundational identification underlying the entire prosecution. The State's case rested on three controlled buys attributed to Carver based on CI-44's identification. If CI-44 expressed doubt after the third buy, that doubt extends retroactively to all three transactions. Agent Whitmore's decision to 'resolve' the uncertainty internally by reviewing the recording and reaching his own conclusion is not a Brady substitute. The Brady obligation belongs to the prosecution and cannot be satisfied by the investigating agent conducting a self-review of disputed evidence.",
+    pageNumber: 33,
+    lineNumber: 8,
+    precedentName: "Brady v. Maryland",
+    precedentCitation: "373 U.S. 83 (1963)",
+    precedentType: "BINDING",
+    courtRuling: "The prosecution's suppression of evidence favorable to an accused violates due process where the evidence is material to guilt or punishment; the duty applies regardless of the good or bad faith of the prosecution.",
+    materialSimilarity: "The entirety of the State's case against Carver was built on CI-44's identification of her as the seller in three controlled buys. CI-44's own uncertainty about that identification — undisclosed to the defense — is the single most material piece of exculpatory evidence in the case. Defense counsel was denied the ability to cross-examine Agent Whitmore with the debrief language, seek an expert on recording identification, or investigate alternative identifications.",
+    proceduralStatus: "Preserved",
+    anticipatedBlock: "State will argue that Whitmore's testimony about the uncertainty was, in fact, disclosed during cross-examination and that no separate document needed to be produced. State will also argue that the recording independently identifies Carver and that the uncertainty claim is immaterial given the physical evidence from the search.",
+    breakthroughArgument: "Whitmore's in-court admission does not cure the Brady violation — the violation occurred before trial when defense received no disclosure of the uncertainty. Under United States v. Agurs, 427 U.S. 97 (1976), Brady suppression is measured at the time of trial preparation, not by what emerges through cross-examination at trial. Defense counsel who learns for the first time at trial that the State's key informant doubted the identification cannot adequately investigate, retain experts, or develop alternative theories. The Eighth Circuit in United States v. Spencer, 753 F.3d 746 (8th Cir. 2014), has affirmed that mid-trial disclosure of Brady material is constitutionally insufficient when it deprives the defense of meaningful investigative opportunity.",
+    legalVehicle: "Iowa Code § 822.2 Post-Conviction Relief Application",
+    survivability: "Strong",
+  },
+  {
+    issueTitle: "Sixth Amendment — Denial of Right to Confront Accuser: Informant Identity and Debrief Suppression",
+    transcriptExcerpt: "CI-44's identity was protected under Iowa Code § 80.13 as law enforcement sensitive. [...] The actual debrief reports — the documents CI-44 signed — those are law enforcement sensitive.",
+    legalAnalysis: "The Sixth Amendment's Confrontation Clause guarantees defendants the right to confront the witnesses against them. CI-44 was not a peripheral witness — CI-44 was the State's primary identification witness who allegedly purchased methamphetamine directly from Carver on three occasions. The recordings were the State's centerpiece evidence. Yet Carver was denied: (1) CI-44's identity, preventing any investigation into motive, history, or reliability; (2) the signed debrief reports, preventing confrontation with CI-44's documented uncertainty; and (3) the ability to cross-examine CI-44 directly. Under Roviaro v. United States, 353 U.S. 53 (1957), the government's informant privilege must yield when the informant is a percipient participant in the charged transaction — not merely a tipster. Here, CI-44 was the alleged buyer in each sale. That makes CI-44 a material witness whose identity and statements go to the heart of guilt. The Iowa Supreme Court in State v. Demaray recognized that Roviaro requires disclosure of an informant's identity when the informant participated in the charged conduct and the defendant's ability to prepare a defense is substantially impaired without that identity.",
+    pageNumber: 32,
+    lineNumber: 9,
+    precedentName: "Roviaro v. United States",
+    precedentCitation: "353 U.S. 53 (1957)",
+    precedentType: "BINDING",
+    courtRuling: "The government's privilege to withhold an informant's identity must yield where the informant was an active participant in the crime charged and disclosure is relevant and helpful to the defense or essential to a fair determination of the cause.",
+    materialSimilarity: "CI-44 was not a tipster — CI-44 allegedly participated in all three drug transactions as the buyer. Without CI-44's identity, Carver could not investigate whether CI-44 had a prior relationship with her, a history of false reporting, pending criminal charges that motivated cooperation, or bias against her. CI-44's identity is the predicate for any meaningful cross-examination, and its suppression throughout trial violated Roviaro and the Confrontation Clause.",
+    proceduralStatus: "Preserved",
+    anticipatedBlock: "State will argue that Iowa Code § 80.13 provides a statutory basis for informant identity protection, that the trial court conducted an in camera review and found the privilege applicable, and that the recordings provided adequate corroboration of guilt independent of any credibility issue with CI-44.",
+    breakthroughArgument: "Roviaro is a federal constitutional floor that state privilege statutes cannot override. The trial court's in camera review addressed confidentiality — it did not apply the Roviaro balancing test to determine whether the defense need for CI-44's identity outweighed the government's interest in protection. On these facts — three transactions, CI-44 as sole percipient witness, and CI-44's own post-transaction doubt — Roviaro compels disclosure. Post-conviction counsel should seek the debrief documents through a § 822.2 application with an explicit Roviaro demand, supported by a declaration that the identification is the sole disputed issue.",
+    legalVehicle: "Iowa Code § 822.2 Post-Conviction Relief Application",
+    survivability: "Strong",
+  },
+  {
+    issueTitle: "Ineffective Assistance of Counsel — Failure to Request Roviaro Hearing or Move to Dismiss for Brady Violation",
+    transcriptExcerpt: "Defense has no further questions of this witness at this time. [...] Your objection is noted and preserved.",
+    legalAnalysis: "Defense counsel Gregory Stahl preserved the Brady and disclosure objections on the record but took no additional remedial action. Stahl did not: (1) move for a mistrial based on the mid-trial Brady disclosure; (2) request a continuance to investigate CI-44's uncertainty; (3) seek a formal Roviaro hearing before trial commenced; or (4) retain an audio identification expert to challenge whether the recordings independently identified Carver. Under Strickland v. Washington, 466 U.S. 668 (1984), these omissions constitute deficient performance in a case where the entire identification rested on a confidential informant whose own uncertainty about the defendant's identity was never disclosed. A competent defense attorney in a narcotics delivery case where the State's entire case is built on an informant's controlled buys files a pre-trial Roviaro motion as a matter of course. The failure to do so here, combined with the failure to seek any remedy after Whitmore's mid-trial admission about CI-44's uncertainty, denied Carver any meaningful opportunity to challenge the identification.",
+    pageNumber: 34,
+    lineNumber: 12,
+    precedentName: "Strickland v. Washington",
+    precedentCitation: "466 U.S. 668 (1984)",
+    precedentType: "BINDING",
+    courtRuling: "Counsel renders ineffective assistance when performance falls below an objective standard of reasonableness and there is a reasonable probability that, but for the deficiency, the result of the proceeding would have been different.",
+    materialSimilarity: "Stahl had every predicate to request a Roviaro hearing before trial — he knew the case rested on an informant's controlled buys. He preserved the Brady objection at trial but requested no remedy. The failure to move for a mistrial or continuance after Whitmore admitted the undisclosed uncertainty left the jury with the tainted identification unremedied. In a case turning entirely on identification, these failures meet both Strickland prongs.",
+    proceduralStatus: "Unclear",
+    anticipatedBlock: "State will argue Stahl made reasonable strategic decisions — a Roviaro hearing might have been denied, and a mistrial motion is a high-risk tactic that could have backfired. State will also argue that the recording independently identifies Carver and that any Strickland error was not prejudicial given the physical evidence from the search.",
+    breakthroughArgument: "The physical evidence from the search — methamphetamine at the residence — does not independently connect Carver to the sales CI-44 allegedly witnessed. Possession charges require different proof than delivery charges. The jury convicted on delivery, which depended entirely on the CI-44 identifications. A pre-trial Roviaro motion had a substantial likelihood of success given that CI-44 was a participant, not a tipster. Post-conviction counsel should obtain Stahl's file to confirm whether a Roviaro motion was considered and why it was not filed.",
+    legalVehicle: "Iowa Code § 822.2 Post-Conviction Relief Application",
+    survivability: "Moderate",
+  },
+  {
+    issueTitle: "Fourth Amendment — Probable Cause Deficiency: Warrant Dependent on Unverified Informant Reliability After Expressed Doubt",
+    transcriptExcerpt: "CI-44 expressed some uncertainty after the third buy, yes. [...] I reviewed the recording and concluded the identification was sound. [...] None that affected our investigation.",
+    legalAnalysis: "The search warrant for 4721 Southeast 14th Street was issued on the basis of three controlled buys attributed to Denise Carver by CI-44. Agent Whitmore's testimony reveals that after the third buy — the final predicate for the warrant — CI-44 expressed uncertainty about whether the seller was in fact Carver. Whitmore resolved this uncertainty internally by reviewing the recording himself. The warrant affidavit almost certainly did not disclose CI-44's post-third-buy uncertainty. Under Illinois v. Gates, 462 U.S. 213 (1983), and Franks v. Delaware, 438 U.S. 154 (1978), a warrant affidavit that omits material information bearing on probable cause — or contains misleading statements — may be challenged in a Franks hearing. The omission of CI-44's uncertainty from the warrant affidavit, combined with Whitmore's unilateral 'resolution' of the reliability question, potentially renders the warrant facially deficient on the third-buy predicate. If the third buy is excised, the remaining probable cause may be insufficient to support the warrant.",
+    pageNumber: 33,
+    lineNumber: 24,
+    precedentName: "Franks v. Delaware",
+    precedentCitation: "438 U.S. 154 (1978)",
+    precedentType: "BINDING",
+    courtRuling: "A defendant has the right to challenge a warrant affidavit if it contains deliberately or recklessly false or misleading statements; if the false material is excised and the remaining content does not support probable cause, the warrant must be voided and the seized evidence suppressed.",
+    materialSimilarity: "Whitmore drafted the warrant affidavit after CI-44's uncertainty was expressed and after Whitmore 'resolved' it unilaterally. If the affidavit represented CI-44's reliability as unqualified, it omitted material information. The methamphetamine recovered from the search — the only physical evidence of possession — would be suppressed if the warrant falls. Without the search evidence, the delivery charge stands alone on the CI-44 identification.",
+    proceduralStatus: "Defaulted",
+    anticipatedBlock: "State will argue procedural default — the Franks issue was not raised in a pretrial suppression motion. State will also invoke the Leon good-faith exception: officers executing a warrant that appears facially valid are entitled to rely on it in good faith, and suppression is an inappropriate remedy.",
+    breakthroughArgument: "The Franks defaulted issue is raised through the IAC vehicle: trial counsel's failure to investigate the warrant affidavit's accuracy — and to request a Franks hearing after Whitmore admitted on the stand that CI-44's uncertainty was not disclosed — independently constitutes deficient performance. Leon good-faith does not apply when the affiant was aware of material reliability information that was omitted. Post-conviction counsel should obtain the full warrant affidavit and compare it against Whitmore's trial testimony to determine whether omission of the uncertainty was reckless.",
+    legalVehicle: "Iowa Code § 822.2 Post-Conviction Relief Application",
+    survivability: "Moderate",
+  },
+];
+
+const IA_DEMO_ROUNDS = [
+  {
+    roundNumber: 1,
+    stateStrength: "MODERATE",
+    defenseBurden: "Defense must establish that CI-44's post-transaction identification doubt constitutes Brady material, that it was suppressed, and that its suppression was material to the jury's guilty verdict on delivery charges.",
+    stateArgument: "Your Honor, the State begins with a threshold framing point: the Brady claim here is not a classic suppression — Agent Whitmore disclosed CI-44's uncertainty during cross-examination at trial. The defense received this information. Under United States v. Bagley, 473 U.S. 667 (1985), Brady materiality is assessed on the totality of evidence, and the jury heard through Whitmore that CI-44 had some uncertainty. Defense counsel used that testimony in closing argument. There was no suppression of the kind Brady addresses.\n\nOn the merits: the recordings of the three controlled buys were authenticated, admitted, and played for the jury. The jury could assess for themselves whether the person in the recordings was Denise Carver. CI-44's uncertainty — noted and resolved by Whitmore — does not change what the jury saw and heard in the recordings. The physical evidence from the search — 312 grams of methamphetamine in the defendant's residence — corroborates the delivery charges independent of CI-44's identification.\n\nThe State asks this Court to find that Brady materiality is not established and to deny relief.",
+    courtCommentary: "Counsel, I find the mid-trial disclosure argument unpersuasive. The Eighth Circuit has been clear that Brady violations are measured at the time of trial preparation, not by the moment disclosure finally occurs. Defense counsel who learns on cross-examination that the State's lead informant expressed post-transaction doubt about the identification cannot — in the minutes remaining before the jury resumes — adequately investigate, retain an expert, or develop alternative theories. The cure for Brady is meaningful pre-trial notice, not a mid-trial concession.\n\nOn the recordings: you ask me to accept that the jury could independently assess the identification from the recordings. But the recordings were authenticated and described by Whitmore — the same agent who unilaterally resolved CI-44's uncertainty. If CI-44's doubt was legitimate enough to record in a debrief, it was material enough for a jury to evaluate.\n\nI want the State to address one specific question: what was in the CI-44 debrief report concerning the third buy? The trial court reviewed it in camera but did not make detailed findings on what it said. Can the State represent to this Court what language the debrief actually used?",
+    defenseResponse: "Your Honor, post-conviction counsel has submitted a § 822.2 application with a specific request for production of the full CI-44 debrief reports. If those documents reflect — as Whitmore's testimony strongly suggests — that CI-44 used language like 'I'm not sure it was her' or 'the person looked different than before,' that is textbook Brady material. Agent Whitmore's answer at trial — that the uncertainty was 'resolved internally' by his review of the recording — is precisely the kind of unilateral State action that Brady forbids. The State cannot be its own Brady arbiter.\n\nOn the recordings: the State produced recordings of transactions involving an unidentified buyer and an unidentified seller. The only link to Denise Carver was CI-44's identification. Without CI-44's reliable identification, the recordings are three drug sales by unidentified individuals. That is why CI-44's uncertainty is material — it goes to the entire identification framework the prosecution used.\n\nWe respectfully request this Court to order production of the full debrief materials as a predicate to a complete Brady determination.",
+  },
+  {
+    roundNumber: 2,
+    stateStrength: "WEAK",
+    defenseBurden: "Defense must establish that the denial of CI-44's identity and the suppression of the full debrief reports violated Roviaro v. United States and the Confrontation Clause, causing constitutional prejudice.",
+    stateArgument: "Your Honor, the State addresses the Roviaro and Confrontation Clause claims. Iowa Code § 80.13 protects informant identities to encourage cooperation in narcotics investigations. The trial court conducted an in camera review and upheld the privilege. The State's interest in protecting CI-44 is substantial — disclosure of CI-44's identity in a methamphetamine distribution case creates significant safety risks.\n\nOn the Confrontation Clause: CI-44 did not testify. The Confrontation Clause applies to witnesses who bear testimony at trial; an informant whose recordings are introduced through the authenticating agent is not a testimonial witness under Crawford v. Washington. The recordings were what the jury saw — not CI-44's hearsay statements.\n\nThe State submits that Roviaro does not mandate disclosure here. The recordings provided the jury with the direct evidence; CI-44's identity was not necessary to evaluate that evidence.",
+    courtCommentary: "The Crawford argument misses the point the defense is raising. The Confrontation Clause issue is not about CI-44 testifying — it is about the defendant's ability to investigate and challenge the only person who identified her as the seller in the charged transactions. Roviaro explicitly addresses participant informants — it distinguishes between informants who merely tip off police and informants who participate in the charged conduct. CI-44 is the latter.\n\nI have significant concerns about whether the trial court's in camera review applied the Roviaro balancing test or merely assessed the Iowa statutory privilege. Those are different analyses. An in camera review that applies only state privilege law without asking whether the constitutional floor of Roviaro is satisfied is legally insufficient.\n\nThe debrief materials have now been produced to this Court under the § 822.2 order. I have reviewed them. CI-44's debrief following the third buy states — and I am reading directly — 'I am not certain the woman today was the same woman as the first two times. She seemed shorter.' This is not vague uncertainty. This is a specific identification doubt. The State's brief to this Court did not disclose that language. Counsel, I am giving the State an opportunity to address this directly.",
+    defenseResponse: "Your Honor, the debrief language this Court has just read confirms everything the defense has argued. CI-44 — the State's sole identification witness — told Agent Whitmore after the third buy that she was not certain the woman was the same person as in the first two transactions. That is Brady material of the highest order. It directly attacks the reliability of the identification across all three charged deliveries, because if the third-buy seller may have been different, the question extends to whether the first and second were Denise Carver either.\n\nThe State did not disclose this language. The trial court's in camera review protected it. Defense counsel never saw it. The jury convicted on an identification the informant herself doubted, and that doubt was never put before them.\n\nWe respectfully submit this is the paradigm case for § 822.2 relief. The Brady violation is not technical — it is the suppression of the single fact that could have changed the verdict: the informant's own uncertainty about whether Denise Carver was the seller.",
+  },
+  {
+    roundNumber: 3,
+    stateStrength: "VERY WEAK",
+    defenseBurden: "Defense must establish that the cumulative Brady and Roviaro violations, combined with the IAC failures, created prejudice sufficient to undermine confidence in the jury's verdict under the Iowa § 822.2 standard.",
+    stateArgument: "Your Honor, the State acknowledges that the debrief language — now before this Court — is significant. The State does not dispute that Agent Whitmore characterized CI-44's statement as mere 'uncertainty' when the debrief used more specific language. The State submits that this Court should consider, however, that the jury convicted on the totality of the evidence: three controlled buys recorded on agency equipment, 312 grams of methamphetamine in the defendant's residence, and $8,400 in cash. The physical evidence corroborates the deliveries even if the identification is challenged. The State asks this Court to find no prejudice given the strength of the corroborating evidence.",
+    courtCommentary: "I have heard this case over three rounds. The debrief language changes the legal analysis fundamentally. CI-44's statement that she was 'not certain the woman today was the same woman as the first two times' is not the 'some uncertainty' Agent Whitmore described at trial — it is a specific, documented doubt that a different person may have made the third sale. That language was in the State's possession throughout trial. It was not disclosed. The jury never had it.\n\nOn the corroboration argument: methamphetamine in a residence proves possession. The delivery charges required the jury to find that Denise Carver personally made three sales. CI-44's identification was the only evidence linking Carver to those sales as the seller. If CI-44 doubted that Carver was the seller on the third occasion, the jury was entitled to weigh that doubt — and they never got the chance.\n\nThis Court is prepared to rule. The Brady violation is established by the debrief language. The Roviaro violation is established by the trial court's failure to apply the federal constitutional balancing test to a participant informant. The IAC is established by trial counsel's failure to file a pre-trial Roviaro motion in a case where counsel knew the entire prosecution rested on an informant's controlled buys.\n\nThe conviction of Denise Carver cannot stand on this record.",
+    defenseResponse: "Your Honor, we thank the Court for its thorough and careful review. Denise Carver has maintained throughout these proceedings that she did not make the sales attributed to her, and the debrief language this Court has reviewed confirms that the State's own informant shared that doubt. The Brady violation here is not a paperwork failure — it is the suppression of the single piece of evidence that most directly supported the defense.\n\nWe ask this Court to vacate the conviction, order production of all CI-44 materials in any retrial, and require that any future identification evidence comply with Iowa's discovery obligations and the Roviaro constitutional standard. Denise Carver deserves a trial at which the jury receives the complete truth about the reliability of the identification evidence used to convict her.",
+  },
+];
+
+const IA_DEMO_VERDICT_SUMMARY = `After three rounds of argument in this Iowa Code § 822.2 post-conviction relief proceeding, this Court finds that the conviction of Denise Renée Carver cannot stand.
+
+The Brady violation is established by the CI-44 debrief report, now before this Court, which states: 'I am not certain the woman today was the same woman as the first two times. She seemed shorter.' Agent Whitmore characterized this to the jury as vague 'uncertainty' that was 'resolved internally.' It was not vague — it was a specific doubt, recorded in writing, that a different person may have made the third controlled buy. That document was in the State's possession throughout trial and was never produced to defense counsel. This is Brady suppression. The language was material because the entire prosecution rested on CI-44's identification of Carver as the seller; CI-44's own documented doubt about that identification goes to the heart of the case.
+
+The Roviaro violation is established by the trial court's in camera review, which applied Iowa's statutory informant privilege without conducting the federal constitutional balancing required by Roviaro v. United States. CI-44 was a participant informant — not a tipster — who allegedly purchased methamphetamine directly from the defendant on three occasions. Roviaro requires that the government's interest in protecting such an informant's identity yield when the informant is the only witness to the charged conduct and the defendant's ability to prepare a defense is substantially impaired. That standard was met here and the Roviaro disclosure obligation was not satisfied.
+
+The ineffective assistance finding follows from trial counsel's failure to file a pre-trial Roviaro motion in a case where the entire prosecution rested on an informant's controlled buys — a foundational step in competent narcotics defense practice.
+
+RULING: The conviction of Denise Renée Carver is VACATED. The matter is remanded for a new trial. The State is ordered to produce all CI-44 debrief reports and communications in any retrial. A Roviaro hearing shall be conducted before any retrial proceeds. DEFENSE WIN.`;
+
+async function seedIaCourtSimulation(tx: Parameters<Parameters<typeof db.transaction>[0]>[0], caseId: number, docId: number): Promise<void> {
+  const [session] = await tx.insert(courtSessionsTable).values({
+    caseId,
+    simulationMode: "postconviction_974",
+    skepticMode: true,
+    expandedRecord: false,
+    pleaQuestionnaireNotes: null,
+    documentIds: JSON.stringify([docId]),
+    status: "completed",
+    verdictRating: "DEFENSE WIN",
+    verdictSummary: IA_DEMO_VERDICT_SUMMARY,
+    defenseWon: true,
+    totalRounds: IA_DEMO_ROUNDS.length,
+  }).returning();
+  for (const r of IA_DEMO_ROUNDS) {
+    await tx.insert(courtRoundsTable).values({
+      sessionId: session.id,
+      roundNumber: r.roundNumber,
+      stateStrength: r.stateStrength,
+      defenseBurden: r.defenseBurden,
+      stateArgument: r.stateArgument,
+      courtCommentary: r.courtCommentary,
+      defenseResponse: r.defenseResponse,
+    });
+  }
+}
+
+export async function seedIowaDemoCase(): Promise<void> {
+  try {
+    const existing = await db
+      .select({ id: casesTable.id })
+      .from(casesTable)
+      .where(eq(casesTable.caseNumber, IA_DEMO_CASE_NUMBER))
+      .limit(1);
+
+    if (existing.length > 0) {
+      const caseId = existing[0].id;
+      const demoDoc = await db
+        .select({ id: documentsTable.id, status: documentsTable.status, findingCount: documentsTable.findingCount })
+        .from(documentsTable)
+        .where(eq(documentsTable.caseId, caseId))
+        .limit(1)
+        .then((rows) => rows[0] ?? null);
+
+      const needsRestore = !demoDoc || demoDoc.status === "error" || demoDoc.status === "pending" || (demoDoc.findingCount ?? 0) === 0;
+      if (!needsRestore) {
+        const existingSession = await db
+          .select({ id: courtSessionsTable.id })
+          .from(courtSessionsTable)
+          .where(eq(courtSessionsTable.caseId, caseId))
+          .limit(1)
+          .then((rows) => rows[0] ?? null);
+        if (!existingSession) {
+          logger.info({ caseId }, "Iowa demo case missing court simulation — seeding session...");
+          await db.transaction(async (tx) => {
+            await seedIaCourtSimulation(tx, caseId, demoDoc!.id);
+          });
+          logger.info({ caseId }, "Iowa demo court simulation seeded");
+        } else {
+          logger.info({ caseId }, "Iowa demo case already exists and is healthy — skipping seed");
+        }
+        return;
+      }
+
+      logger.info({ caseId }, "Iowa demo case is corrupted — restoring...");
+      await db.transaction(async (tx) => {
+        let docId: number;
+        if (!demoDoc) {
+          const [newDoc] = await tx.insert(documentsTable).values({ caseId, title: "Jury Trial Transcript — Day 3, November 19, 2019", documentType: "transcript", content: IA_DEMO_TRANSCRIPT, status: "analyzed" }).returning();
+          docId = newDoc.id;
+        } else {
+          docId = demoDoc.id;
+          await tx.delete(findingsTable).where(eq(findingsTable.documentId, docId));
+        }
+        for (const f of IA_DEMO_FINDINGS) {
+          await tx.insert(findingsTable).values({ caseId, documentId: docId, issueTitle: f.issueTitle, transcriptExcerpt: f.transcriptExcerpt, legalAnalysis: f.legalAnalysis, pageNumber: f.pageNumber, lineNumber: f.lineNumber, precedentName: f.precedentName, precedentCitation: f.precedentCitation, precedentType: f.precedentType, courtRuling: f.courtRuling, materialSimilarity: f.materialSimilarity, proceduralStatus: f.proceduralStatus, anticipatedBlock: f.anticipatedBlock, breakthroughArgument: f.breakthroughArgument, legalVehicle: f.legalVehicle, survivability: f.survivability });
+        }
+        await tx.update(documentsTable).set({ status: "analyzed", findingCount: IA_DEMO_FINDINGS.length }).where(eq(documentsTable.id, docId));
+        await tx.update(casesTable).set({ hasAnalysis: true }).where(eq(casesTable.id, caseId));
+        await tx.delete(courtSessionsTable).where(eq(courtSessionsTable.caseId, caseId));
+        await seedIaCourtSimulation(tx, caseId, docId);
+      });
+      logger.info({ caseId }, "Iowa demo case restored");
+      return;
+    }
+
+    logger.info("Seeding Iowa demo case...");
+    await db.transaction(async (tx) => {
+      const [iaCase] = await tx.insert(casesTable).values({
+        title: "State v. Denise Carver — IA DEMO",
+        defendantName: "Denise Renée Carver",
+        caseNumber: IA_DEMO_CASE_NUMBER,
+        jurisdiction: "Iowa District Court for Polk County, State of Iowa",
+        notes: "DEMO CASE — Iowa post-conviction example showcasing the Iowa Code § 822.2 relief pathway, 8th Circuit federal ladder, and Iowa-specific executive relief options including the Board of Parole and Governor's pardon process.",
+        hasAnalysis: true,
+        hasMotion: false,
+      }).returning();
+
+      const [iaDoc] = await tx.insert(documentsTable).values({
+        caseId: iaCase.id,
+        title: "Jury Trial Transcript — Day 3, November 19, 2019",
+        documentType: "transcript",
+        content: IA_DEMO_TRANSCRIPT,
+        status: "analyzed",
+      }).returning();
+
+      for (const f of IA_DEMO_FINDINGS) {
+        await tx.insert(findingsTable).values({ caseId: iaCase.id, documentId: iaDoc.id, issueTitle: f.issueTitle, transcriptExcerpt: f.transcriptExcerpt, legalAnalysis: f.legalAnalysis, pageNumber: f.pageNumber, lineNumber: f.lineNumber, precedentName: f.precedentName, precedentCitation: f.precedentCitation, precedentType: f.precedentType, courtRuling: f.courtRuling, materialSimilarity: f.materialSimilarity, proceduralStatus: f.proceduralStatus, anticipatedBlock: f.anticipatedBlock, breakthroughArgument: f.breakthroughArgument, legalVehicle: f.legalVehicle, survivability: f.survivability });
+      }
+
+      await tx.update(documentsTable).set({ findingCount: IA_DEMO_FINDINGS.length }).where(eq(documentsTable.id, iaDoc.id));
+      await seedIaCourtSimulation(tx, iaCase.id, iaDoc.id);
+      logger.info({ caseId: iaCase.id }, "Iowa demo case seeded successfully");
+    });
+  } catch (err) {
+    logger.error({ err }, "Failed to seed Iowa demo case");
+  }
+}
