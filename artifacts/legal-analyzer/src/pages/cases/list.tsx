@@ -81,10 +81,10 @@ export default function CaseList() {
   const { data: cases, isLoading } = useListCases();
   const [activeFilter, setActiveFilter] = useState<FilterState>("All");
 
-  // Compute per-state counts
+  // Compute per-state counts (all 5 categories always present)
   const stateCounts = (cases ?? []).reduce<Record<FilterState, number>>(
     (acc, c) => {
-      const s = detectStateName(c.jurisdiction) ?? null;
+      const s = detectStateName(c.jurisdiction);
       if (s) acc[s] = (acc[s] ?? 0) + 1;
       acc["All"] = (acc["All"] ?? 0) + 1;
       return acc;
@@ -92,16 +92,11 @@ export default function CaseList() {
     { All: 0, Wisconsin: 0, Illinois: 0, Minnesota: 0, Other: 0 },
   );
 
-  // Only show filter options that have at least 1 case; always include "All"
-  const filterOptions: FilterState[] = [
-    "All",
-    ...( ["Wisconsin", "Illinois", "Minnesota", "Other"] as FilterState[] ).filter(
-      (s) => (stateCounts[s] ?? 0) > 0,
-    ),
-  ];
+  // Fixed pill set — always the same order, counts may be 0
+  const filterOptions: FilterState[] = ["All", "Wisconsin", "Illinois", "Minnesota", "Other"];
 
-  // Show filter bar only when there are 2+ distinct state categories
-  const showFilterBar = filterOptions.length > 2; // "All" + at least 2 states
+  // Show filter bar whenever cases exist (loaded and non-empty)
+  const showFilterBar = !isLoading && (cases ?? []).length > 0;
 
   // Apply filter
   const filteredCases = (cases ?? []).filter((c) => {
