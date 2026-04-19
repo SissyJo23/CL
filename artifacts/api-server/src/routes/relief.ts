@@ -22,7 +22,7 @@ const putBodySchema = z.object({
 
 const router = Router({ mergeParams: true });
 
-type SupportedState = "WI" | "IL" | "MN" | "IN" | "IA";
+type SupportedState = "WI" | "IL" | "MN" | "IN" | "IA" | "MI" | "OH";
 
 type LadderRung = {
   step: number;
@@ -322,6 +322,118 @@ const STATE_DATA: Record<SupportedState, StateData> = {
     executivePromptInstructions: "Include three Iowa executive options: (a) Governor's Pardon via the Iowa Board of Parole, (b) Sentence Commutation via the Iowa Board of Parole and Governor, (c) Felony set-aside or expungement under Iowa Code § 901C.2 / § 907.9. Describe each accurately for Iowa.",
     administrativePromptInstructions: "Include three Iowa administrative options: (a) Parole from the Iowa Board of Parole, (b) Work Release / Residential Correctional Facility placement, (c) Earned Time / Good Time credit from Iowa DOC. Describe each accurately for Iowa.",
   },
+
+  MI: {
+    name: "Michigan",
+    circuit: "6th Circuit",
+    ladder: [
+      { step: 1, court: "MI Circuit Court", description: "Trial court — Motion for Relief from Judgment under MCR 6.500 et seq., or motion for new trial under MCL 770.9a" },
+      { step: 2, court: "MI Court of Appeals", description: "Intermediate appellate court — direct appeal or delayed application for leave to appeal from post-conviction denial" },
+      { step: 3, court: "MI Supreme Court", description: "Discretionary review — application for leave to appeal" },
+      { step: 4, court: "U.S. District Court (E.D. or W.D. Mich.)", description: "Federal habeas under 28 U.S.C. § 2254 — requires full exhaustion of Michigan state remedies" },
+      { step: 5, court: "6th Circuit Court of Appeals", description: "Federal appellate review — requires certificate of appealability (COA)" },
+      { step: 6, court: "U.S. Supreme Court", description: "Certiorari — discretionary; only for federal constitutional questions" },
+    ],
+    executiveOptions: [
+      {
+        option: "Governor's Pardon",
+        body: "Michigan Parole Board / Governor of Michigan",
+        description: "A Michigan pardon forgives the offense and may restore civil rights including the right to possess firearms. The Michigan Parole Board investigates pardon applications and forwards a recommendation to the Governor. The Governor has sole authority to grant or deny. A pardon supports subsequent record expungement under Michigan's Clean Slate Law.",
+        eligibilityNote: "No mandatory waiting period post-release; Parole Board considers rehabilitation, offense circumstances, and community impact; typically sought post-release.",
+      },
+      {
+        option: "Sentence Commutation",
+        body: "Michigan Parole Board / Governor of Michigan",
+        description: "Commutation reduces an active sentence without removing the underlying conviction. The Michigan Parole Board reviews commutation petitions and forwards a recommendation to the Governor. Applications must show extraordinary rehabilitation, terminal illness, or a compelling manifest-injustice claim. Commutation of a life sentence makes the individual immediately eligible for parole board review.",
+        eligibilityNote: "May be sought while incarcerated; Governor has broad discretion; Parole Board recommendation is advisory only.",
+      },
+      {
+        option: "Expungement under Michigan Clean Slate Law",
+        body: "Michigan Circuit Court",
+        description: "Michigan's Clean Slate Law (2020) significantly expanded expungement eligibility. Most felony convictions may be expunged after 7 years from sentence completion; multiple felonies may be expunged under the 'three felony' rule. Certain serious violent offenses, life-maximum offenses, and criminal sexual conduct charges are excluded. Automatic expungement applies to some misdemeanors after 7 years.",
+        eligibilityNote: "Excludes crimes with life maximum sentences, criminal sexual conduct (most CSC offenses), DUI/OWI with injury/death, and certain weapons offenses; waiting period runs from sentence completion.",
+      },
+    ],
+    administrativeOptions: [
+      {
+        option: "Good Time / Disciplinary Credits",
+        body: "Michigan Department of Corrections",
+        description: "Michigan prisoners earn disciplinary credits that reduce the minimum sentence based on good institutional behavior and programming participation. The Michigan Parole Board considers accumulated disciplinary credit and programming completion when making parole decisions. Misconduct tickets can result in loss of previously earned credits.",
+        eligibilityNote: "Available to most prisoners; disciplinary credit accrual rates and caps vary by offense and sentence type; life prisoners require Board approval before parole consideration.",
+      },
+      {
+        option: "Parole (Michigan Parole Board)",
+        body: "Michigan Parole Board",
+        description: "The Michigan Parole Board has authority to grant parole after a prisoner serves the minimum sentence. The Board conducts annual reviews using a risk/needs assessment, institutional conduct record, programming completion, and community support. Victims may submit statements. Life prisoners require the Governor's approval for parole.",
+        eligibilityNote: "Parole eligibility begins at minimum sentence completion; life prisoners require Governor's approval; sex offenders face additional assessment requirements.",
+      },
+      {
+        option: "Special Alternative Incarceration (SAI) / Boot Camp",
+        body: "Michigan Department of Corrections",
+        description: "Michigan's SAI program (boot camp) provides intensive 90-day programming including physical training, substance abuse education, and cognitive behavioral therapy. Successful completion results in placement on supervised release. The program is available to eligible offenders as an alternative to a portion of their sentence.",
+        eligibilityNote: "Not available for serious violent offenders, sex offenders, or those with lengthy prior records; court recommendation or MDOC nomination required.",
+      },
+    ],
+    ladderPromptInstructions: "Assess each of the 6 Michigan ladder steps (MI Circuit Court → MI Court of Appeals → MI Supreme Court → U.S. District Court (E.D. or W.D. Mich.) → 6th Circuit Court of Appeals → SCOTUS). Michigan post-conviction relief uses the Motion for Relief from Judgment (MCR 6.500 et seq.). Mark steps Completed if prior proceedings are evident in the record. Mark the next available step Available. Pending steps cannot yet be reached. Blocked steps have procedural bars.",
+    executivePromptInstructions: "Include three Michigan executive options: (a) Governor's Pardon via the Michigan Parole Board, (b) Sentence Commutation via the Michigan Parole Board and Governor, (c) Expungement under Michigan's Clean Slate Law. Describe each accurately for Michigan.",
+    administrativePromptInstructions: "Include three Michigan administrative options: (a) Good Time / Disciplinary Credits from MDOC, (b) Parole via the Michigan Parole Board (Governor approval required for life sentences), (c) Special Alternative Incarceration (SAI) boot camp program. Describe each accurately for Michigan.",
+  },
+
+  OH: {
+    name: "Ohio",
+    circuit: "6th Circuit",
+    ladder: [
+      { step: 1, court: "OH Common Pleas Court", description: "Trial court — petition for post-conviction relief under Ohio Revised Code § 2953.21; or motion for new trial under Crim.R. 33" },
+      { step: 2, court: "OH Court of Appeals", description: "Intermediate appellate court — direct appeal or appeal from post-conviction denial; Ohio has 12 numbered appellate districts" },
+      { step: 3, court: "OH Supreme Court", description: "Discretionary review — memorandum in support of jurisdiction" },
+      { step: 4, court: "U.S. District Court (N.D. or S.D. Ohio)", description: "Federal habeas under 28 U.S.C. § 2254 — requires full exhaustion of Ohio state remedies" },
+      { step: 5, court: "6th Circuit Court of Appeals", description: "Federal appellate review — requires certificate of appealability (COA)" },
+      { step: 6, court: "U.S. Supreme Court", description: "Certiorari — discretionary; only for federal constitutional questions" },
+    ],
+    executiveOptions: [
+      {
+        option: "Governor's Pardon / Clemency",
+        body: "Ohio Adult Parole Authority / Governor of Ohio",
+        description: "An Ohio pardon forgives the offense and may restore civil rights. The Ohio Adult Parole Authority (APA) investigates clemency applications and conducts a hearing, then forwards a recommendation to the Governor. The Governor has sole authority to grant or deny. A pardon supports subsequent expungement or sealing of the record under Ohio Revised Code § 2953.32.",
+        eligibilityNote: "Typically sought post-release; APA considers rehabilitation, offense circumstances, victim impact, and community support; no mandatory waiting period.",
+      },
+      {
+        option: "Sentence Commutation",
+        body: "Ohio Adult Parole Authority / Governor of Ohio",
+        description: "Commutation reduces an active sentence without removing the conviction. The APA reviews commutation petitions and forwards a recommendation to the Governor. Applications must demonstrate extraordinary rehabilitation, terminal illness, or compelling manifest-injustice circumstances. Commutation of a life sentence to a term of years creates parole eligibility.",
+        eligibilityNote: "May be sought while incarcerated; Governor has broad discretion; APA recommendation is advisory; death sentence commutation historically requires specific grounds.",
+      },
+      {
+        option: "Expungement / Sealing of Record (ORC § 2953.32)",
+        body: "Ohio Common Pleas Court",
+        description: "Ohio allows sealing of conviction records under ORC § 2953.32 after mandatory waiting periods (1 year for misdemeanors; 3 years for most felonies from final discharge). The 2023 expansion (H.B. 420) added additional offense tiers and reduced some waiting periods. A sealed record is not expunged but is hidden from public view. A pardon may reduce the waiting period.",
+        eligibilityNote: "Excludes most violent felonies (F1/F2 offenses), sexual offenses, felonies with mandatory prison terms, and certain other categories; court has discretion to deny even eligible petitions.",
+      },
+    ],
+    administrativeOptions: [
+      {
+        option: "Good Behavior Time / Earned Credit",
+        body: "Ohio Department of Rehabilitation and Correction",
+        description: "Ohio prisoners earn good-behavior days (5 days per month under ORC § 2967.193) and may earn additional days through educational programming, vocational training, and other approved activities. Earned credit reduces the stated prison term and accelerates parole eligibility or release date. Serious misconduct can result in forfeiture of earned days.",
+        eligibilityNote: "Most prisoners are eligible; credit rates and caps vary by offense and sentence type; certain mandatory sentences limit the effect of earned credit.",
+      },
+      {
+        option: "Parole (Ohio Parole Board / APA)",
+        body: "Ohio Adult Parole Authority",
+        description: "The Ohio APA Parole Board has authority to grant parole to eligible prisoners serving indeterminate sentences. The Board conducts hearings using risk/needs assessments, institutional conduct, programming completion, and victim input. Prisoners sentenced on or after July 1, 1996, are subject to determinate sentencing (Senate Bill 2) and serve definite terms without discretionary parole.",
+        eligibilityNote: "Discretionary parole applies to pre-SB2 (pre-July 1, 1996) sentences; post-SB2 offenders serve fixed terms with post-release control (PRC) rather than discretionary parole.",
+      },
+      {
+        option: "Transitional Control / Work Release",
+        body: "Ohio Department of Rehabilitation and Correction",
+        description: "Ohio's Transitional Control (TC) program allows eligible prisoners to serve the last 180 days of their sentence in the community under electronic monitoring, residing at an approved address. Work release permits prisoners to leave the facility for employment while serving the final portion of their sentence at a minimum-security institution or community-based correctional facility.",
+        eligibilityNote: "Excludes certain violent offenders and sex offenders; ODRC risk assessment and victim notification requirements apply; APA approval required for TC.",
+      },
+    ],
+    ladderPromptInstructions: "Assess each of the 6 Ohio ladder steps (OH Common Pleas Court → OH Court of Appeals → OH Supreme Court → U.S. District Court (N.D. or S.D. Ohio) → 6th Circuit Court of Appeals → SCOTUS). Ohio post-conviction relief is governed by ORC § 2953.21 (petition) and § 2953.23 (untimely petitions with new DNA or newly discovered evidence). Mark steps Completed if prior proceedings are evident. Mark the next available step Available. Pending steps cannot yet be reached. Blocked steps have procedural bars.",
+    executivePromptInstructions: "Include three Ohio executive options: (a) Governor's Pardon via the Ohio Adult Parole Authority, (b) Sentence Commutation via the APA and Governor, (c) Expungement / Sealing of Record under ORC § 2953.32. Describe each accurately for Ohio.",
+    administrativePromptInstructions: "Include three Ohio administrative options: (a) Good Behavior Time / Earned Credit from ODRC (ORC § 2967.193), (b) Parole via the Ohio Adult Parole Authority (applies to pre-SB2 indeterminate sentences), (c) Transitional Control / Work Release from ODRC. Describe each accurately for Ohio.",
+  },
 };
 
 const SUPPORTED_STATES = Object.keys(STATE_DATA) as SupportedState[];
@@ -371,6 +483,23 @@ function detectJurisdiction(jurisdiction: string | null): SupportedState | null 
     lower.includes("(ia)") ||
     lower.includes("des moines")
   ) return "IA";
+
+  if (
+    lower.includes("michigan") ||
+    lower === "mi" || lower === "mich" || lower === "mich." ||
+    lower.startsWith("mich ") || lower.startsWith("mich.") ||
+    lower.includes(", mi") || lower.includes(" mi,") ||
+    lower.includes("(mi)") || lower.includes("(mich)") ||
+    lower.includes("detroit") || lower.includes("grand rapids")
+  ) return "MI";
+
+  if (
+    lower.includes("ohio") ||
+    lower === "oh" ||
+    lower.startsWith("oh ") || lower.includes(", oh") || lower.includes(" oh,") ||
+    lower.includes("(oh)") ||
+    lower.includes("columbus") || lower.includes("cleveland") || lower.includes("cincinnati")
+  ) return "OH";
 
   return null;
 }

@@ -7,7 +7,7 @@ export type JurisdictionBadge = {
   circuit: string | null;
 };
 
-export type StateName = "Wisconsin" | "Illinois" | "Minnesota" | "Indiana" | "Iowa" | "Other";
+export type StateName = "Wisconsin" | "Illinois" | "Minnesota" | "Indiana" | "Iowa" | "Michigan" | "Ohio" | "Other";
 
 export function detectStateName(jurisdiction: string | null | undefined): StateName | null {
   if (!jurisdiction) return null;
@@ -55,6 +55,23 @@ export function detectStateName(jurisdiction: string | null | undefined): StateN
     lower.includes("des moines")
   ) return "Iowa";
 
+  if (
+    lower.includes("michigan") ||
+    lower === "mi" || lower === "mich" || lower === "mich." ||
+    lower.startsWith("mich ") || lower.startsWith("mich.") ||
+    lower.includes(", mi") || lower.includes(" mi,") ||
+    lower.includes("(mi)") || lower.includes("(mich)") ||
+    lower.includes("detroit") || lower.includes("grand rapids")
+  ) return "Michigan";
+
+  if (
+    lower.includes("ohio") ||
+    lower === "oh" ||
+    lower.startsWith("oh ") || lower.includes(", oh") || lower.includes(" oh,") ||
+    lower.includes("(oh)") ||
+    lower.includes("columbus") || lower.includes("cleveland") || lower.includes("cincinnati")
+  ) return "Ohio";
+
   const looksReal =
     jurisdiction.includes(",") ||
     /county|court|district|circuit|judicial|parish|borough/i.test(jurisdiction);
@@ -75,6 +92,8 @@ export function parseJurisdictionBadge(jurisdiction: string | null | undefined):
     Indiana: "7th Circuit",
     Minnesota: "8th Circuit",
     Iowa: "8th Circuit",
+    Michigan: "6th Circuit",
+    Ohio: "6th Circuit",
   };
 
   const firstPart = jurisdiction!.split(",")[0].trim();
