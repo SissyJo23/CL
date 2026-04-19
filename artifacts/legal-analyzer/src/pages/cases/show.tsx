@@ -72,7 +72,7 @@ export default function CaseShow() {
   const analyzeDocument = async (docId: number): Promise<void> => {
     setLive(docId, { phase: "running", message: "Starting analysis…", findingCount: 0 });
     try {
-      const response = await fetch(`/api/cases/${caseId}/documents/${docId}/analyze`, { method: "POST" });
+      const response = await fetch(`/api/cases/${caseId}/documents/${docId}/analyze?mode=${mode}`, { method: "POST" });
 
       if (!response.ok) {
         let msg = "Analysis failed.";
