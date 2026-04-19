@@ -13,6 +13,9 @@ type JurisdictionBadge = {
   circuit: string | null;
 };
 
+// NOTE: Detection patterns intentionally mirror detectJurisdiction() in
+// artifacts/api-server/src/routes/relief.ts — keep these in sync if state
+// support is added or patterns change on the server side.
 function parseJurisdictionBadge(jurisdiction: string | null | undefined): JurisdictionBadge | null {
   if (!jurisdiction) return null;
   const lower = jurisdiction.toLowerCase().trim();
@@ -57,6 +60,14 @@ function parseJurisdictionBadge(jurisdiction: string | null | undefined): Jurisd
       .trim();
     return { displayText: `${cleanLocation} · ${stateName}`, circuit };
   }
+
+  // For unrecognized jurisdictions, only show if the string looks like a real
+  // court location (contains a comma, or contains court-related keywords).
+  // This filters out placeholder values like "Anonymous" or "Test".
+  const looksReal =
+    jurisdiction.includes(",") ||
+    /county|court|district|circuit|judicial|parish|borough/i.test(jurisdiction);
+  if (!looksReal) return null;
 
   return { displayText: jurisdiction, circuit: null };
 }
