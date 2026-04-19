@@ -9,6 +9,7 @@ import motionsRouter from "./motions";
 import exportRouter from "./export";
 import demoRouter from "./demo";
 import patternRouter from "./pattern";
+import reliefRouter from "./relief";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(motionsRouter);
 router.use(exportRouter);
 router.use(demoRouter);
 router.use(patternRouter);
+router.use(reliefRouter);
 
 export default router;

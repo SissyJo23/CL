@@ -8,6 +8,7 @@ import CaseNew from "@/pages/cases/new";
 import CaseList from "@/pages/cases/list";
 import CaseShow from "@/pages/cases/show";
 import PatternPage from "@/pages/cases/pattern";
+import ReliefPage from "@/pages/cases/relief";
 import DocumentShow from "@/pages/documents/show";
 import CourtNew from "@/pages/court/new";
 import CourtRun from "@/pages/court/run";
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/cases/new" component={CaseNew} />
       <Route path="/cases/:id" component={CaseShow} />
       <Route path="/cases/:id/pattern" component={PatternPage} />
+      <Route path="/cases/:id/relief" component={ReliefPage} />
       <Route path="/cases/:caseId/documents/:id" component={DocumentShow} />
       <Route path="/cases/:id/court/new" component={CourtNew} />
       <Route path="/cases/:caseId/court/:id/run" component={CourtRun} />

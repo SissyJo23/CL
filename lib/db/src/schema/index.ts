@@ -6,3 +6,4 @@ export * from "./findings";
 export * from "./court";
 export * from "./motions";
 export * from "./pattern-analyses";
+export * from "./relief-pathways";
