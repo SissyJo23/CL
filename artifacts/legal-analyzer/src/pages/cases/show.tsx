@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock } from "lucide-react";
+import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -281,11 +281,17 @@ export default function CaseShow() {
                   {currentCase.jurisdiction && <span>Jurisdiction: <span className="font-medium text-foreground">{currentCase.jurisdiction}</span></span>}
                 </div>
               </div>
-              <div className="flex gap-2 shrink-0">
+              <div className="flex gap-2 shrink-0 flex-wrap">
                 <Button variant="outline" size="sm" onClick={() => window.print()}>
                   <Download className="w-4 h-4 mr-2" />
                   Export
                 </Button>
+                <Link href={`/cases/${caseId}/pattern`}>
+                  <Button variant="outline" size="sm" className="border-violet-300 text-violet-700 hover:bg-violet-50 dark:border-violet-700 dark:text-violet-300 dark:hover:bg-violet-900/20">
+                    <GitBranch className="w-4 h-4 mr-2" />
+                    Pattern Analysis
+                  </Button>
+                </Link>
                 {hasAnyFindings ? (
                   <Link href={`/cases/${caseId}/court/new`}>
                     <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">

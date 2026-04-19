@@ -8,6 +8,7 @@ import courtRouter from "./court";
 import motionsRouter from "./motions";
 import exportRouter from "./export";
 import demoRouter from "./demo";
+import patternRouter from "./pattern";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(courtRouter);
 router.use(motionsRouter);
 router.use(exportRouter);
 router.use(demoRouter);
+router.use(patternRouter);
 
 export default router;
