@@ -183,7 +183,9 @@ export default function ReliefPage() {
     notes: string;
   }>({ status: "Pending", completedAt: "", notes: "" });
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [togglingTolling, setTogglingTolling] = useState(false);
+  const [tollingError, setTollingError] = useState<string | null>(null);
 
   const fetchPathway = async () => {
     setLoading(true);
@@ -235,6 +237,7 @@ export default function ReliefPage() {
 
   const handleStartEdit = (step: LadderStep) => {
     setEditingStep(step.step);
+    setSaveError(null);
     setEditValues({
       status: step.status,
       completedAt: step.completedAt ?? "",
@@ -244,11 +247,13 @@ export default function ReliefPage() {
 
   const handleCancelEdit = () => {
     setEditingStep(null);
+    setSaveError(null);
   };
 
   const handleSaveStep = async () => {
     if (editingStep === null || !pathway) return;
     setSaving(true);
+    setSaveError(null);
     try {
       const res = await fetch(`/api/cases/${caseId}/relief-pathway`, {
         method: "PUT",
@@ -266,7 +271,12 @@ export default function ReliefPage() {
         const updated = await res.json();
         setPathway(updated);
         setEditingStep(null);
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setSaveError(body.error ?? "Failed to save. Please try again.");
       }
+    } catch {
+      setSaveError("Network error — could not save. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -275,6 +285,7 @@ export default function ReliefPage() {
   const handleToggleTolling = async () => {
     if (!pathway) return;
     setTogglingTolling(true);
+    setTollingError(null);
     try {
       const res = await fetch(`/api/cases/${caseId}/relief-pathway`, {
         method: "PUT",
@@ -284,7 +295,12 @@ export default function ReliefPage() {
       if (res.ok) {
         const updated = await res.json();
         setPathway(updated);
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setTollingError(body.error ?? "Failed to update tolling status.");
       }
+    } catch {
+      setTollingError("Network error — could not update tolling.");
     } finally {
       setTogglingTolling(false);
     }
@@ -468,6 +484,12 @@ export default function ReliefPage() {
                                 onChange={(e) => setEditValues((prev) => ({ ...prev, notes: e.target.value }))}
                               />
                             </div>
+                            {saveError && (
+                              <div className="flex items-center gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                {saveError}
+                              </div>
+                            )}
                             <div className="flex gap-2 justify-end">
                               <Button variant="outline" size="sm" onClick={handleCancelEdit} disabled={saving}>
                                 Cancel
@@ -543,6 +565,12 @@ export default function ReliefPage() {
                     )}
                   </Button>
                 </div>
+                {tollingError && (
+                  <div className="flex items-center gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2 mb-3">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    {tollingError}
+                  </div>
+                )}
                 <AedpaClock
                   deadline={pathway.aedpaDeadline}
                   tolled={pathway.aedpaTolled}
