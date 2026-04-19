@@ -1,12 +1,12 @@
 import { useParams, Link } from "wouter";
 import { useGetCase, getGetCaseQueryKey, useListDocuments, getListDocumentsQueryKey, useCreateDocument, useDeleteDocument, useListCourtSessions, getListCourtSessionsQueryKey, useGenerateCaseStrategy, useGetCaseStrategy, getGetCaseStrategyQueryKey } from "@workspace/api-client-react";
 import type { CreateDocumentBodyDocumentType } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch, Milestone, User, Users, BookOpen } from "lucide-react";
+import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch, Milestone, User, Users, BookOpen, Shield, Star, ChevronRight, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,6 +25,45 @@ const MODE_ICONS: Record<UserMode, React.ReactNode> = {
   appellate: <BookOpen className="w-3 h-3" />,
 };
 
+type LadderStep = {
+  step: number;
+  court: string;
+  description: string;
+  status: "Completed" | "Pending" | "Available" | "Blocked";
+  completedAt: string | null;
+  notes: string | null;
+};
+
+type FederalReadyClaim = {
+  issueTitle: string;
+  amendment: string;
+  readyReason: string;
+};
+
+type ReliefPathway = {
+  id: number;
+  caseId: number;
+  jurisdiction: string | null;
+  ladderStatus: LadderStep[] | null;
+  aedpaDeadline: string | null;
+  aedpaTolled: boolean;
+  aedpaIsEstimate?: boolean;
+  federalReadyClaims: FederalReadyClaim[] | null;
+  martinezApplies: boolean | null;
+  martinezReason?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+const LADDER_SHORT: Record<number, string> = {
+  1: "WI Circuit",
+  2: "WI Court of Appeals",
+  3: "WI Supreme Court",
+  4: "U.S. District",
+  5: "7th Circuit",
+  6: "SCOTUS",
+};
+
 type LiveStatus = {
   phase: "running" | "done" | "error";
   message: string;
@@ -39,6 +78,17 @@ export default function CaseShow() {
   const { data: documents, isLoading: docsLoading } = useListDocuments(caseId, { query: { enabled: !!caseId, queryKey: getListDocumentsQueryKey(caseId) } });
   const { data: strategyData, isLoading: strategyLoading } = useGetCaseStrategy(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseStrategyQueryKey(caseId) } });
   const { data: courtSessions } = useListCourtSessions(caseId, { query: { enabled: !!caseId, queryKey: getListCourtSessionsQueryKey(caseId) } });
+  const { data: reliefPathway, isLoading: reliefLoading } = useQuery<ReliefPathway | null>({
+    queryKey: ["relief-pathway", caseId],
+    queryFn: async () => {
+      const res = await fetch(`/api/cases/${caseId}/relief-pathway`);
+      if (res.status === 404 || res.status === 422) return null;
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!caseId,
+    retry: false,
+  });
 
   const createDocument = useCreateDocument();
   const deleteDocument = useDeleteDocument();
@@ -454,6 +504,177 @@ export default function CaseShow() {
                 </div>
               </div>
             )}
+
+            {/* Federal Readiness Panel */}
+            <div className="border border-indigo-200 dark:border-indigo-800/60 rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 bg-indigo-50/60 dark:bg-indigo-900/10 border-b border-indigo-200 dark:border-indigo-800/60">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  <h2 className="text-lg font-serif font-medium text-indigo-900 dark:text-indigo-200">Federal Readiness</h2>
+                </div>
+                {reliefPathway && (
+                  <Link href={`/cases/${caseId}/relief`}>
+                    <Button size="sm" variant="ghost" className="text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 text-xs h-7 px-2">
+                      Full Pathway →
+                    </Button>
+                  </Link>
+                )}
+              </div>
+              {reliefLoading ? (
+                <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24 w-full" />)}
+                </div>
+              ) : !reliefPathway ? (
+                <div className="p-8 text-center space-y-4">
+                  <div className="mx-auto w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-indigo-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Federal Readiness not yet assessed</p>
+                    <p className="text-xs text-muted-foreground mt-1">Generate a relief pathway to see exhaustion status, AEDPA countdown, and federal-ready claims.</p>
+                  </div>
+                  <Link href={`/cases/${caseId}/relief`}>
+                    <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                      <Milestone className="w-4 h-4 mr-2" />
+                      Generate Relief Pathway
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Block 1: Exhaustion Ladder */}
+                  <div className="space-y-2 md:col-span-2">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Milestone className="w-3.5 h-3.5" /> Exhaustion Ladder
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(reliefPathway.ladderStatus ?? []).sort((a, b) => a.step - b.step).map((step) => {
+                        const label = LADDER_SHORT[step.step] ?? step.court;
+                        const pillClass =
+                          step.status === "Completed"
+                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700"
+                            : step.status === "Available"
+                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-700 ring-1 ring-blue-400 dark:ring-blue-600"
+                            : step.status === "Blocked"
+                            ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 border-red-200 dark:border-red-700"
+                            : "bg-muted text-muted-foreground border-border";
+                        return (
+                          <span key={step.step} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${pillClass}`}>
+                            {step.status === "Completed" && <CheckCircle2 className="w-3 h-3" />}
+                            {step.status === "Available" && <ChevronRight className="w-3 h-3" />}
+                            {label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Block 2: Federal-Ready Claims */}
+                  <div className="space-y-2 bg-muted/30 border border-border rounded-lg p-4">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Star className="w-3.5 h-3.5" /> Federal-Ready Claims
+                    </div>
+                    {reliefPathway.federalReadyClaims && reliefPathway.federalReadyClaims.length > 0 ? (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-300 text-sm font-bold">
+                            {reliefPathway.federalReadyClaims.length}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            claim{reliefPathway.federalReadyClaims.length === 1 ? "" : "s"} ready for federal review
+                          </span>
+                        </div>
+                        <ul className="space-y-1 mt-1">
+                          {reliefPathway.federalReadyClaims.slice(0, 3).map((claim, i) => (
+                            <li key={i} className="text-xs text-foreground/80 flex items-start gap-1.5">
+                              <span className="text-indigo-500 mt-0.5 shrink-0">•</span>
+                              <span className="truncate">{claim.issueTitle} <span className="text-muted-foreground">({claim.amendment} Amend.)</span></span>
+                            </li>
+                          ))}
+                          {reliefPathway.federalReadyClaims.length > 3 && (
+                            <li className="text-xs text-muted-foreground pl-3.5">…and {reliefPathway.federalReadyClaims.length - 3} more</li>
+                          )}
+                        </ul>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">No federally-preserved claims identified yet.</p>
+                    )}
+                  </div>
+
+                  {/* Block 3: AEDPA Countdown */}
+                  <div className="space-y-2 bg-muted/30 border border-border rounded-lg p-4">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5" /> AEDPA Countdown
+                    </div>
+                    {reliefPathway.aedpaTolled ? (
+                      <div className="flex items-start gap-2 p-2 bg-emerald-50 dark:bg-emerald-900/10 rounded-lg">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Clock paused</p>
+                          <p className="text-xs text-emerald-700 dark:text-emerald-400">State proceedings active (§ 2244(d)(2))</p>
+                        </div>
+                      </div>
+                    ) : reliefPathway.aedpaDeadline ? (() => {
+                      const today = new Date(); today.setHours(0, 0, 0, 0);
+                      const deadlineDate = new Date(reliefPathway.aedpaDeadline);
+                      const diffDays = Math.ceil((deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                      const isExpired = diffDays < 0;
+                      const colorClass = isExpired
+                        ? "text-red-900 dark:text-red-200"
+                        : diffDays < 60
+                        ? "text-red-700 dark:text-red-400"
+                        : diffDays < 180
+                        ? "text-amber-700 dark:text-amber-400"
+                        : "text-emerald-700 dark:text-emerald-400";
+                      const bgClass = isExpired
+                        ? "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800"
+                        : diffDays < 60
+                        ? "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800"
+                        : diffDays < 180
+                        ? "bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800"
+                        : "bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800";
+                      return (
+                        <div className={`rounded-lg border p-3 ${bgClass}`}>
+                          <div className={`text-xl font-bold font-mono ${colorClass}`}>
+                            {isExpired ? "Expired" : `${diffDays}d`}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            {isExpired ? "Deadline passed" : "remaining"} — {deadlineDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          </div>
+                          {reliefPathway.aedpaIsEstimate && (
+                            <div className="text-xs text-muted-foreground/70 mt-1 italic">Estimated deadline</div>
+                          )}
+                        </div>
+                      );
+                    })() : (
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                        <Link href={`/cases/${caseId}/relief`}>
+                          <span className="text-xs text-amber-700 dark:text-amber-400 hover:underline cursor-pointer">Calculate deadline →</span>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Block 4: Strongest Federal Argument */}
+                  {(reliefPathway.martinezReason || (reliefPathway.federalReadyClaims && reliefPathway.federalReadyClaims.length > 0)) && (
+                    <div className="md:col-span-2 space-y-2 bg-muted/30 border border-border rounded-lg p-4">
+                      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                        <Star className="w-3.5 h-3.5" /> Strongest Federal Argument
+                      </div>
+                      <p className="text-sm text-foreground/80 leading-relaxed line-clamp-3">
+                        {reliefPathway.martinezReason ??
+                          reliefPathway.federalReadyClaims?.[0]?.readyReason ??
+                          ""}
+                      </p>
+                      <Link href={`/cases/${caseId}/relief`}>
+                        <span className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">Read full analysis →</span>
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
