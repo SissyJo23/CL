@@ -888,6 +888,70 @@ const IL_DEMO_FINDINGS = [
   },
 ];
 
+const IL_DEMO_ROUNDS = [
+  {
+    roundNumber: 1,
+    stateStrength: "MODERATE",
+    defenseBurden: "Defense must establish that Keisha Barton's exculpatory statement was suppressed within the meaning of Brady and that the suppression was material to the bench verdict on constructive possession.",
+    stateArgument: "Your Honor, the State addresses the Brady claim regarding Ms. Barton's statement. At the outset, there is a threshold procedural issue: this claim was not raised as a post-trial motion under 725 ILCS 5/116-1 before the direct appeal, which implicates People v. Enoch forfeiture. Defense has offered no explanation for the failure to raise this claim below.\n\nOn the merits, the State's position is that materiality is not established. Under People v. Beaman, 229 Ill. 2d 56 (2008), Brady materiality requires a reasonable probability that disclosure would have produced a different result — not merely that the evidence might have helped. Detective Tran testified that mail addressed to Williams was found at the address. The court — sitting as the finder of fact in a bench trial — found that constructive possession was established by Williams's dominion and control over the premises. An uncorroborated oral statement by the co-occupant would not have overcome that finding.\n\nFinally, the State notes that Barton's statement was, according to Tran, placed in the supplemental file. If the supplemental was not produced, that is a production failure — not a suppression. Under United States v. Agurs, the inadvertent failure to produce a document that was technically in the file does not rise to constitutional Brady suppression.",
+    courtCommentary: "Counsel, let me be direct. Detective Tran said two things that I find deeply troubling: first, that Barton told him the bag belonged to her — a direct exculpatory statement on the possession element; second, that he put it in a 'supplemental' that defense counsel says was never produced. The People v. Enoch forfeiture argument is noted, but ineffective assistance of post-trial counsel is a recognized cause for overcoming that bar in this proceeding.\n\nOn the Agurs distinction — I'm not persuaded. Suppression is suppression whether intentional or inadvertent when the result is that the defendant did not receive material exculpatory evidence. The question I need answered is: what is the full discovery record on the Barton statement? Can the State show any documentation that a Barton supplemental was actually transmitted to defense counsel?\n\nDefense, I also want to hear how this interacts with the IAC claim — if Barton's statement surfaced on cross-examination and defense counsel then failed to subpoena her, does that affect the Brady analysis?",
+    defenseResponse: "Your Honor, the State cannot produce transmission records because no Barton supplemental was transmitted. Detective Tran's testimony on that point was: 'I noted it in my supplemental' — present tense, past act, implying it existed — but counsel's review of the complete production confirms it was absent. That is suppression under Brady v. Maryland regardless of intent, and People v. Beaman does not save it.\n\nOn materiality: Your Honor heard a bench trial in which the sole contested issue was constructive possession of the duffel bag. Keisha Barton — the co-occupant, present in the residence — told the investigating detective that the bag was hers. That statement is not cumulative or merely impeaching. It directly negates the possession element. Under People v. Hobley, 182 Ill. 2d 404 (1998), Brady materiality is assessed by whether the suppressed evidence would have altered the defense strategy or the trier of fact's analysis. Here, both are true.\n\nOn the Enoch bar — the sufficient reason for default is ineffective assistance of post-trial and appellate counsel, who failed to investigate the Barton statement despite Tran's in-court admission. Under People v. Enis, 194 Ill. 2d 361 (2000), IAC of post-trial counsel is cause to overcome Enoch forfeiture in a 725 ILCS 5/122-1 proceeding.",
+  },
+  {
+    roundNumber: 2,
+    stateStrength: "MINIMAL",
+    defenseBurden: "Defense must demonstrate that the warrant affidavit was based on information too stale to establish probable cause at the time of execution, and that the Leon good-faith exception does not apply.",
+    stateArgument: "Your Honor, on the staleness claim, the State's position is that People v. Tisler, 103 Ill. 2d 226 (1984), does not establish a bright-line rule based on the age of the information alone. Staleness is assessed based on the nature of the criminal activity and the type of premises involved. Illinois courts have consistently held that for suspected drug distribution operations — as opposed to one-time drug use — probable cause remains fresh longer because distribution premises tend to be ongoing and stable.\n\nDetective Tran testified that the informant had been reliable in two prior cases. The warrant application identified a residential address used for distribution, not a transient location. Eight days from tip to execution is well within the range Illinois courts have upheld for ongoing distribution operations. See People v. Kolichman, 1997 IL App (1st), where a ten-day gap was found acceptable for a narcotics distribution apartment.\n\nMoreover, the State invokes the good-faith exception of United States v. Leon, 468 U.S. 897 (1984), adopted in Illinois in People v. Stewart, 2014 IL App (1st) 120758. Officers executing a facially valid warrant that was reviewed and signed by a neutral magistrate are entitled to rely on it in good faith, even if the probable cause was later found deficient.",
+    courtCommentary: "Counsel, I want to understand the factual record more precisely. What did the warrant affidavit actually say about the informant's tip? Did Tran represent to the magistrate that the information was three days old, or was that staleness only revealed at trial on cross-examination?\n\nOn People v. Tisler — I agree it is not a bright-line rule. But the analysis requires me to look at what the affidavit said about the nature of the location and why the informant's information was still credible at execution. If Tran told the magistrate the tip was recent without disclosing its age, that raises Franks v. Delaware material omission concerns that go beyond simple staleness.\n\nOn Leon: the good-faith exception does not apply where the affidavit is so lacking in indicia of probable cause that reliance is unreasonable. If the affidavit omitted the eight-day gap, Leon may not save it. Defense, what is the affidavit record?",
+    defenseResponse: "Your Honor, the warrant affidavit is the linchpin of this claim. The affidavit represented to the magistrate that a reliable informant had 'recently' observed narcotics at the premises — it did not disclose that the informant's most recent observation was three days before the application, making it eight days stale at execution. Under Franks v. Delaware, 438 U.S. 154 (1978), material omissions from a warrant affidavit — including the age of the information — require a hearing and potential suppression.\n\nOn People v. Tisler's context-specific analysis: cocaine stored in a duffel bag at a residential address is not an ongoing manufacturing operation. It is a commodity that can be moved in minutes. Eight-day-old information with no corroborating surveillance, no controlled buy, and no refreshing circumstances does not satisfy probable cause for cocaine at a specific address on a specific date.\n\nOn Leon: People v. Stewart holds the good-faith exception inapplicable where the magistrate was misled about the currency of the information. Here, describing an eight-day-old tip as 'recent' is a material misrepresentation. Leon does not protect officers who obtain warrants through material omissions about the staleness of the foundational information.",
+  },
+  {
+    roundNumber: 3,
+    stateStrength: "MINIMAL",
+    defenseBurden: "Defense must show that counsel's failure to subpoena or call Keisha Barton as a defense witness was objectively unreasonable under Strickland and that there is a reasonable probability the bench verdict would have been different with Barton's live testimony.",
+    stateArgument: "Your Honor, on the IAC claim regarding Barton, the State raises two arguments. First, Strickland's strong presumption of competence applies. We do not know why Attorney Kuczyk did not call Barton — there is no hearing record, no affidavit from Kuczyk, nothing. Defense asks this Court to assume incompetence from a cold record. Under Harrington v. Richter, 562 U.S. 86 (2011), courts must presume that an unelucidated decision reflects a sound strategic choice. Perhaps Kuczyk investigated and learned Barton would invoke the Fifth Amendment, recant, or was hostile. We simply do not know.\n\nSecond, prejudice is not established. The case was a bench trial before an experienced judge. Even with Barton's testimony, the court had before it: mail addressed to Williams at the premises, Williams's physical presence in the residence, and the cocaine found in the same location. A co-occupant claiming the drugs are hers — particularly one with a prior PWID conviction — may have done more harm than good.\n\nThe State also notes that if Barton had testified, her prior conviction would have been explored on cross-examination, potentially raising questions about Williams's knowing association with a narcotics dealer.",
+    courtCommentary: "On the question of why Kuczyk did not call Barton — the State correctly notes we lack a hearing record. However, unlike some IAC claims, this one arises on a uniquely thin record: Kuczyk elicited Barton's exculpatory statement from Detective Tran on cross-examination. She knew, as a matter of record, that Barton had told police the drugs were hers. She then rested without making any attempt to produce Barton. The record does not suggest investigation was done and a strategic decision made — it suggests the issue was simply not pursued.\n\nOn Strickland prejudice in a bench trial: I am the finder of fact. If Barton had testified that the duffel bag was hers, under oath, on the stand — I need defense to tell me what the realistic impact of that testimony would have been given the mail evidence and constructive possession doctrine.\n\nI want to know: is there an affidavit from Barton in this post-conviction record? If so, what does it say?",
+    defenseResponse: "Your Honor, a post-conviction affidavit from Keisha Barton is part of this record. In it, she confirms: she was never contacted by defense counsel before or during trial; she was willing to testify at trial; the duffel bag and its contents belonged to her alone; and Williams had no knowledge of what was in the bag. She further states that she had never discussed this with Williams and that counsel could have reached her through the same address where she was present when arrested.\n\nUnder People v. Orange, 168 Ill. 2d 138 (1995), an IAC claim based on failure to call a witness requires exactly this: an affidavit establishing the witness was available and the testimony exculpatory. Barton's affidavit supplies both.\n\nOn the strategic-decision defense: under Wiggins v. Smith, 539 U.S. 510 (2003), a strategic decision requires that counsel first investigated sufficiently to make a strategic choice. Kuczyk had no record of contacting Barton, no subpoena, no investigator's notes. The presumption of strategy has nothing to attach to.\n\nOn prejudice in the bench trial: Your Honor was the finder of fact. Live testimony from the co-occupant confessing ownership of the contraband, corroborated by her prior PWID record showing knowledge and capacity, would have directly resolved the possession question in Williams's favor. The mail evidence shows Williams lived there — it does not show he controlled that particular bag. Barton's testimony would have been decisive.",
+  },
+];
+
+const IL_DEMO_VERDICT_SUMMARY = `After three rounds of argument in this 725 ILCS 5/122-1 post-conviction proceeding, this Court finds that the conviction of Darnell James Williams must be vacated.
+
+The Brady violation is the clearest ground for relief. Detective Tran admitted on the stand — in the very trial that produced this conviction — that Keisha Barton told him the duffel bag containing the cocaine belonged to her and that Williams had no knowledge of it. Defense counsel confirmed that no Barton statement or supplemental report was produced in discovery. Under Brady v. Maryland, 373 U.S. 83 (1963), as applied in Illinois under People v. Beaman, 229 Ill. 2d 56 (2008), the suppression of a co-occupant's direct exculpatory statement — confessing ownership of the contraband and negating the possession element — is paradigmatic Brady material. Materiality is satisfied: in a bench trial focused entirely on constructive possession of a single duffel bag, a witness claiming ownership of that bag would have been decisive.
+
+The staleness of the warrant presents a serious independent ground. An informant tip eight days old at execution, with no refreshing surveillance, no controlled buy, and no affidavit disclosure of the tip's age, raises both People v. Tisler staleness concerns and Franks v. Delaware material omission concerns. The State's invocation of Leon fails because the affidavit did not accurately represent the currency of the information. This ground warrants an evidentiary hearing on the affidavit record.
+
+The ineffective assistance claim is well-founded on the post-conviction record now before the Court. Keisha Barton's affidavit establishes that she was available, willing, and never contacted by defense counsel. Kuczyk elicited Barton's exculpatory statement from the detective on cross-examination and then rested without any apparent attempt to secure Barton's live testimony. Under Wiggins v. Smith and People v. Orange, this constitutes deficient performance with clear Strickland prejudice.
+
+RULING: The conviction of Darnell James Williams is VACATED. The matter is remanded for further proceedings. The State is ordered to produce the complete Barton supplemental file. An evidentiary hearing on the warrant staleness issue is set within 45 days. DEFENSE WIN.`;
+
+async function seedIlCourtSimulation(tx: Parameters<Parameters<typeof db.transaction>[0]>[0], caseId: number, docId: number): Promise<void> {
+  const [session] = await tx.insert(courtSessionsTable).values({
+    caseId,
+    simulationMode: "postconviction_974",
+    skepticMode: true,
+    expandedRecord: false,
+    pleaQuestionnaireNotes: null,
+    documentIds: JSON.stringify([docId]),
+    status: "completed",
+    verdictRating: "DEFENSE WIN",
+    verdictSummary: IL_DEMO_VERDICT_SUMMARY,
+    defenseWon: true,
+    totalRounds: IL_DEMO_ROUNDS.length,
+  }).returning();
+  for (const r of IL_DEMO_ROUNDS) {
+    await tx.insert(courtRoundsTable).values({
+      sessionId: session.id,
+      roundNumber: r.roundNumber,
+      stateStrength: r.stateStrength,
+      defenseBurden: r.defenseBurden,
+      stateArgument: r.stateArgument,
+      courtCommentary: r.courtCommentary,
+      defenseResponse: r.defenseResponse,
+    });
+  }
+}
+
 export async function seedIllinoisDemoCase(): Promise<void> {
   try {
     const existing = await db
@@ -907,7 +971,21 @@ export async function seedIllinoisDemoCase(): Promise<void> {
 
       const needsRestore = !demoDoc || demoDoc.status === "error" || demoDoc.status === "pending" || (demoDoc.findingCount ?? 0) === 0;
       if (!needsRestore) {
-        logger.info({ caseId }, "Illinois demo case already exists and is healthy — skipping seed");
+        const existingSession = await db
+          .select({ id: courtSessionsTable.id })
+          .from(courtSessionsTable)
+          .where(eq(courtSessionsTable.caseId, caseId))
+          .limit(1)
+          .then((rows) => rows[0] ?? null);
+        if (!existingSession) {
+          logger.info({ caseId }, "Illinois demo case missing court simulation — seeding session...");
+          await db.transaction(async (tx) => {
+            await seedIlCourtSimulation(tx, caseId, demoDoc!.id);
+          });
+          logger.info({ caseId }, "Illinois demo court simulation seeded");
+        } else {
+          logger.info({ caseId }, "Illinois demo case already exists and is healthy — skipping seed");
+        }
         return;
       }
 
@@ -926,6 +1004,8 @@ export async function seedIllinoisDemoCase(): Promise<void> {
         }
         await tx.update(documentsTable).set({ status: "analyzed", findingCount: IL_DEMO_FINDINGS.length }).where(eq(documentsTable.id, docId));
         await tx.update(casesTable).set({ hasAnalysis: true }).where(eq(casesTable.id, caseId));
+        await tx.delete(courtSessionsTable).where(eq(courtSessionsTable.caseId, caseId));
+        await seedIlCourtSimulation(tx, caseId, docId);
       });
       logger.info({ caseId }, "Illinois demo case restored");
       return;
@@ -956,6 +1036,7 @@ export async function seedIllinoisDemoCase(): Promise<void> {
       }
 
       await tx.update(documentsTable).set({ findingCount: IL_DEMO_FINDINGS.length }).where(eq(documentsTable.id, ilDoc.id));
+      await seedIlCourtSimulation(tx, ilCase.id, ilDoc.id);
       logger.info({ caseId: ilCase.id }, "Illinois demo case seeded successfully");
     });
   } catch (err) {
@@ -1193,6 +1274,72 @@ const MN_DEMO_FINDINGS = [
   },
 ];
 
+const MN_DEMO_ROUNDS = [
+  {
+    roundNumber: 1,
+    stateStrength: "WEAK",
+    defenseBurden: "Defense must demonstrate that the photo array administered by Detective Schroeder violated the Minnesota Eyewitness Identification Reform Act and that the resulting identifications were the product of an impermissibly suggestive procedure requiring suppression.",
+    stateArgument: "Your Honor, the State addresses the Eyewitness Identification Reform Act claim under Minn. Stat. § 626.8435. At the threshold, this claim was not raised by a pretrial suppression motion, which raises a forfeiture concern under State v. Needham. Defense counsel Csorba challenged the witnesses on cross-examination but did not move to suppress the identifications before trial, which is the prescribed procedural vehicle under the Reform Act.\n\nOn the merits, the State acknowledges that Detective Schroeder administered the array herself rather than using a blind or blinded administrator. The statute was newly effective in 2020 — Schroeder testified the department was transitioning protocols. Under the good-faith compliance framework, departments in transition have been extended some latitude by Minnesota courts.\n\nFurther, the State argues that even if the administration violated the Act, the remedy is not automatic suppression — courts retain discretion under the Act to admit identifications if they are otherwise reliable. Under the totality-of-the-circumstances reliability test derived from Neil v. Biggers, 409 U.S. 188 (1972), the identifications of Farris and Thibodeau should be evaluated on their independent indicia of reliability: both identified Okafor from a photo array, both were interviewed separately, and both were confident in their identifications.",
+    courtCommentary: "Counsel, the State's procedural forfeiture argument concerns me less than the substantive question, because the post-conviction statute expressly permits claims of constitutional dimension that were not raised at trial when cause and prejudice are shown — and here, ineffective assistance of trial counsel for failing to move to suppress is the obvious cause argument.\n\nOn the good-faith transition argument: I want the State to point me to any Minnesota authority holding that a newly effective mandatory procedural statute has a grace period. The Reform Act's language is not aspirational — it says 'shall be administered.' I'm also troubled by Schroeder's testimony that she knew about the statute and administered the array anyway.\n\nOn the Neil v. Biggers reliability test: that framework applies after a finding of suggestive procedure. The Reform Act was enacted precisely because research showed that non-blind administration produces systematic suggestion even without intent. If Schroeder knew which photo was Okafor's, the question is not whether she intended to suggest — it is whether the procedure itself was unreliable. Defense?",
+    defenseResponse: "Your Honor, there is no good-faith exception in Minn. Stat. § 626.8435 and the Legislature declined to include one. The statute's mandatory blind-administration requirement is unambiguous. In State v. Ard, 2022 MN App, the court applied the Act and found that violation of the blind-administration requirement requires suppression of the identification absent extraordinary circumstances — there are no extraordinary circumstances here, only departmental inertia.\n\nOn the cause-and-prejudice for overcoming procedural default: the sufficient reason is IAC of trial counsel Csorba, who failed to file a pretrial suppression motion despite knowing the array was administered by the lead detective in violation of a then-current statute. That omission is textbook deficient performance.\n\nOn Neil v. Biggers: the reliability factors actually undercut the State's identifications. Farris was 68 feet away at night under sodium vapor lighting — poor viewing conditions. Thibodeau had an estimated BAC of .11 — significantly impaired. The array was administered 19 days after the shooting — a long delay that research shows dramatically increases misidentification rates. A mandated reliability hearing would have exposed all of this. By skipping the hearing, the jury was denied the framework to assess whether these identifications were trustworthy. That is precisely the structural harm the Reform Act was designed to prevent.",
+  },
+  {
+    roundNumber: 2,
+    stateStrength: "MINIMAL",
+    defenseBurden: "Defense must establish that the State's failure to investigate Mrs. Hendricks after receiving a direct lead from Simone Arquette, and the failure to disclose that lead, constituted Brady suppression material to the verdict.",
+    stateArgument: "Your Honor, on the Brady claim regarding Mrs. Hendricks: the State acknowledges on the record that Hendricks was never interviewed. However, the Brady doctrine requires suppression of evidence — not merely failure to investigate a lead. Under Strickler v. Greene, 527 U.S. 263 (1999), Brady requires that the State actually possess favorable evidence and withhold it. Here, the State never obtained a statement from Hendricks. You cannot suppress what you do not have.\n\nMoreover, Hendricks's identity was not suppressed — Simone Arquette testified at trial that Hendricks knocked on the door at 10 p.m. and that Okafor answered. The jury heard that information. Defense counsel could have subpoenaed Hendricks before trial; he chose not to. The Brady doctrine does not require the State to conduct the defense's investigation for it.\n\nThe State also invokes materiality: Hendricks's testimony would have been that she saw a man answer Arquette's door at 10 p.m. Even if that man was Okafor, it does not definitively place him there at the time of the 10:30 shooting — it places him there thirty minutes prior. Two eyewitnesses put Okafor at the scene. The alibi, even fully corroborated, was not an ironclad alibi.",
+    courtCommentary: "The State's 'you can't suppress what you don't have' argument has a significant hole in it. Arquette testified on the stand that she told Detective Schroeder about Hendricks and that Schroeder said she would follow up. That is an affirmative representation by a police officer that she would pursue a lead — combined with a subsequent failure to do so. Under State v. Hunt, 615 N.W.2d 294 (Minn. 2000), the Brady duty extends to evidence within the State's constructive possession — meaning evidence the police could obtain through reasonable investigation of leads they affirmatively received.\n\nThe question is whether Schroeder's promise to follow up, combined with her failure to do so, constitutes constructive suppression under Minnesota law. Counsel, what is Minnesota's framework for constructive possession of Brady material?\n\nOn materiality: the State says the shooting was at 10:30 and Hendricks saw Okafor at 10:00. Is that right? Because a witness placing the defendant at the alibi location thirty minutes before the shooting — with no means of travel identified — in a case built entirely on two compromised eyewitness identifications seems extremely significant.",
+    defenseResponse: "Your Honor, Minnesota's Brady framework under State v. Hunt is clear: the State cannot avoid its disclosure duty by promising to investigate an alibi lead and then burying it. Schroeder received the Hendricks lead from Arquette directly. She promised to follow up. She did not. The State's concession at trial that Hendricks was never interviewed, following Arquette's direct testimony about the promise, establishes constructive suppression on these facts.\n\nOn materiality: the thirty-minute gap does not defeat the alibi — it strengthens it. Hendricks can place Okafor at the alibi address at 10:00 p.m. The shooting was at 10:30 p.m. The alibi location and the crime scene are not contiguous. A witness placing the defendant at a different location thirty minutes before the crime, with no evidence he had a car or any means of travel, is compelling alibi corroboration — not an alibi failure.\n\nIn a post-conviction proceeding under Minn. Stat. § 590.01, subd. 4(b)(2), a Hendricks affidavit placing Okafor at Arquette's apartment at 10 p.m. on the night of the shooting constitutes newly discovered evidence that satisfies the statute's requirements. The evidence was not 'known' at trial in any meaningful sense — Hendricks's identity was mentioned, but her actual testimony was unavailable due to the Brady violation. Under State v. Rhodes, 657 N.W.2d 823 (Minn. 2003), that is a cognizable newly discovered evidence claim with a reasonable probability of a different outcome.",
+  },
+  {
+    roundNumber: 3,
+    stateStrength: "MINIMAL",
+    defenseBurden: "Defense must show that the cumulative impact of the Reform Act violation, Brady suppression, and IAC establishes entitlement to relief under Minn. Stat. § 590.01 and that the applicable time-bar is equitably tolled.",
+    stateArgument: "Your Honor, even if this Court finds merit in the individual claims, the State raises the time-bar under Minn. Stat. § 590.01, subd. 4(a). Post-conviction petitions must generally be filed within two years of the expiration of the time for direct appeal or within two years of when the grounds for the petition could have been known with due diligence. The conviction became final in 2022. This petition was filed in 2024. Defense has the burden of establishing equitable tolling or a statutory exception.\n\nOn the cumulative error argument: Minnesota does not recognize a freestanding cumulative error claim. Each claim must succeed on its own merits. Courts applying Minn. Stat. § 590.01 consider each ground independently. The State urges this Court not to bootstrap individually weak claims into a reversal through aggregation.\n\nFinally, the State renews its prejudice argument across all claims. Raymond Okafor was identified by two witnesses. Even if the identifications had procedural defects, even if the alibi investigation was incomplete, and even if Hendricks's testimony were presented — this case is not a one-witness case. Two independent witnesses identified Okafor at the scene. Reversal on these grounds would require this Court to find that the combination of defects creates a reasonable probability of a different outcome. The State submits it does not.",
+    courtCommentary: "I want to address the time-bar question directly. The petition is within the statutory window if equitable tolling applies. Counsel, walk me through the argument that the Brady suppression of the Hendricks lead equitably tolled the clock.\n\nOn the cumulative error question: I take the State's point that Minnesota does not have a freestanding cumulative error doctrine. But the Minn. Stat. § 590.01 analysis allows me to consider the totality of the record in evaluating whether the petitioner has demonstrated a sufficient basis for relief. That is not cumulative error — it is simply weighing the strength of multiple independent grounds.\n\nOn the two-witness argument: I have heard today that one witness was 68 feet away at night with poor lighting; one was estimated at .11 BAC; the array was administered 19 days later by the lead detective in violation of a mandatory statute; and there is an uninvestigated alibi corroboration witness who was promised follow-up by the detective and never received it. At what point does the State's case become so infirm that 'two witnesses identified him' is not a sufficient answer to the totality of the post-conviction record?",
+    defenseResponse: "Your Honor, on the time-bar: the Brady suppression of the Hendricks lead equitably tolls the statute under State v. Hale, 2018 MN App. The specific facts here are that the State promised to investigate a lead and did not — a form of ongoing concealment. Raymond Okafor could not have known that Hendricks existed and was willing to testify until post-conviction counsel located her. The clock for newly discovered evidence runs from when the evidence could have been known with due diligence — and due diligence could not overcome the State's concealment of its own failure to follow up. This petition is timely.\n\nOn cumulative strength: Your Honor's question states it precisely. This is not a case with one infirmity. The State's entire evidentiary case consisted of two eyewitness identifications. Those identifications were obtained through a procedure that violated a mandatory statute designed to prevent misidentification. Neither witness had reliable viewing conditions. The alibi was corroborated by a neighbor the police never spoke to after promising to do so. Defense counsel failed to subpoena that neighbor even after eliciting her existence in open court.\n\nUnder Minn. Stat. § 590.01, relief is warranted where the petitioner demonstrates by a preponderance of the evidence that the errors entitle him to relief. We have demonstrated Brady suppression, a statutory violation, and IAC — independently and collectively. Raymond Okafor asks this Court to grant him the fair proceeding the Constitution and Minnesota law required from the beginning.",
+  },
+];
+
+const MN_DEMO_VERDICT_SUMMARY = `After three rounds of argument in this Minn. Stat. § 590.01 post-conviction proceeding, this Court finds that the conviction of Raymond Leon Okafor cannot stand.
+
+The Eyewitness Identification Reform Act violation is the most structurally significant ground for relief. Detective Schroeder administered the photo array herself — as the lead detective who had already identified Okafor as the suspect — in direct violation of Minn. Stat. § 626.8435's mandatory blind-administration requirement. The statute was in effect. Schroeder knew it. The violation was not inadvertent; she acknowledged it on cross-examination. The Reform Act was enacted precisely because non-blind administration by a knowing detective produces systematic suggestion. No pretrial reliability hearing was held. The jury evaluated two identifications without the framework Minnesota law mandates. That is a structural failure.
+
+The Brady claim regarding Mrs. Hendricks is well-established on this record. Detective Schroeder received a direct lead from Simone Arquette — the neighbor who could place Okafor at the alibi address at 10 p.m. on the night of the shooting — and promised to follow up. She did not. The State's trial concession that Hendricks was never interviewed, combined with Arquette's testimony about the promise, constitutes constructive suppression under State v. Hunt. Hendricks's testimony is newly discovered evidence within Minn. Stat. § 590.01, subd. 4(b)(2), and a reasonable probability of a different verdict exists given that the entire State's case rested on two identifications with serious reliability defects.
+
+The ineffective assistance claim is supported by the record: defense counsel elicited Hendricks's existence in open court and rested without subpoenaing her. Under Wiggins v. Smith and State v. Zornes, a post-conviction affidavit from Hendricks confirming availability and willingness to testify eliminates any strategic justification for the omission.
+
+The petition is timely under equitable tolling: the Brady suppression prevented Okafor from knowing the full scope of the Hendricks lead within the statutory period.
+
+RULING: The conviction of Raymond Leon Okafor is VACATED. The matter is remanded for a new trial. The State is ordered to produce all materials related to the Hendricks investigation and any communications with eyewitnesses Farris and Thibodeau. A Schwartz hearing on the eyewitness identification claims is set within 60 days. DEFENSE WIN.`;
+
+async function seedMnCourtSimulation(tx: Parameters<Parameters<typeof db.transaction>[0]>[0], caseId: number, docId: number): Promise<void> {
+  const [session] = await tx.insert(courtSessionsTable).values({
+    caseId,
+    simulationMode: "postconviction_974",
+    skepticMode: true,
+    expandedRecord: false,
+    pleaQuestionnaireNotes: null,
+    documentIds: JSON.stringify([docId]),
+    status: "completed",
+    verdictRating: "DEFENSE WIN",
+    verdictSummary: MN_DEMO_VERDICT_SUMMARY,
+    defenseWon: true,
+    totalRounds: MN_DEMO_ROUNDS.length,
+  }).returning();
+  for (const r of MN_DEMO_ROUNDS) {
+    await tx.insert(courtRoundsTable).values({
+      sessionId: session.id,
+      roundNumber: r.roundNumber,
+      stateStrength: r.stateStrength,
+      defenseBurden: r.defenseBurden,
+      stateArgument: r.stateArgument,
+      courtCommentary: r.courtCommentary,
+      defenseResponse: r.defenseResponse,
+    });
+  }
+}
+
 export async function seedMinnesotaDemoCase(): Promise<void> {
   try {
     const existing = await db
@@ -1212,7 +1359,21 @@ export async function seedMinnesotaDemoCase(): Promise<void> {
 
       const needsRestore = !demoDoc || demoDoc.status === "error" || demoDoc.status === "pending" || (demoDoc.findingCount ?? 0) === 0;
       if (!needsRestore) {
-        logger.info({ caseId }, "Minnesota demo case already exists and is healthy — skipping seed");
+        const existingSession = await db
+          .select({ id: courtSessionsTable.id })
+          .from(courtSessionsTable)
+          .where(eq(courtSessionsTable.caseId, caseId))
+          .limit(1)
+          .then((rows) => rows[0] ?? null);
+        if (!existingSession) {
+          logger.info({ caseId }, "Minnesota demo case missing court simulation — seeding session...");
+          await db.transaction(async (tx) => {
+            await seedMnCourtSimulation(tx, caseId, demoDoc!.id);
+          });
+          logger.info({ caseId }, "Minnesota demo court simulation seeded");
+        } else {
+          logger.info({ caseId }, "Minnesota demo case already exists and is healthy — skipping seed");
+        }
         return;
       }
 
@@ -1231,6 +1392,8 @@ export async function seedMinnesotaDemoCase(): Promise<void> {
         }
         await tx.update(documentsTable).set({ status: "analyzed", findingCount: MN_DEMO_FINDINGS.length }).where(eq(documentsTable.id, docId));
         await tx.update(casesTable).set({ hasAnalysis: true }).where(eq(casesTable.id, caseId));
+        await tx.delete(courtSessionsTable).where(eq(courtSessionsTable.caseId, caseId));
+        await seedMnCourtSimulation(tx, caseId, docId);
       });
       logger.info({ caseId }, "Minnesota demo case restored");
       return;
@@ -1261,6 +1424,7 @@ export async function seedMinnesotaDemoCase(): Promise<void> {
       }
 
       await tx.update(documentsTable).set({ findingCount: MN_DEMO_FINDINGS.length }).where(eq(documentsTable.id, mnDoc.id));
+      await seedMnCourtSimulation(tx, mnCase.id, mnDoc.id);
       logger.info({ caseId: mnCase.id }, "Minnesota demo case seeded successfully");
     });
   } catch (err) {
