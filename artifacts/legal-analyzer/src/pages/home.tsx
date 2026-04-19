@@ -5,11 +5,16 @@ import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Compass } from "lucide-react";
+import { useUserMode } from "@/contexts/UserModeContext";
+import { heroHeading, heroSubtext } from "@/lib/modeContent";
 
 export default function Home() {
   const { data, isLoading } = useGetRecentCase();
   const [, navigate] = useLocation();
   const [demoCaseId, setDemoCaseId] = useState<number | null>(null);
+  const { mode } = useUserMode();
+  const heading = heroHeading(mode);
+  const subtext = heroSubtext(mode);
 
   useEffect(() => {
     let attempts = 0;
@@ -43,6 +48,18 @@ export default function Home() {
       <Navbar />
       <main className="flex-1 flex flex-col items-center justify-center p-4">
         <div className="max-w-3xl w-full text-center space-y-8">
+          {heading && (
+            <div className="space-y-3">
+              <h1 className="text-3xl sm:text-4xl font-serif font-medium tracking-tight text-foreground leading-snug">
+                {heading}
+              </h1>
+              {subtext && (
+                <p className="text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+                  {subtext}
+                </p>
+              )}
+            </div>
+          )}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 flex-wrap">
             <Link href="/cases/new" className="w-full sm:w-auto">
               <Button size="lg" className="w-full sm:w-auto text-base h-14 px-8 rounded-full" data-testid="button-create-case">

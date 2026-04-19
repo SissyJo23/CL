@@ -1,7 +1,7 @@
 import type { Finding, CrossCaseMatch } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Scale, BookOpen, Quote, ChevronDown, Link as LinkIcon, Loader2, FileText, ShieldAlert, Target, Swords, Route, BarChart3 } from "lucide-react";
+import { Pencil, Trash2, Scale, BookOpen, Quote, ChevronDown, Link as LinkIcon, Loader2, FileText, ShieldAlert, Target, Swords, Route, BarChart3, Lightbulb } from "lucide-react";
 import { useListCategories, useUpdateFinding, useDeleteFinding } from "@workspace/api-client-react";
 import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -9,6 +9,8 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useUserMode } from "@/contexts/UserModeContext";
+import { sectionTitle, proceduralStatusLabel, survivabilityLabel, actionStepForVehicle } from "@/lib/modeContent";
 
 const colorMap: Record<string, string> = {
   blue: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
@@ -46,6 +48,8 @@ export default function FindingCard({ finding, caseId, documentId, onDeleted, on
   const [crossCaseOpen, setCrossCaseOpen] = useState(false);
   const [strategicOpen, setStrategicOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const { mode } = useUserMode();
+  const isPlainMode = mode === "inmate" || mode === "advocate";
 
   const hasStrategicData = !!(
     finding.proceduralStatus ||
@@ -177,7 +181,7 @@ export default function FindingCard({ finding, caseId, documentId, onDeleted, on
                   <span className="text-amber-900 dark:text-amber-300 font-semibold">Strategic Analysis</span>
                   {finding.survivability && (() => {
                     const s = survivabilityStyles[finding.survivability ?? ""] ?? survivabilityStyles.Moderate;
-                    return <Badge className={cn("text-[10px] h-4 py-0 px-1.5 ml-1", s.badge)}>{s.label}</Badge>;
+                    return <Badge className={cn("text-[10px] h-4 py-0 px-1.5 ml-1", s.badge)}>{survivabilityLabel(finding.survivability, mode)}</Badge>;
                   })()}
                 </div>
                 <ChevronDown className={cn("w-4 h-4 text-amber-600 dark:text-amber-500 transition-transform", strategicOpen && "rotate-180")} />
@@ -188,18 +192,18 @@ export default function FindingCard({ finding, caseId, documentId, onDeleted, on
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
                         <BarChart3 className="w-3.5 h-3.5" />
-                        Procedural Status
+                        {sectionTitle("proceduralStatus", mode)}
                       </div>
-                      <span className={cn("inline-block text-xs font-medium px-2 py-0.5 rounded border", proceduralStatusStyles[finding.proceduralStatus] ?? "text-muted-foreground bg-muted")}>
-                        {finding.proceduralStatus}
+                      <span className={cn("inline-block text-xs font-medium px-2 py-0.5 rounded border", isPlainMode ? "text-foreground/80 bg-muted border-border" : proceduralStatusStyles[finding.proceduralStatus] ?? "text-muted-foreground bg-muted")}>
+                        {proceduralStatusLabel(finding.proceduralStatus, mode)}
                       </span>
                     </div>
                   )}
-                  {finding.legalVehicle && (
+                  {finding.legalVehicle && !isPlainMode && (
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
                         <Route className="w-3.5 h-3.5" />
-                        Best Legal Vehicle
+                        {sectionTitle("legalVehicle", mode)}
                       </div>
                       <p className="text-sm text-foreground/90 font-medium">{finding.legalVehicle}</p>
                     </div>
@@ -208,7 +212,7 @@ export default function FindingCard({ finding, caseId, documentId, onDeleted, on
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-red-700 dark:text-red-400">
                         <Target className="w-3.5 h-3.5" />
-                        Anticipated Block
+                        {sectionTitle("anticipatedBlock", mode)}
                       </div>
                       <p className="text-sm text-foreground/80 leading-relaxed bg-red-50/50 dark:bg-red-900/10 p-3 rounded-lg border border-red-100 dark:border-red-900/30">
                         {finding.anticipatedBlock}
@@ -219,7 +223,7 @@ export default function FindingCard({ finding, caseId, documentId, onDeleted, on
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                         <Swords className="w-3.5 h-3.5" />
-                        Breakthrough Argument
+                        {sectionTitle("breakthroughArgument", mode)}
                       </div>
                       <p className="text-sm text-foreground/80 leading-relaxed bg-emerald-50/50 dark:bg-emerald-900/10 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
                         {finding.breakthroughArgument}
@@ -260,6 +264,19 @@ export default function FindingCard({ finding, caseId, documentId, onDeleted, on
             </Collapsible>
           )}
         </div>
+
+        {isPlainMode && (() => {
+          const actionStep = actionStepForVehicle(finding.legalVehicle, mode);
+          if (!actionStep) return null;
+          return (
+            <div className="px-5 pb-4">
+              <div className="flex items-start gap-2 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-lg px-3 py-2.5 text-xs text-indigo-800 dark:text-indigo-300 leading-snug">
+                <Lightbulb className="w-3.5 h-3.5 shrink-0 mt-0.5 text-indigo-500" />
+                <span><span className="font-semibold">What you can do: </span>{actionStep}</span>
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="grid grid-cols-2 divide-x divide-border border-t border-border mt-auto">
           <Button

@@ -219,9 +219,18 @@ async function callAnthropicWithRetry(
   throw new Error("Max retries exceeded");
 }
 
+const VALID_MODES = ["inmate", "advocate", "attorney", "appellate"] as const;
+type UserMode = typeof VALID_MODES[number];
+
 router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
   const caseId = Number(req.params.caseId);
   const docId = Number(req.params.id);
+
+  const rawMode = req.query.mode;
+  const userMode: UserMode | undefined =
+    typeof rawMode === "string" && VALID_MODES.includes(rawMode as UserMode)
+      ? (rawMode as UserMode)
+      : undefined;
 
   const [doc] = await db
     .select()
@@ -261,6 +270,8 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
   res.flushHeaders();
+
+  logger.info({ docId, caseId, userMode: userMode ?? "attorney" }, "Starting document analysis");
 
   await db
     .update(documentsTable)

@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch, Milestone } from "lucide-react";
+import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch, Milestone, User, Users, BookOpen } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,6 +15,15 @@ import { Input } from "@/components/ui/input";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { useUserMode, type UserMode } from "@/contexts/UserModeContext";
+import { MODE_LABELS } from "@/lib/modeContent";
+
+const MODE_ICONS: Record<UserMode, React.ReactNode> = {
+  inmate: <User className="w-3 h-3" />,
+  advocate: <Users className="w-3 h-3" />,
+  attorney: <Scale className="w-3 h-3" />,
+  appellate: <BookOpen className="w-3 h-3" />,
+};
 
 type LiveStatus = {
   phase: "running" | "done" | "error";
@@ -25,6 +34,7 @@ type LiveStatus = {
 export default function CaseShow() {
   const params = useParams();
   const caseId = parseInt(params.id || "0", 10);
+  const { mode, setMode } = useUserMode();
   const { data: currentCase, isLoading: caseLoading } = useGetCase(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseQueryKey(caseId) } });
   const { data: documents, isLoading: docsLoading } = useListDocuments(caseId, { query: { enabled: !!caseId, queryKey: getListDocumentsQueryKey(caseId) } });
   const { data: strategyData, isLoading: strategyLoading } = useGetCaseStrategy(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseStrategyQueryKey(caseId) } });
@@ -279,6 +289,40 @@ export default function CaseShow() {
                   {currentCase.caseNumber && <span>Case #: <span className="font-medium text-foreground">{currentCase.caseNumber}</span></span>}
                   {currentCase.defendantName && <span>Defendant: <span className="font-medium text-foreground">{currentCase.defendantName}</span></span>}
                   {currentCase.jurisdiction && <span>Jurisdiction: <span className="font-medium text-foreground">{currentCase.jurisdiction}</span></span>}
+                </div>
+                <div className="mt-3">
+                  <Select value={mode} onValueChange={(v) => setMode(v as UserMode)}>
+                    <SelectTrigger className="h-7 text-xs border-border/50 bg-muted/30 hover:bg-muted/60 w-auto gap-1.5 px-2 focus:ring-0 focus:ring-offset-0 text-muted-foreground">
+                      {MODE_ICONS[mode]}
+                      <span>Viewing as: <span className="font-medium text-foreground">{MODE_LABELS[mode]}</span></span>
+                    </SelectTrigger>
+                    <SelectContent align="start">
+                      <SelectItem value="inmate">
+                        <div className="flex items-center gap-2">
+                          <User className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span>Inmate</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="advocate">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span>Advocate</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="attorney">
+                        <div className="flex items-center gap-2">
+                          <Scale className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span>Attorney</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="appellate">
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span>Appellate</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="flex gap-2 shrink-0 flex-wrap">
