@@ -263,6 +263,7 @@ export default function CaseShow() {
     setIsRunningAll(false);
     queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
     queryClient.invalidateQueries({ queryKey: getGetCaseQueryKey(caseId) });
+    queryClient.invalidateQueries({ queryKey: ["case-findings-summary", caseId] });
     toast({
       title: "Analysis Complete",
       description: `All ${queue.length} document${queue.length === 1 ? "" : "s"} have been processed.`,
@@ -277,6 +278,7 @@ export default function CaseShow() {
           setConfirmDeleteId(null);
           queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
           queryClient.invalidateQueries({ queryKey: getGetCaseQueryKey(caseId) });
+          queryClient.invalidateQueries({ queryKey: ["case-findings-summary", caseId] });
           toast({ title: "Document removed" });
         },
         onError: () => {
