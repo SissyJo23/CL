@@ -95,7 +95,7 @@ export default function CaseList() {
   // Fixed pill set — always the same order, counts may be 0
   const filterOptions: FilterState[] = ["All", "Wisconsin", "Illinois", "Minnesota", "Other"];
 
-  // Show filter bar whenever cases exist (loaded and non-empty)
+  // Show filter bar as soon as at least one case is loaded
   const showFilterBar = !isLoading && (cases ?? []).length > 0;
 
   // Apply filter
