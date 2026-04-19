@@ -18,14 +18,15 @@ lib/
   api-client-react/              — generated React Query hooks
   api-zod/                       — generated Zod schemas
   db/src/schema/                 — Drizzle ORM schema
-    cases.ts, documents.ts, categories.ts, findings.ts, court.ts, motions.ts
+    cases.ts, documents.ts, categories.ts, findings.ts, court.ts, motions.ts,
+    pattern-analyses.ts, relief-pathways.ts, nomerit-analyses.ts
 
 artifacts/
   api-server/src/
-    routes/                      — Express routes (cases, documents, findings, categories, court, motions, export)
-    lib/anthropic.ts             — Anthropic client + all AI prompts
+    routes/                      — Express routes (cases, documents, findings, categories, court, motions, export, pattern, relief, nomerit)
+    lib/anthropic.ts             — Anthropic client + all AI prompts + DOCUMENT_TYPE_LABELS
   legal-analyzer/src/
-    pages/                       — React pages (Home, CaseNew, CaseShow, DocumentShow, CourtNew, CourtRun, CourtShow, MotionShow)
+    pages/                       — React pages (Home, CaseNew, CaseShow, DocumentShow, NomeritPage, CourtNew, CourtRun, CourtShow, MotionShow, PatternPage, ReliefPage)
     components/                  — CategoryFilter, FindingCard, etc.
 ```
 
@@ -56,6 +57,13 @@ pnpm --filter @workspace/db run push
 
 ## Color System for Categories
 Categories have 5 colors: blue, yellow, red, pink, orange. Rendered as badges on FindingCards.
+
+## No-Merit Report Analyzer (Feature 3)
+When a document is typed as `no_merit_report`, the document page shows a violet "Run No-Merit Analysis" button. This triggers a two-phase AI analysis:
+1. **Phase 1**: Extracts dismissed claims from the report, identifies case findings counsel missed, and assesses arguability under Anders/Smith v. Robbins
+2. **Phase 2**: Drafts per-issue IAAC arguments (Strickland prongs) and a full Wisconsin-specific draft motion, including Martinez v. Ryan analysis
+
+Results stored in `nomerit_analyses` table. Analysis page: `/cases/:caseId/documents/:id/nomerit`.
 
 ## Court Simulation Modes
 1. **Direct Appeal** — De novo / harmless error standard

@@ -20,6 +20,7 @@ export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   exhibit: "Exhibit",
   policy: "Policy Document",
   executive_order: "Executive Order",
+  no_merit_report: "No-Merit Report",
   other: "Document",
 };
 

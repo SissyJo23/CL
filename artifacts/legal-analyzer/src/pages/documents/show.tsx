@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { useGetDocument, getGetDocumentQueryKey, useListFindings, getListFindingsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Play, Loader2, ShieldOff, Printer, Trash2, FileDown } from "lucide-react";
+import { ArrowLeft, Play, Loader2, ShieldOff, Trash2, FileDown, Scale, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import FindingCard from "@/components/findings/FindingCard";
 import CategoryFilter from "@/components/categories/CategoryFilter";
@@ -17,6 +17,7 @@ export default function DocumentShow() {
   const params = useParams();
   const caseId = parseInt(params.caseId || "0", 10);
   const documentId = parseInt(params.id || "0", 10);
+  const [, navigate] = useLocation();
 
   const { data: doc, isLoading: docLoading } = useGetDocument(caseId, documentId, {
     query: { enabled: !!documentId, queryKey: getGetDocumentQueryKey(caseId, documentId) },
@@ -31,6 +32,10 @@ export default function DocumentShow() {
   const [isRedacting, setIsRedacting] = useState(false);
   const [redactedContent, setRedactedContent] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>("");
+  const [isRunningNomerit, setIsRunningNomerit] = useState(false);
+  const [nomeritStatus, setNomeritStatus] = useState<string>("");
+  const [nomeritComplete, setNomeritComplete] = useState(false);
+  const [nomeritPriorStatus, setNomeritPriorStatus] = useState<"error" | null>(null);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -38,6 +43,75 @@ export default function DocumentShow() {
   useEffect(() => {
     if (initialFindings) setLiveFindings(initialFindings);
   }, [initialFindings]);
+
+  useEffect(() => {
+    if (doc?.documentType === "no_merit_report") {
+      fetch(`/api/cases/${caseId}/documents/${documentId}/nomerit-analysis`)
+        .then((r) => {
+          if (!r.ok) return;
+          return r.json();
+        })
+        .then((data) => {
+          if (!data) return;
+          if (data.status === "complete") {
+            setNomeritComplete(true);
+          } else if (data.status === "error") {
+            setNomeritPriorStatus("error");
+          }
+        })
+        .catch(() => {});
+    }
+  }, [doc, caseId, documentId]);
+
+  const handleRunNomeritAnalysis = async () => {
+    setIsRunningNomerit(true);
+    setNomeritPriorStatus(null);
+    setNomeritStatus("Starting no-merit analysis...");
+    try {
+      const response = await fetch(`/api/cases/${caseId}/documents/${documentId}/analyze-nomerit`, {
+        method: "POST",
+      });
+      if (!response.body) throw new Error("No response body");
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          const jsonStr = line.slice(5).trim();
+          if (!jsonStr) continue;
+          try {
+            const event = JSON.parse(jsonStr);
+            if (event.type === "status") {
+              setNomeritStatus(event.message ?? "");
+            } else if (event.type === "done") {
+              setIsRunningNomerit(false);
+              setNomeritStatus("");
+              setNomeritComplete(true);
+              toast({ title: "No-Merit Analysis Complete", description: "IAAC arguments and draft motion are ready." });
+              navigate(`/cases/${caseId}/documents/${documentId}/nomerit`);
+            } else if (event.type === "error") {
+              setIsRunningNomerit(false);
+              setNomeritStatus("");
+              toast({ title: "Analysis Error", description: event.message, variant: "destructive" });
+            }
+          } catch {
+            console.error("Failed to parse SSE event", line);
+          }
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      setIsRunningNomerit(false);
+      setNomeritStatus("");
+      toast({ title: "Connection Error", description: "Failed to connect to no-merit analysis stream.", variant: "destructive" });
+    }
+  };
 
   const handleRunAnalysis = async () => {
     setIsAnalyzing(true);
@@ -251,6 +325,41 @@ export default function DocumentShow() {
               </div>
 
               <div className="flex flex-wrap gap-2">
+                {doc.documentType === "no_merit_report" && (
+                  nomeritComplete ? (
+                    <Link href={`/cases/${caseId}/documents/${documentId}/nomerit`}>
+                      <Button size="lg" className="shadow-sm bg-violet-700 hover:bg-violet-800 text-white">
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        View No-Merit Analysis
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button
+                      size="lg"
+                      className={`shadow-sm text-white ${nomeritPriorStatus === "error" ? "bg-destructive hover:bg-destructive/90" : "bg-violet-700 hover:bg-violet-800"}`}
+                      onClick={handleRunNomeritAnalysis}
+                      disabled={isRunningNomerit}
+                      title={nomeritPriorStatus === "error" ? "Previous analysis failed — click to retry" : undefined}
+                    >
+                      {isRunningNomerit ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          {nomeritStatus || "Analyzing..."}
+                        </>
+                      ) : nomeritPriorStatus === "error" ? (
+                        <>
+                          <Scale className="w-4 h-4 mr-2" />
+                          Retry No-Merit Analysis
+                        </>
+                      ) : (
+                        <>
+                          <Scale className="w-4 h-4 mr-2" />
+                          Run No-Merit Analysis
+                        </>
+                      )}
+                    </Button>
+                  )
+                )}
                 {(doc.status === "pending" || doc.status === "error") && !isAnalyzing && (
                   <Button onClick={handleRunAnalysis} size="lg" className="shadow-sm">
                     <Play className="w-4 h-4 mr-2 fill-current" />

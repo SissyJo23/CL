@@ -10,6 +10,7 @@ import exportRouter from "./export";
 import demoRouter from "./demo";
 import patternRouter from "./pattern";
 import reliefRouter from "./relief";
+import nomeritRouter from "./nomerit";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(exportRouter);
 router.use(demoRouter);
 router.use(patternRouter);
 router.use(reliefRouter);
+router.use(nomeritRouter);
 
 export default router;

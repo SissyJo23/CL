@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { z } from "zod";
+import { z } from "zod/v4";
 import { db, casesTable, findingsTable, reliefPathwaysTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { anthropic } from "../lib/anthropic";

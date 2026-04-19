@@ -444,6 +444,7 @@ export default function CaseShow() {
                             <SelectItem value="exhibit">Exhibit</SelectItem>
                             <SelectItem value="policy">Policy</SelectItem>
                             <SelectItem value="executive_order">Executive Order</SelectItem>
+                            <SelectItem value="no_merit_report">No-Merit Report</SelectItem>
                             <SelectItem value="other">Other</SelectItem>
                           </SelectContent>
                         </Select>

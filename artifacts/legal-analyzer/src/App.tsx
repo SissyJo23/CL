@@ -10,6 +10,7 @@ import CaseShow from "@/pages/cases/show";
 import PatternPage from "@/pages/cases/pattern";
 import ReliefPage from "@/pages/cases/relief";
 import DocumentShow from "@/pages/documents/show";
+import NomeritPage from "@/pages/documents/nomerit";
 import CourtNew from "@/pages/court/new";
 import CourtRun from "@/pages/court/run";
 import CourtShow from "@/pages/court/show";
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/cases/:id/pattern" component={PatternPage} />
       <Route path="/cases/:id/relief" component={ReliefPage} />
       <Route path="/cases/:caseId/documents/:id" component={DocumentShow} />
+      <Route path="/cases/:caseId/documents/:id/nomerit" component={NomeritPage} />
       <Route path="/cases/:id/court/new" component={CourtNew} />
       <Route path="/cases/:caseId/court/:id/run" component={CourtRun} />
       <Route path="/cases/:caseId/court/:id" component={CourtShow} />
