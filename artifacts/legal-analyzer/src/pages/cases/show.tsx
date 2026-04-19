@@ -56,11 +56,11 @@ type ReliefPathway = {
 };
 
 const LADDER_SHORT: Record<number, string> = {
-  1: "WI Circuit",
-  2: "WI Court of Appeals",
-  3: "WI Supreme Court",
-  4: "U.S. District",
-  5: "7th Circuit",
+  1: "Trial Court",
+  2: "Court of Appeals",
+  3: "State Supreme Court",
+  4: "U.S. District Court",
+  5: "Circuit Court of Appeals",
   6: "SCOTUS",
 };
 
@@ -552,7 +552,7 @@ export default function CaseShow() {
                   <div>
                     <p className="text-sm font-medium text-foreground">Jurisdiction not yet configured</p>
                     <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
-                      The Federal Readiness engine currently supports Wisconsin cases. Support for additional jurisdictions is coming soon.
+                      The Federal Readiness engine supports Wisconsin, Illinois, and Minnesota cases. This case's jurisdiction was not recognized — please verify the case jurisdiction field.
                     </p>
                   </div>
                 </div>
