@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch, Milestone, User, Users, BookOpen, Shield, Star, ChevronRight, ChevronDown, AlertTriangle } from "lucide-react";
+import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch, Milestone, User, Users, BookOpen, Shield, Star, ChevronRight, ChevronDown, AlertTriangle, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -115,6 +115,55 @@ type PathwayResult =
 function truncateSentences(text: string, n: number): string {
   const sentences = text.match(/[^.!?]+[.!?]+/g) ?? [text];
   return sentences.slice(0, n).join(" ").trim();
+}
+
+// NOTE: Detection patterns mirror detectJurisdiction() in
+// artifacts/api-server/src/routes/relief.ts and list.tsx — keep in sync.
+type JurisdictionBadge = { displayText: string; circuit: string | null };
+
+function parseJurisdictionBadge(jurisdiction: string | null | undefined): JurisdictionBadge | null {
+  if (!jurisdiction) return null;
+  const lower = jurisdiction.toLowerCase().trim();
+
+  let stateName: string | null = null;
+  let circuit: string | null = null;
+
+  if (
+    lower.includes("wisconsin") ||
+    lower === "wi" || lower === "wis" || lower === "wis." ||
+    lower.startsWith("wi ") || lower.startsWith("wis ") || lower.startsWith("wis.") ||
+    lower.includes(", wi") || lower.includes(" wi,") ||
+    lower.includes("(wi)") || lower.includes("(wis)")
+  ) { stateName = "Wisconsin"; circuit = "7th Circuit"; }
+  else if (
+    lower.includes("illinois") ||
+    lower === "il" || lower === "ill" || lower === "ill." ||
+    lower.startsWith("il ") || lower.startsWith("ill ") ||
+    lower.includes(", il") || lower.includes(" il,") ||
+    lower.includes("(il)") || lower.includes("(ill)") ||
+    lower.includes("cook county") || lower.includes("chicago")
+  ) { stateName = "Illinois"; circuit = "7th Circuit"; }
+  else if (
+    lower.includes("minnesota") ||
+    lower === "mn" ||
+    lower.startsWith("mn ") || lower.includes(", mn") || lower.includes(" mn,") ||
+    lower.includes("(mn)") ||
+    lower.includes("minneapolis") || lower.includes("st. paul") || lower.includes("saint paul")
+  ) { stateName = "Minnesota"; circuit = "8th Circuit"; }
+
+  if (stateName) {
+    const firstPart = jurisdiction.split(",")[0].trim();
+    const cleanLocation = firstPart
+      .replace(/\s+(circuit court|district court|superior court|municipal court|county court|court)\s*$/i, "")
+      .trim();
+    return { displayText: `${cleanLocation} · ${stateName}`, circuit };
+  }
+
+  const looksReal =
+    jurisdiction.includes(",") ||
+    /county|court|district|circuit|judicial|parish|borough/i.test(jurisdiction);
+  if (!looksReal) return null;
+  return { displayText: jurisdiction, circuit: null };
 }
 
 type LiveStatus = {
@@ -415,7 +464,25 @@ export default function CaseShow() {
                 <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-sm text-muted-foreground">
                   {currentCase.caseNumber && <span>Case #: <span className="font-medium text-foreground">{currentCase.caseNumber}</span></span>}
                   {currentCase.defendantName && <span>Defendant: <span className="font-medium text-foreground">{currentCase.defendantName}</span></span>}
-                  {currentCase.jurisdiction && <span>Jurisdiction: <span className="font-medium text-foreground">{currentCase.jurisdiction}</span></span>}
+                  {(() => {
+                    const jBadge = parseJurisdictionBadge(currentCase.jurisdiction);
+                    if (!jBadge) return null;
+                    return (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5 shrink-0" />
+                          <span className="font-medium text-foreground">{jBadge.displayText}</span>
+                        </span>
+                        {jBadge.circuit && (
+                          <Link href={`/cases/${caseId}/relief`}>
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors cursor-pointer">
+                              {jBadge.circuit}
+                            </span>
+                          </Link>
+                        )}
+                      </span>
+                    );
+                  })()}
                 </div>
                 <div className="mt-3">
                   <Select value={mode} onValueChange={(v) => setMode(v as UserMode)}>
