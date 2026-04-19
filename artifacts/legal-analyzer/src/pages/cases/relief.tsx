@@ -19,7 +19,14 @@ import {
   ChevronRight,
   AlertTriangle,
   Info,
+  Pencil,
+  X,
+  Save,
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 type LadderStep = {
   step: number;
@@ -169,6 +176,14 @@ export default function ReliefPage() {
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingStep, setEditingStep] = useState<number | null>(null);
+  const [editValues, setEditValues] = useState<{
+    status: LadderStep["status"];
+    completedAt: string;
+    notes: string;
+  }>({ status: "Pending", completedAt: "", notes: "" });
+  const [saving, setSaving] = useState(false);
+  const [togglingTolling, setTogglingTolling] = useState(false);
 
   const fetchPathway = async () => {
     setLoading(true);
@@ -215,6 +230,63 @@ export default function ReliefPage() {
       setError("Failed to regenerate relief pathway.");
     } finally {
       setRegenerating(false);
+    }
+  };
+
+  const handleStartEdit = (step: LadderStep) => {
+    setEditingStep(step.step);
+    setEditValues({
+      status: step.status,
+      completedAt: step.completedAt ?? "",
+      notes: step.notes ?? "",
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingStep(null);
+  };
+
+  const handleSaveStep = async () => {
+    if (editingStep === null || !pathway) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/cases/${caseId}/relief-pathway`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stepUpdates: [{
+            step: editingStep,
+            status: editValues.status,
+            completedAt: editValues.completedAt || null,
+            notes: editValues.notes || null,
+          }],
+        }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setPathway(updated);
+        setEditingStep(null);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggleTolling = async () => {
+    if (!pathway) return;
+    setTogglingTolling(true);
+    try {
+      const res = await fetch(`/api/cases/${caseId}/relief-pathway`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ aedpaTolled: !pathway.aedpaTolled }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setPathway(updated);
+      }
+    } finally {
+      setTogglingTolling(false);
     }
   };
 
@@ -324,6 +396,8 @@ export default function ReliefPage() {
                   else if (isAvailable) { dotColor = "bg-blue-500 border-blue-500"; lineColor = "bg-border"; }
                   else if (isBlocked) { dotColor = "bg-red-400 border-red-400"; }
 
+                  const isEditing = editingStep === step.step;
+
                   return (
                     <div key={step.step} className="flex gap-4">
                       <div className="flex flex-col items-center">
@@ -342,27 +416,104 @@ export default function ReliefPage() {
                           <div className={`w-0.5 flex-1 my-1 ${lineColor}`} style={{ minHeight: "2rem" }} />
                         )}
                       </div>
-                      <div className={`pb-6 flex-1 ${isLast ? "" : ""}`}>
-                        <div className="flex items-start justify-between gap-2 flex-wrap">
-                          <div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className={`font-semibold text-sm ${isAvailable ? "text-blue-700 dark:text-blue-400" : isCompleted ? "text-emerald-700 dark:text-emerald-400" : isBlocked ? "text-red-700 dark:text-red-400" : "text-foreground/60"}`}>
-                                {step.court}
-                              </span>
-                              <StatusBadge status={step.status} />
+                      <div className={`pb-6 flex-1`}>
+                        {isEditing ? (
+                          <div className="border border-primary/30 rounded-xl p-4 space-y-4 bg-primary/5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-semibold text-foreground">{step.court}</span>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="text-muted-foreground hover:text-foreground transition-colors"
+                                aria-label="Cancel edit"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{step.description}</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</Label>
+                                <Select
+                                  value={editValues.status}
+                                  onValueChange={(v) => setEditValues((prev) => ({ ...prev, status: v as LadderStep["status"] }))}
+                                >
+                                  <SelectTrigger className="h-9 text-sm">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Completed">Completed</SelectItem>
+                                    <SelectItem value="Available">Available</SelectItem>
+                                    <SelectItem value="Pending">Pending</SelectItem>
+                                    <SelectItem value="Blocked">Blocked</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-1.5">
+                                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                  Completed Date
+                                </Label>
+                                <Input
+                                  type="date"
+                                  className="h-9 text-sm"
+                                  value={editValues.completedAt}
+                                  onChange={(e) => setEditValues((prev) => ({ ...prev, completedAt: e.target.value }))}
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes</Label>
+                              <Textarea
+                                className="text-sm min-h-[72px] resize-none"
+                                placeholder="Add notes about this step — filings, decisions, dates…"
+                                value={editValues.notes}
+                                onChange={(e) => setEditValues((prev) => ({ ...prev, notes: e.target.value }))}
+                              />
+                            </div>
+                            <div className="flex gap-2 justify-end">
+                              <Button variant="outline" size="sm" onClick={handleCancelEdit} disabled={saving}>
+                                Cancel
+                              </Button>
+                              <Button size="sm" onClick={handleSaveStep} disabled={saving}>
+                                {saving ? (
+                                  <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />Saving…</>
+                                ) : (
+                                  <><Save className="w-3.5 h-3.5 mr-1.5" />Save</>
+                                )}
+                              </Button>
+                            </div>
                           </div>
-                          {step.completedAt && (
-                            <span className="text-xs text-muted-foreground shrink-0">
-                              {new Date(step.completedAt).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                        {step.notes && (
-                          <div className={`mt-2 text-xs leading-snug px-3 py-2 rounded-lg ${isBlocked ? "bg-red-50 dark:bg-red-900/10 text-red-800 dark:text-red-300" : isAvailable ? "bg-blue-50 dark:bg-blue-900/10 text-blue-800 dark:text-blue-300" : "bg-muted/60 text-foreground/70"}`}>
-                            {step.notes}
-                          </div>
+                        ) : (
+                          <>
+                            <div className="flex items-start justify-between gap-2 flex-wrap">
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className={`font-semibold text-sm ${isAvailable ? "text-blue-700 dark:text-blue-400" : isCompleted ? "text-emerald-700 dark:text-emerald-400" : isBlocked ? "text-red-700 dark:text-red-400" : "text-foreground/60"}`}>
+                                    {step.court}
+                                  </span>
+                                  <StatusBadge status={step.status} />
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{step.description}</p>
+                              </div>
+                              <div className="flex items-center gap-3 shrink-0">
+                                {step.completedAt && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(step.completedAt).toLocaleDateString()}
+                                  </span>
+                                )}
+                                <button
+                                  onClick={() => handleStartEdit(step)}
+                                  className="print:hidden text-muted-foreground hover:text-foreground transition-colors"
+                                  aria-label={`Edit step ${step.step}`}
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                            {step.notes && (
+                              <div className={`mt-2 text-xs leading-snug px-3 py-2 rounded-lg ${isBlocked ? "bg-red-50 dark:bg-red-900/10 text-red-800 dark:text-red-300" : isAvailable ? "bg-blue-50 dark:bg-blue-900/10 text-blue-800 dark:text-blue-300" : "bg-muted/60 text-foreground/70"}`}>
+                                {step.notes}
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -376,6 +527,21 @@ export default function ReliefPage() {
                 <div className="flex items-center gap-2 mb-5">
                   <Clock className="w-5 h-5 text-indigo-500" />
                   <h2 className="text-xl font-serif font-medium">2. AEDPA Clock</h2>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="ml-auto print:hidden h-8 text-xs"
+                    onClick={handleToggleTolling}
+                    disabled={togglingTolling}
+                  >
+                    {togglingTolling ? (
+                      <><Loader2 className="w-3 h-3 mr-1.5 animate-spin" />Updating…</>
+                    ) : pathway.aedpaTolled ? (
+                      <><X className="w-3 h-3 mr-1.5" />Remove Tolling</>
+                    ) : (
+                      <><CheckCircle2 className="w-3 h-3 mr-1.5" />Mark as Tolled</>
+                    )}
+                  </Button>
                 </div>
                 <AedpaClock
                   deadline={pathway.aedpaDeadline}
