@@ -169,6 +169,22 @@ function AedpaClock({ deadline, tolled, isEstimate }: { deadline: string; tolled
   );
 }
 
+function addDaysToDateString(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const utcMs = Date.UTC(y, m - 1, d) + days * 86400000;
+  return new Date(utcMs).toISOString().split("T")[0];
+}
+
+function utcTodayString(): string {
+  return new Date().toISOString().split("T")[0];
+}
+
+function daysBetween(fromStr: string, toStr: string): number {
+  const [fy, fm, fd] = fromStr.split("-").map(Number);
+  const [ty, tm, td] = toStr.split("-").map(Number);
+  return Math.round((Date.UTC(ty, tm - 1, td) - Date.UTC(fy, fm - 1, fd)) / 86400000);
+}
+
 export default function ReliefPage() {
   const params = useParams();
   const caseId = parseInt(params.id || "0", 10);
@@ -185,8 +201,13 @@ export default function ReliefPage() {
   }>({ status: "Pending", completedAt: "", notes: "" });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [togglingTolling, setTogglingTolling] = useState(false);
-  const [tollingError, setTollingError] = useState<string | null>(null);
+  const [editingAedpa, setEditingAedpa] = useState(false);
+  const [aedpaEditValues, setAedpaEditValues] = useState<{ convictionFinalDate: string; tolled: boolean }>({
+    convictionFinalDate: "",
+    tolled: false,
+  });
+  const [savingAedpa, setSavingAedpa] = useState(false);
+  const [aedpaEditError, setAedpaEditError] = useState<string | null>(null);
 
   const fetchPathway = async () => {
     setLoading(true);
@@ -283,27 +304,54 @@ export default function ReliefPage() {
     }
   };
 
-  const handleToggleTolling = async () => {
+  const handleStartAedpaEdit = () => {
     if (!pathway) return;
-    setTogglingTolling(true);
-    setTollingError(null);
+    let convFinal = "";
+    if (pathway.aedpaDeadline) {
+      convFinal = addDaysToDateString(pathway.aedpaDeadline, -365);
+    }
+    setAedpaEditValues({ convictionFinalDate: convFinal, tolled: pathway.aedpaTolled });
+    setAedpaEditError(null);
+    setEditingAedpa(true);
+  };
+
+  const handleCancelAedpaEdit = () => {
+    setEditingAedpa(false);
+    setAedpaEditError(null);
+  };
+
+  const computeAedpaDeadline = (convictionFinalDate: string): string | null => {
+    if (!convictionFinalDate || !/^\d{4}-\d{2}-\d{2}$/.test(convictionFinalDate)) return null;
+    return addDaysToDateString(convictionFinalDate, 365);
+  };
+
+  const handleSaveAedpa = async () => {
+    if (!pathway) return;
+    const aedpaDeadline = computeAedpaDeadline(aedpaEditValues.convictionFinalDate);
+    if (!aedpaDeadline) {
+      setAedpaEditError("Please enter a valid conviction-final date.");
+      return;
+    }
+    setSavingAedpa(true);
+    setAedpaEditError(null);
     try {
       const res = await fetch(`/api/cases/${caseId}/relief-pathway`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ aedpaTolled: !pathway.aedpaTolled }),
+        body: JSON.stringify({ aedpaDeadline, aedpaTolled: aedpaEditValues.tolled }),
       });
       if (res.ok) {
         const updated = await res.json();
-        setPathway(updated);
+        setPathway({ ...updated, aedpaIsEstimate: false });
+        setEditingAedpa(false);
       } else {
         const body = await res.json().catch(() => ({}));
-        setTollingError(body.error ?? "Failed to update tolling status.");
+        setAedpaEditError(body.error ?? "Failed to save. Please try again.");
       }
     } catch {
-      setTollingError("Network error — could not update tolling.");
+      setAedpaEditError("Network error — could not save. Please try again.");
     } finally {
-      setTogglingTolling(false);
+      setSavingAedpa(false);
     }
   };
 
@@ -561,33 +609,117 @@ export default function ReliefPage() {
                 <div className="flex items-center gap-2 mb-5">
                   <Clock className="w-5 h-5 text-indigo-500" />
                   <h2 className="text-xl font-serif font-medium">2. AEDPA Clock</h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="ml-auto print:hidden h-8 text-xs"
-                    onClick={handleToggleTolling}
-                    disabled={togglingTolling}
-                  >
-                    {togglingTolling ? (
-                      <><Loader2 className="w-3 h-3 mr-1.5 animate-spin" />Updating…</>
-                    ) : pathway.aedpaTolled ? (
-                      <><X className="w-3 h-3 mr-1.5" />Remove Tolling</>
-                    ) : (
-                      <><CheckCircle2 className="w-3 h-3 mr-1.5" />Mark as Tolled</>
-                    )}
-                  </Button>
+                  {!editingAedpa && (
+                    <button
+                      onClick={handleStartAedpaEdit}
+                      className="print:hidden ml-auto text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="Edit AEDPA deadline"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
-                {tollingError && (
-                  <div className="flex items-center gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2 mb-3">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                    {tollingError}
+
+                {editingAedpa ? (
+                  <div className="border border-primary/30 rounded-xl p-4 space-y-4 bg-primary/5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-foreground">Edit AEDPA Deadline</span>
+                      <button
+                        onClick={handleCancelAedpaEdit}
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label="Cancel edit"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Conviction-Final Date
+                        </Label>
+                        <Input
+                          type="date"
+                          className="h-9 text-sm"
+                          value={aedpaEditValues.convictionFinalDate}
+                          onChange={(e) => setAedpaEditValues((prev) => ({ ...prev, convictionFinalDate: e.target.value }))}
+                        />
+                        <p className="text-xs text-muted-foreground">Date conviction became final — AEDPA clock starts here</p>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Computed AEDPA Deadline
+                        </Label>
+                        {(() => {
+                          const dl = computeAedpaDeadline(aedpaEditValues.convictionFinalDate);
+                          if (!dl) {
+                            return <p className="text-sm text-muted-foreground italic h-9 flex items-center">Enter conviction-final date</p>;
+                          }
+                          const today = utcTodayString();
+                          const diffDays = daysBetween(today, dl);
+                          const isExp = diffDays < 0;
+                          const [dlY, dlM, dlD] = dl.split("-").map(Number);
+                          const displayDate = new Date(Date.UTC(dlY, dlM - 1, dlD)).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
+                          return (
+                            <div className="h-9 flex items-center gap-3">
+                              <span className="text-sm font-semibold text-foreground">
+                                {displayDate}
+                              </span>
+                              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isExp ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : diffDays <= 90 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"}`}>
+                                {isExp ? `Expired ${Math.abs(diffDays)}d ago` : `${diffDays} days remaining`}
+                              </span>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 pt-1">
+                      <input
+                        type="checkbox"
+                        id="aedpa-tolled-edit"
+                        checked={aedpaEditValues.tolled}
+                        onChange={(e) => setAedpaEditValues((prev) => ({ ...prev, tolled: e.target.checked }))}
+                        className="w-4 h-4 accent-primary cursor-pointer"
+                      />
+                      <Label htmlFor="aedpa-tolled-edit" className="cursor-pointer text-sm font-normal leading-snug">
+                        Mark as <span className="font-semibold">tolled</span> — state post-conviction proceeding is currently pending (28 U.S.C. § 2244(d)(2))
+                      </Label>
+                    </div>
+
+                    {aedpaEditError && (
+                      <div className="flex items-center gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        {aedpaEditError}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 justify-end">
+                      <Button variant="outline" size="sm" onClick={handleCancelAedpaEdit} disabled={savingAedpa}>
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleSaveAedpa}
+                        disabled={savingAedpa || !aedpaEditValues.convictionFinalDate}
+                      >
+                        {savingAedpa ? (
+                          <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />Saving…</>
+                        ) : (
+                          <><Save className="w-3.5 h-3.5 mr-1.5" />Save</>
+                        )}
+                      </Button>
+                    </div>
                   </div>
+                ) : (
+                  <>
+                    <AedpaClock
+                      deadline={pathway.aedpaDeadline}
+                      tolled={pathway.aedpaTolled}
+                      isEstimate={pathway.aedpaIsEstimate}
+                    />
+                  </>
                 )}
-                <AedpaClock
-                  deadline={pathway.aedpaDeadline}
-                  tolled={pathway.aedpaTolled}
-                  isEstimate={pathway.aedpaIsEstimate}
-                />
               </section>
             )}
 

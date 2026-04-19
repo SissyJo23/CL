@@ -629,7 +629,10 @@ router.put("/cases/:caseId/relief-pathway", async (req, res) => {
     updateData.ladderStatus = mergedLadder;
   }
 
-  if (aedpaDeadline !== undefined) updateData.aedpaDeadline = aedpaDeadline;
+  if (aedpaDeadline !== undefined) {
+    updateData.aedpaDeadline = aedpaDeadline;
+    updateData.aedpaIsEstimate = false;
+  }
   if (aedpaTolled !== undefined) updateData.aedpaTolled = aedpaTolled;
 
   const [updated] = await db
