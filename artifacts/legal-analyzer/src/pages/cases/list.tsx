@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { useListCases } from "@workspace/api-client-react";
 import Navbar from "@/components/layout/Navbar";
@@ -27,8 +27,17 @@ export default function CaseList() {
     { All: 0, Wisconsin: 0, Illinois: 0, Indiana: 0, Minnesota: 0, Iowa: 0, Michigan: 0, Ohio: 0, Other: 0 },
   );
 
-  // Fixed pill set — always the same order, counts may be 0
-  const filterOptions: FilterState[] = ["All", "Wisconsin", "Illinois", "Indiana", "Minnesota", "Iowa", "Michigan", "Ohio", "Other"];
+  // Only show pills that have at least one case; "All" is always included
+  const filterOptions: FilterState[] = (
+    ["All", "Wisconsin", "Illinois", "Indiana", "Minnesota", "Iowa", "Michigan", "Ohio", "Other"] as FilterState[]
+  ).filter((opt) => opt === "All" || (stateCounts[opt] ?? 0) > 0);
+
+  // If the active filter's pill is no longer visible (count dropped to 0), reset state to "All"
+  useEffect(() => {
+    if (activeFilter !== "All" && (stateCounts[activeFilter] ?? 0) === 0) {
+      setActiveFilter("All");
+    }
+  }, [activeFilter, stateCounts]);
 
   // Show filter bar as soon as at least one case is loaded
   const showFilterBar = !isLoading && (cases ?? []).length > 0;
