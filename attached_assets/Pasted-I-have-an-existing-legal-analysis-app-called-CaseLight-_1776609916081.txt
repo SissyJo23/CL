@@ -1,0 +1,62 @@
+I have an existing legal analysis app called CaseLight. It’s a pnpm monorepo with a React/Vite frontend (artifacts/legal-analyzer), an Express API server (artifacts/api-server), and a Neon PostgreSQL database using Drizzle ORM. It’s deployed on Render.com. I need you to build the following new features into the existing codebase:
+FEATURE 1: Pattern Recognition Engine
+Add a new analysis mode that reads ALL documents in a case chronologically and builds:
+	1.	A hearing timeline with every date, who was present, who was absent, and what was decided or deferred
+	2.	An identity integrity check that compares defendant name, DOB, race, and case numbers across every document and flags any inconsistency
+	3.	A decision point map — at each critical hearing, what motions were pending, what did the defendant know, was the defendant present, and what choice was made
+	4.	A coercion timeline — tracks accumulating pressure factors (pending unresolved motions, speedy trial deadlines, prosecutorial errors, threat of additional charges, pretrial detention length) and calculates whether conditions for a voluntary plea actually existed
+	5.	Output is not a list of issues — it’s a narrative: “here is the sequence that made a free choice impossible”
+The API endpoint should be POST /api/cases/:id/pattern-analysis
+Store results in a new pattern_analyses table with caseId, timeline JSON, identityFlags JSON, decisionPoints JSON, coercionScore integer, narrativeSummary text, createdAt timestamp.
+FEATURE 2: Relief Pathway Engine
+Build a pathway mapper that works for all 50 US states plus federal. For any case it should:
+	1.	Determine what state the case is in from the case jurisdiction field
+	2.	Map the complete judicial ladder for that state (state trial court → intermediate appeals → state supreme court → federal district court → circuit court → SCOTUS)
+	3.	Track which steps have been completed, which are pending, which are available
+	4.	Calculate AEDPA deadline (1 year from when state conviction became final, tolled during properly filed state post-conviction proceedings)
+	5.	Identify which findings from the case are federal-ready (based on 5th, 6th, 14th Amendment violations)
+	6.	Flag whether Martinez v. Ryan applies (if ineffective assistance of post-conviction counsel can excuse procedural default)
+	7.	Show executive relief options for that state (governor pardon process, clemency board, relevant executive orders)
+	8.	Show administrative options (earned release programs, sentence credit disputes, First Step Act applicability for federal cases)
+API endpoint: GET /api/cases/:id/relief-pathway
+Store in relief_pathways table with caseId, jurisdiction, ladderStatus JSON, aedpaDeadline date, federalReadyClaims JSON, executiveOptions JSON, administrativeOptions JSON.
+FEATURE 3: No-Merit Report Analyzer
+Build a document subtype called “no-merit report.” When a document is tagged as this type:
+	1.	Extract every issue appellate counsel claimed lacked merit
+	2.	Cross-reference those issues against the findings already in the case
+	3.	Identify any finding in the case record that counsel’s no-merit report failed to address
+	4.	For each missed finding, assess whether it was an “arguable issue” under the Anders/Smith v. Robbins standard
+	5.	Build an Ineffective Assistance of Appellate Counsel (IAAC) argument for each missed arguable issue
+	6.	Generate a draft motion arguing IAAC under Smith v. Robbins, 528 U.S. 259 (2000)
+	7.	Flag whether this IAAC finding can be used under Martinez v. Ryan, 566 U.S. 1 (2012) to excuse procedural default on other claims
+API endpoint: POST /api/documents/:id/analyze-nomerit
+Store results in nomerit_analyses table.
+FEATURE 4: User Mode System
+Add a userMode field to the users table with four options:
+	•	“inmate” — plain language output, step by step guidance, focus on what they can do themselves
+	•	“advocate” — what a non-attorney family member can do, letter templates, public records requests
+	•	“attorney” — full technical legal output, citation format, motion-ready drafts
+	•	“appellate” — comparative research mode, cross-case pattern analysis
+Each analysis output should render differently based on the user’s mode. Inmate mode uses plain language. Attorney mode uses legal citation format. Add a mode selector to the settings/profile page.
+FEATURE 5: Federal Readiness Indicator
+On every case page, add a Federal Readiness dashboard that shows:
+	•	State exhaustion status (how many ladder rungs completed)
+	•	Which claims are exhausted and federal-ready
+	•	Which claims are not yet exhausted
+	•	AEDPA deadline countdown
+	•	Whether the case qualifies for any exception to exhaustion requirement
+	•	One-paragraph summary of the strongest federal argument based on current findings
+DATABASE CHANGES NEEDED:
+	•	pattern_analyses table (described above)
+	•	relief_pathways table (described above)
+	•	nomerit_analyses table (described above)
+	•	Add userMode column to users table
+	•	Add jurisdiction column to cases table if not already present
+	•	Add documentSubtype column to documents table
+IMPORTANT CONSTRAINTS:
+	•	Use the existing Anthropic claude-sonnet model for all AI analysis
+	•	Use the existing Drizzle ORM patterns already in the codebase
+	•	Use the existing Express router patterns already in the codebase
+	•	Use the existing React/Tailwind component patterns already in the frontend
+	•	All new routes must use the existing requireAuth middleware
+	•	Run all schema changes via drizzle push
