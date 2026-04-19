@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import {
   findingsTable,
   crossCaseMatchesTable,
+  documentsTable,
 } from "@workspace/db";
 import { eq, and, asc } from "drizzle-orm";
 
@@ -33,6 +34,34 @@ async function getFindingWithMatches(findingId: number) {
     })),
   };
 }
+
+router.get("/cases/:caseId/findings", async (req, res) => {
+  const caseId = Number(req.params.caseId);
+  if (isNaN(caseId)) {
+    res.status(400).json({ error: "Invalid case ID" });
+    return;
+  }
+
+  const rows = await db
+    .select({
+      id: findingsTable.id,
+      issueTitle: findingsTable.issueTitle,
+      survivability: findingsTable.survivability,
+      proceduralStatus: findingsTable.proceduralStatus,
+      legalVehicle: findingsTable.legalVehicle,
+      anticipatedBlock: findingsTable.anticipatedBlock,
+      categoryId: findingsTable.categoryId,
+      documentId: findingsTable.documentId,
+      documentTitle: documentsTable.title,
+      createdAt: findingsTable.createdAt,
+    })
+    .from(findingsTable)
+    .innerJoin(documentsTable, eq(findingsTable.documentId, documentsTable.id))
+    .where(eq(findingsTable.caseId, caseId))
+    .orderBy(asc(findingsTable.id));
+
+  res.json(rows);
+});
 
 router.get(
   "/cases/:caseId/documents/:documentId/findings",

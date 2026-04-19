@@ -25,6 +25,37 @@ const MODE_ICONS: Record<UserMode, React.ReactNode> = {
   appellate: <BookOpen className="w-3 h-3" />,
 };
 
+type CaseFindingSummary = {
+  id: number;
+  issueTitle: string;
+  survivability: string | null;
+  proceduralStatus: string | null;
+  legalVehicle: string | null;
+  anticipatedBlock: string | null;
+  categoryId: number | null;
+  documentId: number;
+  documentTitle: string;
+  createdAt: string;
+};
+
+const SURVIVABILITY_ORDER: Record<string, number> = {
+  Strong: 0,
+  Moderate: 1,
+  Vulnerable: 2,
+};
+
+const SURVIVABILITY_STYLES: Record<string, { badge: string }> = {
+  Strong: { badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700" },
+  Moderate: { badge: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700" },
+  Vulnerable: { badge: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 border-red-200 dark:border-red-700" },
+};
+
+const PROCEDURAL_STYLES: Record<string, string> = {
+  Preserved: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
+  Defaulted: "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800",
+  Unclear: "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800",
+};
+
 type LadderStep = {
   step: number;
   court: string;
@@ -104,6 +135,24 @@ export default function CaseShow() {
   });
   const reliefPathway = pathwayResult?.status === "ok" ? pathwayResult.data : null;
   const [federalExpanded, setFederalExpanded] = useState(true);
+  const [findingsExpanded, setFindingsExpanded] = useState(true);
+  const [showAllFindings, setShowAllFindings] = useState(false);
+
+  const { data: caseFindingsRaw, isLoading: findingsLoading } = useQuery<CaseFindingSummary[]>({
+    queryKey: ["case-findings-summary", caseId],
+    queryFn: async () => {
+      const res = await fetch(`/api/cases/${caseId}/findings`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!caseId,
+  });
+
+  const caseFindings = (caseFindingsRaw ?? []).slice().sort((a, b) => {
+    const aOrder = a.survivability != null ? (SURVIVABILITY_ORDER[a.survivability] ?? 3) : 3;
+    const bOrder = b.survivability != null ? (SURVIVABILITY_ORDER[b.survivability] ?? 3) : 3;
+    return aOrder - bOrder;
+  });
 
   const createDocument = useCreateDocument();
   const deleteDocument = useDeleteDocument();
@@ -716,6 +765,97 @@ export default function CaseShow() {
                 </div>
               ) : null}
             </div>
+
+            {/* Findings Summary Panel */}
+            {(hasAnyFindings || findingsLoading) && (
+              <div className="border border-border rounded-xl overflow-hidden">
+                <button
+                  className="w-full flex items-center justify-between px-5 py-4 bg-muted/30 border-b border-border hover:bg-muted/50 transition-colors text-left"
+                  onClick={() => setFindingsExpanded((v) => !v)}
+                  aria-expanded={findingsExpanded}
+                >
+                  <div className="flex items-center gap-2">
+                    <Scale className="w-5 h-5 text-muted-foreground" />
+                    <h2 className="text-lg font-serif font-medium">Findings</h2>
+                    {caseFindings.length > 0 && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-muted text-muted-foreground border border-border">
+                        {caseFindings.length}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {caseFindings.length > 0 && (
+                      <div className="flex items-center gap-1.5 mr-1">
+                        {["Strong", "Moderate", "Vulnerable"].map((v) => {
+                          const count = caseFindings.filter((f) => f.survivability === v).length;
+                          if (count === 0) return null;
+                          const s = SURVIVABILITY_STYLES[v];
+                          return (
+                            <span key={v} className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold border ${s.badge}`}>
+                              {count} {v}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${findingsExpanded ? "" : "-rotate-90"}`} />
+                  </div>
+                </button>
+                {findingsExpanded && (
+                  findingsLoading ? (
+                    <div className="p-4 space-y-2">
+                      {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
+                    </div>
+                  ) : caseFindings.length === 0 ? (
+                    <div className="p-6 text-center text-sm text-muted-foreground">
+                      No findings extracted yet. Analyze a document to see findings here.
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {(showAllFindings ? caseFindings : caseFindings.slice(0, 5)).map((finding) => {
+                        const survStyle = finding.survivability ? SURVIVABILITY_STYLES[finding.survivability] : null;
+                        const procStyle = finding.proceduralStatus ? PROCEDURAL_STYLES[finding.proceduralStatus] : null;
+                        return (
+                          <Link key={finding.id} href={`/cases/${caseId}/documents/${finding.documentId}`}>
+                            <div className="flex items-start gap-3 px-5 py-3 hover:bg-accent transition-colors cursor-pointer">
+                              <div className="flex-1 min-w-0 space-y-1">
+                                <p className="text-sm font-medium text-foreground leading-snug truncate">{finding.issueTitle}</p>
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  {survStyle && finding.survivability && (
+                                    <span className={`inline-flex items-center px-1.5 py-0 rounded text-[10px] font-semibold border ${survStyle.badge}`}>
+                                      {finding.survivability}
+                                    </span>
+                                  )}
+                                  {procStyle && finding.proceduralStatus && (
+                                    <span className={`inline-flex items-center px-1.5 py-0 rounded text-[10px] font-medium border ${procStyle}`}>
+                                      {finding.proceduralStatus}
+                                    </span>
+                                  )}
+                                  <span className="text-[10px] text-muted-foreground truncate max-w-[200px]">
+                                    {finding.documentTitle}
+                                  </span>
+                                </div>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
+                            </div>
+                          </Link>
+                        );
+                      })}
+                      {caseFindings.length > 5 && (
+                        <button
+                          className="w-full px-5 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors text-center"
+                          onClick={() => setShowAllFindings((v) => !v)}
+                        >
+                          {showAllFindings
+                            ? "Show fewer findings"
+                            : `Show ${caseFindings.length - 5} more finding${caseFindings.length - 5 === 1 ? "" : "s"}`}
+                        </button>
+                      )}
+                    </div>
+                  )
+                )}
+              </div>
+            )}
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
