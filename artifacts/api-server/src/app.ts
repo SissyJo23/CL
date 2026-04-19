@@ -3,7 +3,7 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
-import { seedDemoCase, seedCategories } from "./lib/seed";
+import { seedDemoCase, seedCategories, seedIllinoisDemoCase, seedMinnesotaDemoCase } from "./lib/seed";
 import { db, courtSessionsTable, documentsTable } from "@workspace/db";
 import { eq, lt, and } from "drizzle-orm";
 
@@ -82,6 +82,14 @@ seedDemoCase().catch((err) => {
 
 seedCategories().catch((err) => {
   logger.error({ err }, "Category seed failed");
+});
+
+seedIllinoisDemoCase().catch((err) => {
+  logger.error({ err }, "Illinois demo seed failed");
+});
+
+seedMinnesotaDemoCase().catch((err) => {
+  logger.error({ err }, "Minnesota demo seed failed");
 });
 
 recoverStuckSessions();

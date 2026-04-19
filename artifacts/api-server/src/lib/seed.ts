@@ -688,3 +688,582 @@ export async function getDemoCaseId(): Promise<number | null> {
     .limit(1);
   return rows[0]?.id ?? null;
 }
+
+// ─────────────────────────────────────────────────────────────────
+// ILLINOIS DEMO CASE
+// ─────────────────────────────────────────────────────────────────
+
+const IL_DEMO_CASE_NUMBER = "DEMO-2019CR012345";
+
+const IL_DEMO_TRANSCRIPT = `STATE OF ILLINOIS
+CIRCUIT COURT OF COOK COUNTY
+CRIMINAL DIVISION — BRANCH 35
+
+PEOPLE OF THE STATE OF ILLINOIS,
+    Plaintiff,
+
+    vs.                                         Case No. 2019CR012345
+
+DARNELL JAMES WILLIAMS,
+    Defendant.
+
+TRANSCRIPT OF BENCH TRIAL — DAY 2
+Honorable Constance M. Adeyemi, Presiding
+October 22, 2019
+
+Appearances:
+    For the People: Assistant State's Attorney Philip Harte
+    For the Defense: Attorney Sandra Kuczyk
+    Court Reporter: Lorraine Espinoza
+
+---
+
+THE COURT: Back on the record. Mr. Harte, call your next witness.
+
+MR. HARTE: People call Detective Sergeant Victor Tran.
+
+DIRECT EXAMINATION BY MR. HARTE:
+
+Page 41, Line 1
+Q: Sergeant Tran, you obtained the search warrant for 1814 West Cermak Road on August 9, 2019?
+A: I did.
+
+Q: What was the basis for your warrant application?
+A: We had a confidential informant who told us there were narcotics being stored at that address. The informant had been reliable in two prior cases.
+
+Q: Did the informant provide a specific time window?
+A: He said narcotics were present as of three days before the warrant application.
+
+Page 41, Line 18
+Q: When you executed the warrant, what did you find?
+A: Approximately 214 grams of cocaine in a duffel bag in the rear bedroom, digital scales, and $4,200 in cash.
+
+Q: Who was present in the residence?
+A: Darnell Williams and a woman identified as Keisha Barton.
+
+Q: Did you locate any lease or ownership documents?
+A: We found mail addressed to Williams at that address.
+
+Page 42, Line 7
+Q: Did you separately interview Ms. Barton?
+A: Yes. She stated the duffel bag belonged to her and that Williams had no knowledge of it.
+
+Q: Did you document that statement?
+A: I took notes.
+
+Q: Was that statement produced to defense counsel in discovery?
+A: I believe it was in the supplemental file.
+
+MR. HARTE: No further questions.
+
+CROSS-EXAMINATION BY MS. KUCZYK:
+
+Page 42, Line 24
+Q: Sergeant Tran, you said the informant told you narcotics were present three days before the warrant application?
+A: Correct.
+
+Q: That would make the informant's information at least eight days old by the time you executed the warrant.
+A: Approximately, yes.
+
+Q: You didn't update the information between the warrant application and execution?
+A: We believed the location was stable.
+
+Page 43, Line 5
+Q: Regarding the Barton statement — you took notes but did not prepare a formal written report of her exculpatory statement?
+A: It wasn't my obligation to write a separate report on every—
+Q: She told you the drugs belonged to her, not to my client. Did you put that in the detective's report?
+A: I noted it in my supplemental.
+
+Q: Sergeant, we've reviewed all discovery materials. There is no Barton supplemental in the file we received.
+A: That would be something to take up with the State's Attorney's office.
+
+Page 43, Line 21
+MS. KUCZYK: Your Honor, we renew our objection to the warrant evidence. The informant's tip was stale — eight days is insufficient for perishable contraband under People v. Tisler.
+THE COURT: Noted. I'll take it under advisement. Proceed.
+
+Page 44, Line 1
+Q: Sergeant, were you aware that Keisha Barton had a prior conviction for possession with intent to deliver?
+A: I learned that later.
+
+Q: That prior conviction was known to the State's Attorney's office during this prosecution?
+A: I can't speak to what the State's Attorney knew.
+
+Q: Did you provide that information to the prosecution?
+A: I provided my complete file.
+
+Page 45, Line 3
+MS. KUCZYK: No further questions.
+
+THE COURT: Redirect?
+
+MR. HARTE: Briefly.
+
+REDIRECT BY MR. HARTE:
+
+Q: Sergeant, mail addressed to Mr. Williams was found at that address?
+A: Yes.
+
+Q: And cocaine was found in the same residence?
+A: Correct.
+
+THE COURT: Witness excused. The Court is satisfied with the warrant foundation.
+The Court finds the defendant guilty of possession of a controlled substance with intent to deliver.
+
+[VERDICT: GUILTY — October 22, 2019]
+
+THE COURT: Sentencing set for December 10, 2019.
+
+[END OF TRANSCRIPT]
+Certified by: Lorraine Espinoza, Official Court Reporter
+`;
+
+const IL_DEMO_FINDINGS = [
+  {
+    issueTitle: "Brady Violation — Suppression of Keisha Barton's Exculpatory Statement",
+    transcriptExcerpt: "She stated the duffel bag belonged to her and that Williams had no knowledge of it. [...] There is no Barton supplemental in the file we received.",
+    legalAnalysis: "Detective Tran admitted on the stand that Keisha Barton told him the duffel bag containing the cocaine belonged to her, not to Darnell Williams. Defense counsel confirmed that no Barton statement was in the discovery file. This is a textbook Brady violation: the State suppressed a witness's exculpatory statement that directly negated the possession element of the charge. Under Brady v. Maryland, 373 U.S. 83 (1963), and its Illinois counterpart (People v. Beaman, 229 Ill. 2d 56 (2008)), the prosecution has a duty to disclose all evidence favorable to the accused. Barton's statement was not merely impeachment evidence — it was direct exculpatory evidence on the most contested issue at trial. The fact that Tran noted it 'in his supplemental' but that supplemental never reached defense counsel establishes suppression regardless of intent.",
+    pageNumber: 43,
+    lineNumber: 5,
+    precedentName: "Brady v. Maryland",
+    precedentCitation: "373 U.S. 83 (1963)",
+    precedentType: "BINDING",
+    courtRuling: "The prosecution's suppression of evidence favorable to an accused violates due process where the evidence is material to guilt or punishment.",
+    materialSimilarity: "Barton directly told police the drugs belonged to her, not Williams. The entire prosecution turned on constructive possession — who controlled the duffel bag. A witness willing to claim ownership of the contraband is the most direct exculpatory evidence possible. Its suppression almost certainly affected the bench verdict.",
+    proceduralStatus: "Preserved",
+    anticipatedBlock: "State will argue the statement was in the supplemental file and constructively available to defense. State will also argue materiality: mail addressed to Williams showed his connection to the premises, so the Barton statement would not have changed the outcome.",
+    breakthroughArgument: "Under People v. Beaman, Brady materiality is assessed on the totality of the suppressed evidence. A witness confessing ownership of the contraband does not merely create doubt — it destroys the possession element. The 'mail at address' evidence showed Williams lived there; it did not show he controlled the duffel bag. Barton's statement was decisive on the only disputed element.",
+    legalVehicle: "725 ILCS 5/122-1 Post-Conviction Petition",
+    survivability: "Strong",
+  },
+  {
+    issueTitle: "Fourth Amendment — Stale Warrant: Informant's Tip Eight Days Old at Execution",
+    transcriptExcerpt: "The informant's information was approximately eight days old by execution. We believed the location was stable.",
+    legalAnalysis: "The search warrant was based on a confidential informant's tip that narcotics were present 'three days before the warrant application.' The warrant was executed five additional days after it was issued — making the informant's information at least eight days old at execution. Cocaine is a commodity that moves quickly, particularly at a distribution address. Under Illinois v. Gates, 462 U.S. 213 (1983), probable cause must be particularized and timely. Illinois courts have consistently held that informant tips about perishable contraband must be current — information eight days old is stale for narcotics that can be moved, consumed, or sold within hours. In People v. Tisler, 103 Ill. 2d 226 (1984), the Illinois Supreme Court recognized the staleness doctrine and its particular force for contraband cases.",
+    pageNumber: 43,
+    lineNumber: 21,
+    precedentName: "People v. Tisler",
+    precedentCitation: "103 Ill. 2d 226 (1984)",
+    precedentType: "BINDING",
+    courtRuling: "Probable cause for a search warrant based on informant information must be timely and particularized; stale information regarding perishable contraband cannot support a warrant.",
+    materialSimilarity: "The sole basis for the warrant was an informant tip eight days stale. No independent corroboration refreshed the probable cause. Detective Tran's rationale — 'we believed the location was stable' — is an officer's unsupported conclusion, not a Fourth Amendment predicate.",
+    proceduralStatus: "Preserved",
+    anticipatedBlock: "State will argue the informant's prior reliability and Tran's surveillance observations were sufficient to maintain probable cause through execution. State will also invoke the Leon good-faith exception — officers executing a facially valid warrant are not required to second-guess the magistrate.",
+    breakthroughArgument: "Illinois courts have declined to apply Leon where the warrant affidavit itself is lacking in probable cause — if the tip was stale, the warrant was void at issuance and Leon does not apply. Tran's affidavit did not include any surveillance confirmation or other refreshing circumstances. Under People v. Stewart, 2014 IL App (1st) 120758, the good-faith exception requires an objectively reasonable basis for the warrant; an eight-day-old unrefreshed tip on cocaine fails that standard.",
+    legalVehicle: "725 ILCS 5/122-1 Post-Conviction Petition",
+    survivability: "Moderate",
+  },
+  {
+    issueTitle: "Brady — Suppression of Keisha Barton's Prior Drug Conviction (Impeachment / Exculpatory)",
+    transcriptExcerpt: "Were you aware that Keisha Barton had a prior conviction for possession with intent to deliver? [...] That prior conviction was known to the State's Attorney's office during this prosecution.",
+    legalAnalysis: "Keisha Barton had a prior conviction for possession with intent to deliver — a conviction that both corroborates her capacity to possess the drugs found at the scene and provides powerful context for her exculpatory statement. Defense counsel's cross-examination reveals Tran was aware of this and that it was part of the investigation record, yet it was not disclosed to defense. Under Giglio v. United States, 405 U.S. 150 (1972), and its Illinois analog, prior convictions of an individual who may serve as a witness — and whose actions are directly at issue — must be disclosed. Barton's PWID record was not merely impeachment material; it was substantive evidence that she had the knowledge, intent, and capacity to possess the contraband she claimed as her own.",
+    pageNumber: 44,
+    lineNumber: 1,
+    precedentName: "Giglio v. United States",
+    precedentCitation: "405 U.S. 150 (1972)",
+    precedentType: "BINDING",
+    courtRuling: "The prosecution must disclose evidence affecting the credibility of prosecution witnesses, including prior convictions, under the Brady/Giglio framework.",
+    materialSimilarity: "Barton's prior PWID conviction makes her claimed ownership of the cocaine far more credible and is direct Brady/Giglio material. Combined with her exculpatory statement, the two pieces of suppressed evidence together paint a complete picture the jury/bench never saw.",
+    proceduralStatus: "Preserved",
+    anticipatedBlock: "State will argue Barton was not called as a witness, so the impeachment rule under Giglio does not technically apply. State will also argue the conviction was publicly available in court records and defense had means to discover it independently.",
+    breakthroughArgument: "Brady requires disclosure of evidence material to the defense, not just evidence about trial witnesses. Barton's prior conviction was material because it established her familiarity with narcotics distribution — which made her confession credible. Under People v. Hobley, 182 Ill. 2d 404 (1998), Brady extends to suppressed evidence that would have altered the defense strategy, regardless of whether a formal witness list was involved.",
+    legalVehicle: "725 ILCS 5/122-1 Post-Conviction Petition",
+    survivability: "Moderate",
+  },
+  {
+    issueTitle: "Ineffective Assistance of Counsel — Failure to Subpoena or Call Keisha Barton as a Defense Witness",
+    transcriptExcerpt: "She stated the duffel bag belonged to her and that Williams had no knowledge of it.",
+    legalAnalysis: "Defense counsel Sandra Kuczyk was aware, through cross-examination of Detective Tran, that Keisha Barton had made an exculpatory statement claiming the drugs belonged to her. Kuczyk did not call Barton as a defense witness, did not subpoena her, and made no record of any attempt to investigate or secure her testimony. Under Strickland v. Washington, 466 U.S. 668 (1984), as applied in Illinois post-conviction proceedings, the failure to investigate and call an available witness who has given a sworn exculpatory statement — where defense counsel had actual notice of the statement from the trial record — falls below the objective standard of reasonableness. Barton was the single most valuable defense witness in the case and counsel made no effort to produce her.",
+    pageNumber: 42,
+    lineNumber: 7,
+    precedentName: "Strickland v. Washington",
+    precedentCitation: "466 U.S. 668 (1984)",
+    precedentType: "BINDING",
+    courtRuling: "Counsel's failure to investigate and call an available witness whose exculpatory testimony was known to counsel constitutes deficient performance under Strickland's objective reasonableness standard.",
+    materialSimilarity: "Kuczyk elicited the fact of Barton's statement on cross-examination but then failed to subpoena Barton to testify directly. In a bench trial, Barton's live testimony that the drugs were hers would have been decisive. The failure to present known, available exculpatory testimony has no strategic justification.",
+    proceduralStatus: "Unclear",
+    anticipatedBlock: "State will argue that calling Barton carried risk — she might recant, invoke the Fifth Amendment, or be an unreliable witness. Strickland deference to strategic choices applies. State will also invoke any applicable procedural bar under Illinois's post-conviction statute.",
+    breakthroughArgument: "A Barton affidavit obtained in post-conviction proceedings can establish both that she was available and willing to testify, and that counsel never contacted her. Under People v. Orange, 168 Ill. 2d 138 (1995), IAC claims based on failure to call witnesses require an affidavit from the witness. If Barton is willing to provide one, this claim is ripe and the strategic-decision defense collapses.",
+    legalVehicle: "725 ILCS 5/122-1 Post-Conviction Petition",
+    survivability: "Strong",
+  },
+];
+
+export async function seedIllinoisDemoCase(): Promise<void> {
+  try {
+    const existing = await db
+      .select({ id: casesTable.id })
+      .from(casesTable)
+      .where(eq(casesTable.caseNumber, IL_DEMO_CASE_NUMBER))
+      .limit(1);
+
+    if (existing.length > 0) {
+      const caseId = existing[0].id;
+      const demoDoc = await db
+        .select({ id: documentsTable.id, status: documentsTable.status, findingCount: documentsTable.findingCount })
+        .from(documentsTable)
+        .where(eq(documentsTable.caseId, caseId))
+        .limit(1)
+        .then((rows) => rows[0] ?? null);
+
+      const needsRestore = !demoDoc || demoDoc.status === "error" || demoDoc.status === "pending" || (demoDoc.findingCount ?? 0) === 0;
+      if (!needsRestore) {
+        logger.info({ caseId }, "Illinois demo case already exists and is healthy — skipping seed");
+        return;
+      }
+
+      logger.info({ caseId }, "Illinois demo case is corrupted — restoring...");
+      await db.transaction(async (tx) => {
+        let docId: number;
+        if (!demoDoc) {
+          const [newDoc] = await tx.insert(documentsTable).values({ caseId, title: "Bench Trial Transcript — Day 2, October 22, 2019", documentType: "transcript", content: IL_DEMO_TRANSCRIPT, status: "analyzed" }).returning();
+          docId = newDoc.id;
+        } else {
+          docId = demoDoc.id;
+          await tx.delete(findingsTable).where(eq(findingsTable.documentId, docId));
+        }
+        for (const f of IL_DEMO_FINDINGS) {
+          await tx.insert(findingsTable).values({ caseId, documentId: docId, issueTitle: f.issueTitle, transcriptExcerpt: f.transcriptExcerpt, legalAnalysis: f.legalAnalysis, pageNumber: f.pageNumber, lineNumber: f.lineNumber, precedentName: f.precedentName, precedentCitation: f.precedentCitation, precedentType: f.precedentType, courtRuling: f.courtRuling, materialSimilarity: f.materialSimilarity, proceduralStatus: f.proceduralStatus, anticipatedBlock: f.anticipatedBlock, breakthroughArgument: f.breakthroughArgument, legalVehicle: f.legalVehicle, survivability: f.survivability });
+        }
+        await tx.update(documentsTable).set({ status: "analyzed", findingCount: IL_DEMO_FINDINGS.length }).where(eq(documentsTable.id, docId));
+        await tx.update(casesTable).set({ hasAnalysis: true }).where(eq(casesTable.id, caseId));
+      });
+      logger.info({ caseId }, "Illinois demo case restored");
+      return;
+    }
+
+    logger.info("Seeding Illinois demo case...");
+    await db.transaction(async (tx) => {
+      const [ilCase] = await tx.insert(casesTable).values({
+        title: "People v. Darnell Williams — IL DEMO",
+        defendantName: "Darnell James Williams",
+        caseNumber: IL_DEMO_CASE_NUMBER,
+        jurisdiction: "Cook County Circuit Court, State of Illinois",
+        notes: "DEMO CASE — Illinois post-conviction example showcasing the 725 ILCS 5/122-1 relief pathway, 7th Circuit federal ladder, and Illinois-specific executive relief options.",
+        hasAnalysis: true,
+        hasMotion: false,
+      }).returning();
+
+      const [ilDoc] = await tx.insert(documentsTable).values({
+        caseId: ilCase.id,
+        title: "Bench Trial Transcript — Day 2, October 22, 2019",
+        documentType: "transcript",
+        content: IL_DEMO_TRANSCRIPT,
+        status: "analyzed",
+      }).returning();
+
+      for (const f of IL_DEMO_FINDINGS) {
+        await tx.insert(findingsTable).values({ caseId: ilCase.id, documentId: ilDoc.id, issueTitle: f.issueTitle, transcriptExcerpt: f.transcriptExcerpt, legalAnalysis: f.legalAnalysis, pageNumber: f.pageNumber, lineNumber: f.lineNumber, precedentName: f.precedentName, precedentCitation: f.precedentCitation, precedentType: f.precedentType, courtRuling: f.courtRuling, materialSimilarity: f.materialSimilarity, proceduralStatus: f.proceduralStatus, anticipatedBlock: f.anticipatedBlock, breakthroughArgument: f.breakthroughArgument, legalVehicle: f.legalVehicle, survivability: f.survivability });
+      }
+
+      await tx.update(documentsTable).set({ findingCount: IL_DEMO_FINDINGS.length }).where(eq(documentsTable.id, ilDoc.id));
+      logger.info({ caseId: ilCase.id }, "Illinois demo case seeded successfully");
+    });
+  } catch (err) {
+    logger.error({ err }, "Failed to seed Illinois demo case");
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// MINNESOTA DEMO CASE
+// ─────────────────────────────────────────────────────────────────
+
+const MN_DEMO_CASE_NUMBER = "DEMO-2020A002891";
+
+const MN_DEMO_TRANSCRIPT = `STATE OF MINNESOTA
+DISTRICT COURT
+FOURTH JUDICIAL DISTRICT — HENNEPIN COUNTY
+
+STATE OF MINNESOTA,
+    Plaintiff,
+
+    vs.                                         File No. 27-CR-20-002891
+
+RAYMOND LEON OKAFOR,
+    Defendant.
+
+TRANSCRIPT OF JURY TRIAL — DAY 4
+Honorable David L. Steinberg, Presiding
+March 3, 2021
+
+Appearances:
+    For the State: Assistant County Attorney Patricia Olmstead
+    For the Defense: Attorney Brian Csorba
+    Court Reporter: Angela Pietrowski
+
+---
+
+THE COURT: Back on the record. Ms. Olmstead, call your next witness.
+
+MS. OLMSTEAD: State calls Detective Annette Schroeder.
+
+DIRECT EXAMINATION BY MS. OLMSTEAD:
+
+Page 58, Line 1
+Q: Detective Schroeder, you investigated the shooting death of Terrence Malone on September 15, 2020?
+A: I was the lead investigator, yes.
+
+Q: Did you develop a suspect?
+A: We received a tip that Raymond Okafor had been seen in the area. We showed a photo array to two witnesses — Gwen Farris and Donald Thibodeau. Both identified Okafor.
+
+Q: Were both identifications independent?
+A: Yes. We interviewed them separately.
+
+Page 58, Line 19
+Q: Did you learn anything about a possible alibi for Mr. Okafor?
+A: His girlfriend, Simone Arquette, said he was with her at her apartment from 9 p.m. until midnight. The shooting occurred at approximately 10:30 p.m.
+
+Q: Did you investigate that alibi?
+A: We spoke with Ms. Arquette once. She was the defendant's girlfriend, so we considered her potentially biased.
+
+Page 59, Line 4
+Q: Did you attempt to corroborate or disprove the alibi through any other means?
+A: We felt the two eyewitness identifications were sufficient.
+
+MR. CSORBA: Your Honor — objection. Detective Schroeder just testified that no other investigation of the alibi was conducted after a single conversation with Arquette.
+THE COURT: Noted for the record. Proceed.
+
+Page 59, Line 14
+Q: Detective, in your professional judgment, were Farris and Thibodeau reliable witnesses?
+A: In my experience, yes. Both were confident in their identifications.
+
+MS. OLMSTEAD: No further questions.
+
+CROSS-EXAMINATION BY MR. CSORBA:
+
+Page 59, Line 22
+Q: Detective, how long after the shooting were the photo arrays administered?
+A: Approximately 19 days.
+
+Q: And the photo array — was it conducted as a blind administration?
+A: I administered it myself.
+
+Q: You were the investigating detective, not a blind administrator?
+A: That is correct.
+
+Q: Are you aware that the Minnesota Eyewitness Identification Reform Act of 2020 requires blind or blinded administration?
+A: I am aware of the statute.
+
+Q: You did not comply with it?
+A: The Act was new. We were transitioning protocols.
+
+Page 60, Line 11
+Q: Regarding the alibi — you said you spoke with Simone Arquette once. Did you pull any cell phone records, credit card data, or surveillance footage from her building to corroborate or contradict her account?
+A: No.
+
+Q: Did you speak with any neighbors, building staff, or other residents of her building?
+A: No.
+
+Q: You dismissed a complete alibi based on a single conversation?
+A: The two eyewitnesses identified him. We moved forward on that basis.
+
+Page 61, Line 1
+Q: Detective, Gwen Farris was 68 feet away at night under sodium vapor street lighting. Correct?
+A: That was the approximate distance, yes.
+
+Q: Donald Thibodeau was intoxicated at the time of his observation — that's in your report?
+A: He had been drinking. He appeared coherent.
+
+Q: Your report says his blood alcohol was estimated at .11 based on his own account?
+A: That's what the report says.
+
+Page 62, Line 3
+MR. CSORBA: Nothing further.
+
+THE COURT: Redirect?
+
+MS. OLMSTEAD: No, Your Honor.
+
+THE COURT: Defense may call its first witness.
+
+MR. CSORBA: Defense calls Simone Arquette.
+
+Page 62, Line 12
+DIRECT EXAMINATION BY MR. CSORBA:
+
+Q: Ms. Arquette, where was Raymond Okafor on the night of September 15th?
+A: He was with me. He arrived at my apartment around 8:45 and we watched TV until he fell asleep on my couch. I didn't wake him up until almost midnight.
+
+Q: Is there anything that could corroborate this?
+A: My neighbor, Mrs. Hendricks, knocked on my door around 10 to ask about a package. Raymond answered the door.
+
+Q: Did you tell Detective Schroeder about Mrs. Hendricks?
+A: Yes. She said she would follow up.
+
+Page 62, Line 29
+MS. OLMSTEAD: Your Honor, the State concedes it did not interview Mrs. Hendricks.
+
+THE COURT: The record should so reflect.
+
+Q: Ms. Arquette, did Detective Schroeder ever contact you after the initial interview?
+A: No.
+
+Page 63, Line 8
+MR. CSORBA: Nothing further.
+
+[Defense rested. State did not call rebuttal witnesses.]
+
+THE COURT: Closing arguments.
+
+Page 64, Line 1
+MS. OLMSTEAD: Two witnesses put Raymond Okafor at that scene. An alibi from a girlfriend proves nothing. The jury should convict.
+
+MR. CSORBA: The eyewitnesses were compromised — distance, darkness, a drunk observer, non-blind administration 19 days later. The alibi was corroborated by a neighbor the police never bothered to speak to. The State proved nothing beyond a reasonable doubt.
+
+[JURY DELIBERATION: 6 hours 51 minutes]
+
+THE COURT: Has the jury reached a verdict?
+FOREPERSON: Guilty, Your Honor. Guilty of second-degree murder.
+
+[VERDICT: GUILTY — March 3, 2021]
+
+THE COURT: Sentencing is set for May 18, 2021.
+
+[END OF TRANSCRIPT]
+Certified by: Angela Pietrowski, Official Court Reporter
+`;
+
+const MN_DEMO_FINDINGS = [
+  {
+    issueTitle: "Eyewitness Identification Reform Act Violation — Non-Blind Photo Array Administration",
+    transcriptExcerpt: "Are you aware that the Minnesota Eyewitness Identification Reform Act of 2020 requires blind or blinded administration? [...] I administered it myself. [...] The Act was new. We were transitioning protocols.",
+    legalAnalysis: "Detective Schroeder administered the photo array herself, 19 days after the shooting, in direct violation of the Minnesota Eyewitness Identification Reform Act (Minn. Stat. § 626.8435, eff. 2020). The Act expressly requires blind or blinded administration — meaning the administrator must not know which photo depicts the suspect — to prevent unconscious suggestion. Schroeder knew the suspect, knew which photo was Okafor's, and administered the array anyway. Under State v. Henderson (N.J. 2011, adopted as persuasive authority in MN), non-compliant eyewitness procedures are presumptively suggestive and the identification must be subjected to a heightened reliability hearing. The admission of identifications obtained in violation of the Reform Act without a pretrial reliability hearing was reversible error.",
+    pageNumber: 59,
+    lineNumber: 22,
+    precedentName: "Minn. Stat. § 626.8435",
+    precedentCitation: "Minnesota Eyewitness Identification Reform Act (2020)",
+    precedentType: "BINDING",
+    courtRuling: "Photo array identifications must be administered by a person who does not know which member of the array is the suspect; noncompliant administration triggers a mandatory pretrial reliability hearing.",
+    materialSimilarity: "Schroeder personally administered the array while she was the lead detective who had already identified Okafor as the suspect. The identifications were obtained 19 days after the event under street lighting conditions that limited reliability (68 feet, sodium vapor lights). One witness was estimated at .11 BAC at the time of observation. Without a pretrial reliability hearing, the jury never assessed whether the identifications were trustworthy.",
+    proceduralStatus: "Preserved",
+    anticipatedBlock: "State will argue harmless error: two independent witnesses identified Okafor, the statute was new and officers were transitioning protocols, and the jury was free to assess witness credibility. State will also argue that the Leon-equivalent good-faith exception applies.",
+    breakthroughArgument: "The Reform Act does not include a good-faith exception — it is a mandatory procedural requirement. Under State v. Ard, 2022 MN App (unreported), violation of the Act's blind-administration requirement requires suppression of the identification absent extraordinary circumstances. Here, the entirety of the State's evidence was eyewitness testimony. Suppression of the identifications eliminates the State's case.",
+    legalVehicle: "Minn. Stat. § 590.01 Post-Conviction Petition",
+    survivability: "Strong",
+  },
+  {
+    issueTitle: "Brady / State Duty — Suppression of Corroborating Alibi Witness (Mrs. Hendricks)",
+    transcriptExcerpt: "The State concedes it did not interview Mrs. Hendricks. [...] Ms. Arquette told Detective Schroeder about Mrs. Hendricks — she said she would follow up.",
+    legalAnalysis: "Simone Arquette told Detective Schroeder during the initial alibi interview that her neighbor, Mrs. Hendricks, could corroborate Okafor's presence at the apartment on the night of the shooting — specifically that Hendricks knocked on Arquette's door at approximately 10 p.m. and Okafor answered it. Schroeder promised to follow up and did not. The State affirmatively conceded at trial that Hendricks was never interviewed. Under State v. Hunt, 615 N.W.2d 294 (Minn. 2000), the duty to disclose Brady material extends to evidence the police possess or could readily obtain. By promising to follow up on an alibi lead and then burying it, the State constructively suppressed evidence that would have corroborated the only alibi in the case.",
+    pageNumber: 62,
+    lineNumber: 29,
+    precedentName: "Brady v. Maryland",
+    precedentCitation: "373 U.S. 83 (1963) / State v. Hunt, 615 N.W.2d 294 (Minn. 2000)",
+    precedentType: "BINDING",
+    courtRuling: "The prosecution must disclose favorable evidence, including evidence within its constructive possession that could be obtained through reasonable investigation of leads it affirmatively received.",
+    materialSimilarity: "Schroeder was directly told about Hendricks and promised to investigate. A third-party eyewitness placing the defendant at the alibi location at the time of the murder is the most significant possible exculpatory evidence. The failure to follow up and the failure to disclose Arquette's lead constitute Brady suppression.",
+    proceduralStatus: "Preserved",
+    anticipatedBlock: "State will argue that Arquette testified at trial, so the jury was aware of the Hendricks lead and could evaluate its significance. State will argue there was no obligation to interview every alibi lead in a case supported by two eyewitnesses.",
+    breakthroughArgument: "The State's trial concession that Hendricks was never interviewed — after Schroeder promised to follow up — is a record admission of suppression. Hendricks is now available and, in post-conviction proceedings, an affidavit from her that she saw Okafor at Arquette's door at 10 p.m. would be newly discovered evidence satisfying Minn. Stat. § 590.01, subd. 4(b)(2). Combined with the Reform Act violation on the identifications, materiality is overwhelming.",
+    legalVehicle: "Minn. Stat. § 590.01 Post-Conviction Petition",
+    survivability: "Strong",
+  },
+  {
+    issueTitle: "Ineffective Assistance of Counsel — Failure to Investigate or Present Mrs. Hendricks",
+    transcriptExcerpt: "My neighbor Mrs. Hendricks knocked on my door around 10 to ask about a package. Raymond answered the door. [...] Did Detective Schroeder ever contact you after the initial interview? No.",
+    legalAnalysis: "Defense counsel Brian Csorba knew from Simone Arquette's direct examination that Mrs. Hendricks had been told to Detective Schroeder and never followed up. Csorba did not subpoena Hendricks, did not request a continuance to locate and call her, and rested the defense without her testimony. The record reflects that Hendricks was known to defense through Arquette's own testimony — yet counsel made no effort to produce her. Under Wiggins v. Smith, 539 U.S. 510 (2003) and Strickland, a defense attorney who elicits the existence of a corroborating alibi witness in open court and then fails to call that witness has no strategic justification for the omission. The failure to call Hendricks, whose testimony would have directly corroborated the alibi and potentially acquitted the defendant, constitutes deficient performance under any objective standard.",
+    pageNumber: 62,
+    lineNumber: 12,
+    precedentName: "Wiggins v. Smith",
+    precedentCitation: "539 U.S. 510 (2003)",
+    precedentType: "BINDING",
+    courtRuling: "Counsel's failure to investigate and call a witness whose existence is known and whose testimony would materially support the defense constitutes deficient performance under Strickland.",
+    materialSimilarity: "Csorba elicited testimony that Hendricks existed, lived next door to Arquette, and could place Okafor at the alibi location at the time of the murder. He then rested without her. There is no trial record suggesting Csorba tried to locate Hendricks, subpoena her, or was refused a continuance for that purpose. This is a paradigmatic case of failure to follow up on a known alibi lead.",
+    proceduralStatus: "Unclear",
+    anticipatedBlock: "State will argue Csorba's decision not to delay trial for an uninvestigated witness was reasonable strategy — Hendricks might have been unreliable, unavailable, or harmful. State will invoke Strickland's strong presumption of competence.",
+    breakthroughArgument: "A post-conviction affidavit from Hendricks confirming her availability and willingness to testify eliminates the State's strategy argument. Under State v. Zornes, 831 N.W.2d 609 (Minn. 2013), IAC claims require showing the witness was actually available and the testimony actually exculpatory — both of which can be established through affidavit in this proceeding. The jury deliberated nearly seven hours, suggesting the verdict was not a foregone conclusion; Hendricks's testimony would have been decisive.",
+    legalVehicle: "Minn. Stat. § 590.01 Post-Conviction Petition",
+    survivability: "Moderate",
+  },
+  {
+    issueTitle: "Newly Discovered Evidence — Mrs. Hendricks as Alibi Corroboration Witness",
+    transcriptExcerpt: "My neighbor Mrs. Hendricks knocked on my door around 10 to ask about a package. Raymond answered the door. She said she would follow up. [State concedes it never interviewed Hendricks.]",
+    legalAnalysis: "Under Minn. Stat. § 590.01, subd. 4(b)(2), a post-conviction petition may be brought based on newly discovered evidence that, with reasonable diligence, could not have been presented at trial. While Hendricks's identity was mentioned at trial, her actual testimony constitutes newly discovered evidence for post-conviction purposes because the State's failure to interview her — and counsel's failure to locate her — meant her account was never presented. Under State v. Rhodes, 657 N.W.2d 823 (Minn. 2003), newly discovered evidence warrants a new trial if there is a reasonable probability that, had it been presented, the verdict would have been different. A neighbor who can place the defendant at the alibi address at the time of the murder satisfies that standard against a conviction based entirely on two compromised eyewitness identifications.",
+    pageNumber: 62,
+    lineNumber: 12,
+    precedentName: "Minn. Stat. § 590.01, subd. 4(b)(2)",
+    precedentCitation: "Minnesota Post-Conviction Relief Statute",
+    precedentType: "BINDING",
+    courtRuling: "A new trial may be granted on the basis of newly discovered evidence that could not have been produced at trial with reasonable diligence and that creates a reasonable probability of a different outcome.",
+    materialSimilarity: "Hendricks's testimony is newly available alibi corroboration that was never presented to the jury due to a combination of police failure to investigate and defense counsel's failure to follow up. In a case where the conviction rested on two compromised eyewitness identifications, corroborated alibi testimony from a disinterested neighbor satisfies the newly discovered evidence standard.",
+    proceduralStatus: "Preserved",
+    anticipatedBlock: "State will argue Hendricks was mentioned at trial and is therefore not 'newly discovered.' State will also invoke the time-bar under Minn. Stat. § 590.01, subd. 4(a), which requires petitions within two years of the time the claim could have been known.",
+    breakthroughArgument: "The time-bar is equitably tolled because Hendricks's actual testimony — as opposed to her name — was not available due to the State's suppression of the lead it received from Arquette. Under State v. Hale, 2018 MN App, equitable tolling applies when the petitioner demonstrates that the State's conduct prevented timely discovery. Hendricks's identity was disclosed at trial but her testimony was not obtainable due to the Brady violation — that suppression equitably tolls the petition clock.",
+    legalVehicle: "Minn. Stat. § 590.01 Post-Conviction Petition",
+    survivability: "Moderate",
+  },
+];
+
+export async function seedMinnesotaDemoCase(): Promise<void> {
+  try {
+    const existing = await db
+      .select({ id: casesTable.id })
+      .from(casesTable)
+      .where(eq(casesTable.caseNumber, MN_DEMO_CASE_NUMBER))
+      .limit(1);
+
+    if (existing.length > 0) {
+      const caseId = existing[0].id;
+      const demoDoc = await db
+        .select({ id: documentsTable.id, status: documentsTable.status, findingCount: documentsTable.findingCount })
+        .from(documentsTable)
+        .where(eq(documentsTable.caseId, caseId))
+        .limit(1)
+        .then((rows) => rows[0] ?? null);
+
+      const needsRestore = !demoDoc || demoDoc.status === "error" || demoDoc.status === "pending" || (demoDoc.findingCount ?? 0) === 0;
+      if (!needsRestore) {
+        logger.info({ caseId }, "Minnesota demo case already exists and is healthy — skipping seed");
+        return;
+      }
+
+      logger.info({ caseId }, "Minnesota demo case is corrupted — restoring...");
+      await db.transaction(async (tx) => {
+        let docId: number;
+        if (!demoDoc) {
+          const [newDoc] = await tx.insert(documentsTable).values({ caseId, title: "Jury Trial Transcript — Day 4, March 3, 2021", documentType: "transcript", content: MN_DEMO_TRANSCRIPT, status: "analyzed" }).returning();
+          docId = newDoc.id;
+        } else {
+          docId = demoDoc.id;
+          await tx.delete(findingsTable).where(eq(findingsTable.documentId, docId));
+        }
+        for (const f of MN_DEMO_FINDINGS) {
+          await tx.insert(findingsTable).values({ caseId, documentId: docId, issueTitle: f.issueTitle, transcriptExcerpt: f.transcriptExcerpt, legalAnalysis: f.legalAnalysis, pageNumber: f.pageNumber, lineNumber: f.lineNumber, precedentName: f.precedentName, precedentCitation: f.precedentCitation, precedentType: f.precedentType, courtRuling: f.courtRuling, materialSimilarity: f.materialSimilarity, proceduralStatus: f.proceduralStatus, anticipatedBlock: f.anticipatedBlock, breakthroughArgument: f.breakthroughArgument, legalVehicle: f.legalVehicle, survivability: f.survivability });
+        }
+        await tx.update(documentsTable).set({ status: "analyzed", findingCount: MN_DEMO_FINDINGS.length }).where(eq(documentsTable.id, docId));
+        await tx.update(casesTable).set({ hasAnalysis: true }).where(eq(casesTable.id, caseId));
+      });
+      logger.info({ caseId }, "Minnesota demo case restored");
+      return;
+    }
+
+    logger.info("Seeding Minnesota demo case...");
+    await db.transaction(async (tx) => {
+      const [mnCase] = await tx.insert(casesTable).values({
+        title: "State v. Raymond Okafor — MN DEMO",
+        defendantName: "Raymond Leon Okafor",
+        caseNumber: MN_DEMO_CASE_NUMBER,
+        jurisdiction: "Hennepin County District Court, State of Minnesota",
+        notes: "DEMO CASE — Minnesota post-conviction example showcasing the Minn. Stat. § 590.01 relief pathway, 8th Circuit federal ladder, and Minnesota-specific executive relief options including the Board of Pardons.",
+        hasAnalysis: true,
+        hasMotion: false,
+      }).returning();
+
+      const [mnDoc] = await tx.insert(documentsTable).values({
+        caseId: mnCase.id,
+        title: "Jury Trial Transcript — Day 4, March 3, 2021",
+        documentType: "transcript",
+        content: MN_DEMO_TRANSCRIPT,
+        status: "analyzed",
+      }).returning();
+
+      for (const f of MN_DEMO_FINDINGS) {
+        await tx.insert(findingsTable).values({ caseId: mnCase.id, documentId: mnDoc.id, issueTitle: f.issueTitle, transcriptExcerpt: f.transcriptExcerpt, legalAnalysis: f.legalAnalysis, pageNumber: f.pageNumber, lineNumber: f.lineNumber, precedentName: f.precedentName, precedentCitation: f.precedentCitation, precedentType: f.precedentType, courtRuling: f.courtRuling, materialSimilarity: f.materialSimilarity, proceduralStatus: f.proceduralStatus, anticipatedBlock: f.anticipatedBlock, breakthroughArgument: f.breakthroughArgument, legalVehicle: f.legalVehicle, survivability: f.survivability });
+      }
+
+      await tx.update(documentsTable).set({ findingCount: MN_DEMO_FINDINGS.length }).where(eq(documentsTable.id, mnDoc.id));
+      logger.info({ caseId: mnCase.id }, "Minnesota demo case seeded successfully");
+    });
+  } catch (err) {
+    logger.error({ err }, "Failed to seed Minnesota demo case");
+  }
+}
