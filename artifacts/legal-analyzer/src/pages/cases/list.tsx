@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { useListCases } from "@workspace/api-client-react";
 import Navbar from "@/components/layout/Navbar";
@@ -13,15 +14,14 @@ type JurisdictionBadge = {
   circuit: string | null;
 };
 
+type FilterState = "All" | "Wisconsin" | "Illinois" | "Minnesota" | "Other";
+
 // NOTE: Detection patterns intentionally mirror detectJurisdiction() in
 // artifacts/api-server/src/routes/relief.ts — keep these in sync if state
 // support is added or patterns change on the server side.
-function parseJurisdictionBadge(jurisdiction: string | null | undefined): JurisdictionBadge | null {
+function detectStateName(jurisdiction: string | null | undefined): "Wisconsin" | "Illinois" | "Minnesota" | "Other" | null {
   if (!jurisdiction) return null;
   const lower = jurisdiction.toLowerCase().trim();
-
-  let stateName: string | null = null;
-  let circuit: string | null = null;
 
   if (
     lower.includes("wisconsin") ||
@@ -29,51 +29,85 @@ function parseJurisdictionBadge(jurisdiction: string | null | undefined): Jurisd
     lower.startsWith("wi ") || lower.startsWith("wis ") || lower.startsWith("wis.") ||
     lower.includes(", wi") || lower.includes(" wi,") ||
     lower.includes("(wi)") || lower.includes("(wis)")
-  ) {
-    stateName = "Wisconsin";
-    circuit = "7th Circuit";
-  } else if (
+  ) return "Wisconsin";
+
+  if (
     lower.includes("illinois") ||
     lower === "il" || lower === "ill" || lower === "ill." ||
     lower.startsWith("il ") || lower.startsWith("ill ") ||
     lower.includes(", il") || lower.includes(" il,") ||
     lower.includes("(il)") || lower.includes("(ill)") ||
     lower.includes("cook county") || lower.includes("chicago")
-  ) {
-    stateName = "Illinois";
-    circuit = "7th Circuit";
-  } else if (
+  ) return "Illinois";
+
+  if (
     lower.includes("minnesota") ||
     lower === "mn" ||
     lower.startsWith("mn ") || lower.includes(", mn") || lower.includes(" mn,") ||
     lower.includes("(mn)") ||
     lower.includes("minneapolis") || lower.includes("st. paul") || lower.includes("saint paul")
-  ) {
-    stateName = "Minnesota";
-    circuit = "8th Circuit";
-  }
+  ) return "Minnesota";
 
-  if (stateName) {
-    const firstPart = jurisdiction.split(",")[0].trim();
-    const cleanLocation = firstPart
-      .replace(/\s+(circuit court|district court|superior court|municipal court|county court|court)\s*$/i, "")
-      .trim();
-    return { displayText: `${cleanLocation} · ${stateName}`, circuit };
-  }
-
-  // For unrecognized jurisdictions, only show if the string looks like a real
-  // court location (contains a comma, or contains court-related keywords).
-  // This filters out placeholder values like "Anonymous" or "Test".
+  // "Other" only for real-looking unrecognized jurisdictions
   const looksReal =
     jurisdiction.includes(",") ||
     /county|court|district|circuit|judicial|parish|borough/i.test(jurisdiction);
-  if (!looksReal) return null;
+  return looksReal ? "Other" : null;
+}
 
-  return { displayText: jurisdiction, circuit: null };
+function parseJurisdictionBadge(jurisdiction: string | null | undefined): JurisdictionBadge | null {
+  const state = detectStateName(jurisdiction);
+  if (!state) return null;
+
+  if (state === "Other") {
+    return { displayText: jurisdiction!, circuit: null };
+  }
+
+  const circuitMap: Record<string, string> = {
+    Wisconsin: "7th Circuit",
+    Illinois: "7th Circuit",
+    Minnesota: "8th Circuit",
+  };
+
+  const firstPart = jurisdiction!.split(",")[0].trim();
+  const cleanLocation = firstPart
+    .replace(/\s+(circuit court|district court|superior court|municipal court|county court|court)\s*$/i, "")
+    .trim();
+
+  return { displayText: `${cleanLocation} · ${state}`, circuit: circuitMap[state] ?? null };
 }
 
 export default function CaseList() {
   const { data: cases, isLoading } = useListCases();
+  const [activeFilter, setActiveFilter] = useState<FilterState>("All");
+
+  // Compute per-state counts
+  const stateCounts = (cases ?? []).reduce<Record<FilterState, number>>(
+    (acc, c) => {
+      const s = detectStateName(c.jurisdiction) ?? null;
+      if (s) acc[s] = (acc[s] ?? 0) + 1;
+      acc["All"] = (acc["All"] ?? 0) + 1;
+      return acc;
+    },
+    { All: 0, Wisconsin: 0, Illinois: 0, Minnesota: 0, Other: 0 },
+  );
+
+  // Only show filter options that have at least 1 case; always include "All"
+  const filterOptions: FilterState[] = [
+    "All",
+    ...( ["Wisconsin", "Illinois", "Minnesota", "Other"] as FilterState[] ).filter(
+      (s) => (stateCounts[s] ?? 0) > 0,
+    ),
+  ];
+
+  // Show filter bar only when there are 2+ distinct state categories
+  const showFilterBar = filterOptions.length > 2; // "All" + at least 2 states
+
+  // Apply filter
+  const filteredCases = (cases ?? []).filter((c) => {
+    if (activeFilter === "All") return true;
+    return detectStateName(c.jurisdiction) === activeFilter;
+  });
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
@@ -92,15 +126,47 @@ export default function CaseList() {
           </Link>
         </div>
 
+        {/* State filter pills — only shown when 2+ distinct states are present */}
+        {!isLoading && showFilterBar && (
+          <div className="flex flex-wrap items-center gap-2 mb-5">
+            {filterOptions.map((opt) => {
+              const count = stateCounts[opt] ?? 0;
+              const isActive = activeFilter === opt;
+              return (
+                <button
+                  key={opt}
+                  onClick={() => setActiveFilter(opt)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                    isActive
+                      ? "bg-foreground text-background border-foreground"
+                      : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-foreground"
+                  }`}
+                >
+                  {opt}
+                  <span
+                    className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-semibold ${
+                      isActive
+                        ? "bg-background/20 text-background"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {opt === "All" ? stateCounts["All"] : count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-24 w-full" />
             ))}
           </div>
-        ) : cases && cases.length > 0 ? (
+        ) : filteredCases.length > 0 ? (
           <div className="grid gap-3">
-            {cases.map((c) => {
+            {filteredCases.map((c) => {
               const jBadge = parseJurisdictionBadge(c.jurisdiction);
               return (
                 <Link key={c.id} href={`/cases/${c.id}`}>
@@ -157,6 +223,19 @@ export default function CaseList() {
                 </Link>
               );
             })}
+          </div>
+        ) : cases && cases.length > 0 ? (
+          // Filtered results are empty but total cases exist
+          <div className="text-center py-16 border-2 border-dashed border-border rounded-xl bg-muted/20">
+            <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+              <FolderOpen className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <p className="text-sm font-medium text-foreground mb-1">No {activeFilter} cases</p>
+            <p className="text-xs text-muted-foreground">
+              <button className="underline underline-offset-2 hover:text-foreground transition-colors" onClick={() => setActiveFilter("All")}>
+                View all cases
+              </button>
+            </p>
           </div>
         ) : (
           <div className="text-center py-20 border-2 border-dashed border-border rounded-xl bg-muted/20">
