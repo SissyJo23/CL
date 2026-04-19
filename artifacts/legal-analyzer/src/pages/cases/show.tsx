@@ -38,16 +38,27 @@ type CaseFindingSummary = {
   createdAt: string;
 };
 
-const SURVIVABILITY_ORDER: Record<string, number> = {
-  Strong: 0,
-  Moderate: 1,
-  Vulnerable: 2,
+type FindingSeverity = "Critical" | "High" | "Medium" | "Low";
+
+function deriveSeverity(survivability: string | null, proceduralStatus: string | null): FindingSeverity {
+  if (survivability === "Strong" && proceduralStatus === "Preserved") return "Critical";
+  if (survivability === "Strong") return "High";
+  if (survivability === "Moderate") return "Medium";
+  return "Low";
+}
+
+const SEVERITY_ORDER: Record<FindingSeverity, number> = {
+  Critical: 0,
+  High: 1,
+  Medium: 2,
+  Low: 3,
 };
 
-const SURVIVABILITY_STYLES: Record<string, { badge: string }> = {
-  Strong: { badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700" },
-  Moderate: { badge: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700" },
-  Vulnerable: { badge: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 border-red-200 dark:border-red-700" },
+const SEVERITY_STYLES: Record<FindingSeverity, string> = {
+  Critical: "bg-red-100 text-red-900 dark:bg-red-900/40 dark:text-red-200 border-red-300 dark:border-red-700",
+  High: "bg-orange-100 text-orange-900 dark:bg-orange-900/40 dark:text-orange-200 border-orange-300 dark:border-orange-700",
+  Medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700",
+  Low: "bg-muted text-muted-foreground border-border",
 };
 
 const PROCEDURAL_STYLES: Record<string, string> = {
@@ -149,8 +160,8 @@ export default function CaseShow() {
   });
 
   const caseFindings = (caseFindingsRaw ?? []).slice().sort((a, b) => {
-    const aOrder = a.survivability != null ? (SURVIVABILITY_ORDER[a.survivability] ?? 3) : 3;
-    const bOrder = b.survivability != null ? (SURVIVABILITY_ORDER[b.survivability] ?? 3) : 3;
+    const aOrder = SEVERITY_ORDER[deriveSeverity(a.survivability, a.proceduralStatus)];
+    const bOrder = SEVERITY_ORDER[deriveSeverity(b.survivability, b.proceduralStatus)];
     return aOrder - bOrder;
   });
 
@@ -786,13 +797,12 @@ export default function CaseShow() {
                   <div className="flex items-center gap-2">
                     {caseFindings.length > 0 && (
                       <div className="flex items-center gap-1.5 mr-1">
-                        {["Strong", "Moderate", "Vulnerable"].map((v) => {
-                          const count = caseFindings.filter((f) => f.survivability === v).length;
+                        {(["Critical", "High", "Medium", "Low"] as FindingSeverity[]).map((sev) => {
+                          const count = caseFindings.filter((f) => deriveSeverity(f.survivability, f.proceduralStatus) === sev).length;
                           if (count === 0) return null;
-                          const s = SURVIVABILITY_STYLES[v];
                           return (
-                            <span key={v} className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold border ${s.badge}`}>
-                              {count} {v}
+                            <span key={sev} className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold border ${SEVERITY_STYLES[sev]}`}>
+                              {count} {sev}
                             </span>
                           );
                         })}
@@ -813,7 +823,7 @@ export default function CaseShow() {
                   ) : (
                     <div className="divide-y divide-border">
                       {(showAllFindings ? caseFindings : caseFindings.slice(0, 5)).map((finding) => {
-                        const survStyle = finding.survivability ? SURVIVABILITY_STYLES[finding.survivability] : null;
+                        const severity = deriveSeverity(finding.survivability, finding.proceduralStatus);
                         const procStyle = finding.proceduralStatus ? PROCEDURAL_STYLES[finding.proceduralStatus] : null;
                         return (
                           <Link key={finding.id} href={`/cases/${caseId}/documents/${finding.documentId}`}>
@@ -821,11 +831,9 @@ export default function CaseShow() {
                               <div className="flex-1 min-w-0 space-y-1">
                                 <p className="text-sm font-medium text-foreground leading-snug truncate">{finding.issueTitle}</p>
                                 <div className="flex flex-wrap items-center gap-1.5">
-                                  {survStyle && finding.survivability && (
-                                    <span className={`inline-flex items-center px-1.5 py-0 rounded text-[10px] font-semibold border ${survStyle.badge}`}>
-                                      {finding.survivability}
-                                    </span>
-                                  )}
+                                  <span className={`inline-flex items-center px-1.5 py-0 rounded text-[10px] font-semibold border ${SEVERITY_STYLES[severity]}`}>
+                                    {severity}
+                                  </span>
                                   {procStyle && finding.proceduralStatus && (
                                     <span className={`inline-flex items-center px-1.5 py-0 rounded text-[10px] font-medium border ${procStyle}`}>
                                       {finding.proceduralStatus}
