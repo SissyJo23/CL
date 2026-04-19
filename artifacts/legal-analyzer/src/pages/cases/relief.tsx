@@ -196,7 +196,7 @@ export default function ReliefPage() {
         setError("Case not found. The case you are looking for does not exist.");
       } else if (res.status === 422) {
         const body = await res.json().catch(() => ({}));
-        setError(body.message ?? "This case's jurisdiction is not currently supported. Relief Pathway Engine supports Wisconsin cases only.");
+        setError(body.message ?? "This case's jurisdiction is not currently supported. Relief Pathway Engine supports Wisconsin (WI), Illinois (IL), and Minnesota (MN).");
       } else if (res.ok) {
         const data = await res.json();
         setPathway(data);
@@ -331,8 +331,19 @@ export default function ReliefPage() {
             <Milestone className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-serif font-medium tracking-tight">Relief Pathway Engine</h1>
-            <p className="text-sm text-muted-foreground">Wisconsin judicial ladder, AEDPA clock, federal-ready claims, and executive options</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-2xl font-serif font-medium tracking-tight">Relief Pathway Engine</h1>
+              {pathway?.jurisdiction && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700">
+                  {pathway.jurisdiction.toLowerCase().includes("illinois") || pathway.jurisdiction.toLowerCase() === "il"
+                    ? "Illinois · 7th Circuit"
+                    : pathway.jurisdiction.toLowerCase().includes("minnesota") || pathway.jurisdiction.toLowerCase() === "mn"
+                    ? "Minnesota · 8th Circuit"
+                    : "Wisconsin · 7th Circuit"}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">Judicial ladder, AEDPA clock, federal-ready claims, and executive options</p>
           </div>
           {pathway && (
             <Button
@@ -380,7 +391,7 @@ export default function ReliefPage() {
             <div className="space-y-2">
               <h2 className="text-xl font-serif font-medium">No Relief Pathway Yet</h2>
               <p className="text-sm text-muted-foreground max-w-md">
-                Generate a complete post-conviction relief pathway including the Wisconsin judicial ladder, AEDPA deadline, federal-ready claims, and executive options.
+                Generate a complete post-conviction relief pathway including the judicial ladder, AEDPA deadline, federal-ready claims, and executive options. Supports Wisconsin, Illinois, and Minnesota.
               </p>
             </div>
             <Button onClick={fetchPathway} className="bg-indigo-600 hover:bg-indigo-700 text-white">
