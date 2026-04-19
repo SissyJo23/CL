@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch, Milestone, User, Users, BookOpen, Shield, Star, ChevronRight, AlertTriangle } from "lucide-react";
+import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch, Milestone, User, Users, BookOpen, Shield, Star, ChevronRight, ChevronDown, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -64,6 +64,17 @@ const LADDER_SHORT: Record<number, string> = {
   6: "SCOTUS",
 };
 
+type PathwayResult =
+  | { status: "ok"; data: ReliefPathway }
+  | { status: "not_found" }
+  | { status: "unsupported_jurisdiction" }
+  | { status: "error" };
+
+function truncateSentences(text: string, n: number): string {
+  const sentences = text.match(/[^.!?]+[.!?]+/g) ?? [text];
+  return sentences.slice(0, n).join(" ").trim();
+}
+
 type LiveStatus = {
   phase: "running" | "done" | "error";
   message: string;
@@ -78,17 +89,21 @@ export default function CaseShow() {
   const { data: documents, isLoading: docsLoading } = useListDocuments(caseId, { query: { enabled: !!caseId, queryKey: getListDocumentsQueryKey(caseId) } });
   const { data: strategyData, isLoading: strategyLoading } = useGetCaseStrategy(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseStrategyQueryKey(caseId) } });
   const { data: courtSessions } = useListCourtSessions(caseId, { query: { enabled: !!caseId, queryKey: getListCourtSessionsQueryKey(caseId) } });
-  const { data: reliefPathway, isLoading: reliefLoading } = useQuery<ReliefPathway | null>({
+  const { data: pathwayResult, isLoading: reliefLoading } = useQuery<PathwayResult>({
     queryKey: ["relief-pathway", caseId],
     queryFn: async () => {
       const res = await fetch(`/api/cases/${caseId}/relief-pathway`);
-      if (res.status === 404 || res.status === 422) return null;
-      if (!res.ok) return null;
-      return res.json();
+      if (res.status === 404) return { status: "not_found" } as PathwayResult;
+      if (res.status === 422) return { status: "unsupported_jurisdiction" } as PathwayResult;
+      if (!res.ok) return { status: "error" } as PathwayResult;
+      const data = await res.json();
+      return { status: "ok", data } as PathwayResult;
     },
     enabled: !!caseId,
     retry: false,
   });
+  const reliefPathway = pathwayResult?.status === "ok" ? pathwayResult.data : null;
+  const [federalExpanded, setFederalExpanded] = useState(true);
 
   const createDocument = useCreateDocument();
   const deleteDocument = useDeleteDocument();
@@ -507,24 +522,41 @@ export default function CaseShow() {
 
             {/* Federal Readiness Panel */}
             <div className="border border-indigo-200 dark:border-indigo-800/60 rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 bg-indigo-50/60 dark:bg-indigo-900/10 border-b border-indigo-200 dark:border-indigo-800/60">
+              <button
+                className="w-full flex items-center justify-between px-5 py-4 bg-indigo-50/60 dark:bg-indigo-900/10 border-b border-indigo-200 dark:border-indigo-800/60 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/20 transition-colors text-left"
+                onClick={() => setFederalExpanded((v) => !v)}
+                aria-expanded={federalExpanded}
+              >
                 <div className="flex items-center gap-2">
                   <Shield className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                   <h2 className="text-lg font-serif font-medium text-indigo-900 dark:text-indigo-200">Federal Readiness</h2>
                 </div>
-                {reliefPathway && (
-                  <Link href={`/cases/${caseId}/relief`}>
-                    <Button size="sm" variant="ghost" className="text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 text-xs h-7 px-2">
-                      Full Pathway →
-                    </Button>
-                  </Link>
-                )}
-              </div>
-              {reliefLoading ? (
+                <div className="flex items-center gap-2">
+                  {reliefPathway && (
+                    <Link href={`/cases/${caseId}/relief`} onClick={(e) => e.stopPropagation()}>
+                      <span className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline px-1">Full Pathway →</span>
+                    </Link>
+                  )}
+                  <ChevronDown className={`w-4 h-4 text-indigo-500 transition-transform duration-200 ${federalExpanded ? "" : "-rotate-90"}`} />
+                </div>
+              </button>
+              {!federalExpanded ? null : reliefLoading ? (
                 <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24 w-full" />)}
                 </div>
-              ) : !reliefPathway ? (
+              ) : pathwayResult?.status === "unsupported_jurisdiction" ? (
+                <div className="p-8 text-center space-y-3">
+                  <div className="mx-auto w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Jurisdiction not yet configured</p>
+                    <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
+                      The Federal Readiness engine currently supports Wisconsin cases. Support for additional jurisdictions is coming soon.
+                    </p>
+                  </div>
+                </div>
+              ) : pathwayResult?.status === "not_found" || !pathwayResult ? (
                 <div className="p-8 text-center space-y-4">
                   <div className="mx-auto w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
                     <Shield className="w-5 h-5 text-indigo-500" />
@@ -657,21 +689,25 @@ export default function CaseShow() {
                   </div>
 
                   {/* Block 4: Strongest Federal Argument */}
-                  {(reliefPathway.martinezReason || (reliefPathway.federalReadyClaims && reliefPathway.federalReadyClaims.length > 0)) && (
-                    <div className="md:col-span-2 space-y-2 bg-muted/30 border border-border rounded-lg p-4">
-                      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                        <Star className="w-3.5 h-3.5" /> Strongest Federal Argument
+                  {(() => {
+                    const rawText =
+                      reliefPathway.federalReadyClaims?.[0]?.readyReason ??
+                      reliefPathway.martinezReason ??
+                      "";
+                    if (!rawText) return null;
+                    const narrativeSummary = truncateSentences(rawText, 3);
+                    return (
+                      <div className="md:col-span-2 space-y-2 bg-muted/30 border border-border rounded-lg p-4">
+                        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                          <Star className="w-3.5 h-3.5" /> Strongest Federal Argument
+                        </div>
+                        <p className="text-sm text-foreground/80 leading-relaxed">{narrativeSummary}</p>
+                        <Link href={`/cases/${caseId}/relief`}>
+                          <span className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">Read full analysis →</span>
+                        </Link>
                       </div>
-                      <p className="text-sm text-foreground/80 leading-relaxed line-clamp-3">
-                        {reliefPathway.martinezReason ??
-                          reliefPathway.federalReadyClaims?.[0]?.readyReason ??
-                          ""}
-                      </p>
-                      <Link href={`/cases/${caseId}/relief`}>
-                        <span className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">Read full analysis →</span>
-                      </Link>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               )}
             </div>
