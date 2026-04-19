@@ -72,6 +72,7 @@ type ReliefPathway = {
   updatedAt: string;
   aedpaIsEstimate?: boolean;
   martinezReason?: string | null;
+  detectedState?: "WI" | "IL" | "MN" | null;
 };
 
 function StatusBadge({ status }: { status: LadderStep["status"] }) {
@@ -333,11 +334,11 @@ export default function ReliefPage() {
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-serif font-medium tracking-tight">Relief Pathway Engine</h1>
-              {pathway?.jurisdiction && (
+              {pathway?.detectedState && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700">
-                  {pathway.jurisdiction.toLowerCase().includes("illinois") || pathway.jurisdiction.toLowerCase() === "il"
+                  {pathway.detectedState === "IL"
                     ? "Illinois · 7th Circuit"
-                    : pathway.jurisdiction.toLowerCase().includes("minnesota") || pathway.jurisdiction.toLowerCase() === "mn"
+                    : pathway.detectedState === "MN"
                     ? "Minnesota · 8th Circuit"
                     : "Wisconsin · 7th Circuit"}
                 </span>

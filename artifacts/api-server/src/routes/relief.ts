@@ -514,7 +514,7 @@ router.get("/cases/:caseId/relief-pathway", async (req, res) => {
     .where(eq(reliefPathwaysTable.caseId, caseId));
 
   if (existing) {
-    res.json({ ...existing, aedpaIsEstimate: existing.aedpaIsEstimate ?? true, martinezReason: existing.martinezReason ?? null });
+    res.json({ ...existing, aedpaIsEstimate: existing.aedpaIsEstimate ?? true, martinezReason: existing.martinezReason ?? null, detectedState: state });
     return;
   }
 
@@ -524,7 +524,7 @@ router.get("/cases/:caseId/relief-pathway", async (req, res) => {
       res.status(500).json({ error: result.error });
       return;
     }
-    res.json({ ...result.pathway, aedpaIsEstimate: result.isEstimate, martinezReason: result.martinezReason });
+    res.json({ ...result.pathway, aedpaIsEstimate: result.isEstimate, martinezReason: result.martinezReason, detectedState: state });
   } catch (err) {
     logger.error({ err, caseId, state }, "Relief pathway generation failed");
     const status = (err as { status?: number })?.status;
@@ -570,7 +570,7 @@ router.post("/cases/:caseId/relief-pathway/regenerate", async (req, res) => {
       res.status(500).json({ error: result.error });
       return;
     }
-    res.json({ ...result.pathway, aedpaIsEstimate: result.isEstimate, martinezReason: result.martinezReason });
+    res.json({ ...result.pathway, aedpaIsEstimate: result.isEstimate, martinezReason: result.martinezReason, detectedState: state });
   } catch (err) {
     logger.error({ err, caseId, state }, "Relief pathway regeneration failed");
     res.status(500).json({ error: "Failed to regenerate relief pathway. Please try again." });
@@ -591,15 +591,17 @@ router.put("/cases/:caseId/relief-pathway", async (req, res) => {
     return;
   }
 
-  const [existing] = await db
-    .select()
-    .from(reliefPathwaysTable)
-    .where(eq(reliefPathwaysTable.caseId, caseId));
+  const [[existingCase], [existing]] = await Promise.all([
+    db.select({ jurisdiction: casesTable.jurisdiction }).from(casesTable).where(eq(casesTable.id, caseId)),
+    db.select().from(reliefPathwaysTable).where(eq(reliefPathwaysTable.caseId, caseId)),
+  ]);
 
   if (!existing) {
     res.status(404).json({ error: "No relief pathway found for this case" });
     return;
   }
+
+  const detectedState = detectJurisdiction(existingCase?.jurisdiction ?? null);
 
   const { stepUpdates, aedpaDeadline, aedpaTolled } = parsed.data;
   const updateData: Record<string, unknown> = { updatedAt: new Date() };
@@ -636,7 +638,7 @@ router.put("/cases/:caseId/relief-pathway", async (req, res) => {
     .where(eq(reliefPathwaysTable.caseId, caseId))
     .returning();
 
-  res.json(updated);
+  res.json({ ...updated, detectedState });
 });
 
 export default router;
