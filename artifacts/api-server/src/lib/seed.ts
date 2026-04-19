@@ -1431,3 +1431,528 @@ export async function seedMinnesotaDemoCase(): Promise<void> {
     logger.error({ err }, "Failed to seed Minnesota demo case");
   }
 }
+
+// ─────────────────────────────────────────────────────────────────
+// MICHIGAN DEMO CASE
+// ─────────────────────────────────────────────────────────────────
+
+const MI_DEMO_CASE_NUMBER = "DEMO-MICH-2019001234";
+
+const MI_DEMO_TRANSCRIPT = `STATE OF MICHIGAN
+IN THE CIRCUIT COURT FOR WAYNE COUNTY
+
+PEOPLE OF THE STATE OF MICHIGAN,
+    Plaintiff,
+
+    vs.                                     Case No. 19-001234-FC
+
+MARCUS DESHAWN PORTER,
+    Defendant.
+
+TRANSCRIPT OF BENCH TRIAL — DAY 3
+Honorable Sylvia R. Kowalczyk, Presiding
+November 14, 2019
+
+Appearances:
+    For the People: Assistant Prosecutor Alicia Denford
+    For the Defense: Attorney Kevin Mwamba
+    Court Reporter: Sandra Tucciarone
+
+---
+
+THE COURT: Back on the record. Ms. Denford, call your next witness.
+
+MS. DENFORD: People call Officer Thomas Greer.
+
+DIRECT EXAMINATION BY MS. DENFORD:
+
+Page 44, Line 1
+Q: Officer Greer, on August 3rd, 2019, you conducted a traffic stop of a vehicle driven by Marcus Porter?
+A: That's correct. I observed the vehicle traveling on East Jefferson Avenue.
+
+Q: What was the basis for the stop?
+A: I observed what I believed was a cracked tail light.
+
+Q: What happened during the stop?
+A: I approached the vehicle, smelled what I believed to be marijuana. I asked Mr. Porter to step out. I then conducted a search of the interior.
+
+Q: What did you find?
+A: Under the driver's seat, I found a handgun — a Glock 19 — and a digital scale. In the center console there was a plastic bag with what appeared to be crack cocaine.
+
+Page 44, Line 19
+Q: Was the firearm registered to Mr. Porter?
+A: No. The firearm came back as stolen out of a 2017 residential burglary in Dearborn.
+
+Q: Did you obtain a warrant before searching the vehicle?
+A: No. The marijuana odor gave me probable cause under the automobile exception.
+
+MS. DENFORD: Nothing further.
+
+CROSS-EXAMINATION BY MR. MWAMBA:
+
+Page 45, Line 3
+Q: Officer Greer, you said you observed a cracked tail light. Did you photograph the tail light before making the stop?
+A: No.
+
+Q: Did you note the crack in your incident report?
+A: I described the tail light as defective.
+
+Q: Your actual report says 'equipment violation, tinted windows.' No mention of a cracked tail light?
+A: I may have simplified the description.
+
+Page 45, Line 14
+Q: The dash cam footage from your vehicle — where is that footage?
+A: The camera malfunctioned on that shift. There is no footage.
+
+Q: How convenient. Was the malfunction logged?
+A: I submitted a malfunction report the following day.
+
+Page 45, Line 22
+Q: Officer, have you been informed that the Wayne County Crime Lab found no marijuana residue in Mr. Porter's vehicle during their subsequent examination?
+A: I'm not aware of those results.
+
+Q: If the Crime Lab found no marijuana odor residue — no plant material, no detectable THC residue on any surface — would that affect your probable cause claim?
+A: The crime lab examines things after the fact. My observation at the time was my probable cause.
+
+Page 46, Line 9
+MR. MWAMBA: Your Honor, I would at this time move to introduce Exhibit D-4, the Wayne County Crime Lab negative result report dated September 12, 2019, finding no marijuana residue in the vehicle.
+
+MS. DENFORD: Objection — this report was not disclosed to the defense in the People's Brady disclosures.
+
+THE COURT: Is that accurate, Ms. Denford?
+
+MS. DENFORD: The People ... acknowledge the report was not included in the initial disclosure package. We received it from the lab directly and it was in our file.
+
+THE COURT: The Court has serious concerns. We'll address this at the close of evidence.
+
+Page 47, Line 1
+MR. MWAMBA: Nothing further.
+
+[Defense called two character witnesses. State offered no rebuttal.]
+
+THE COURT: Mr. Mwamba, does the defense wish to address the suppression issue now?
+
+MR. MWAMBA: Your Honor, we do not raise a suppression motion at this time. We rely on our challenge to the credibility of the stop and the search through cross-examination.
+
+THE COURT: Very well. The Court will take the matter under advisement.
+
+Page 50, Line 4
+[VERDICT — November 14, 2019]
+
+THE COURT: The Court finds Mr. Porter guilty of possession of a controlled substance with intent to deliver, felon in possession of a firearm, and receiving and concealing stolen property. Sentencing set for January 7, 2020.
+
+[END OF TRANSCRIPT]
+Certified by: Sandra Tucciarone, Official Court Reporter
+`;
+
+const MI_DEMO_FINDINGS = [
+  {
+    issueTitle: "Brady Violation — Suppression of Exculpatory Crime Lab Report (No Marijuana Residue)",
+    transcriptExcerpt: "The People acknowledge the report was not included in the initial disclosure package. We received it from the lab directly and it was in our file. [...] The Wayne County Crime Lab found no marijuana residue in Mr. Porter's vehicle.",
+    legalAnalysis: "The Wayne County Crime Lab produced a report dated September 12, 2019 — six weeks before trial — finding no marijuana residue in Porter's vehicle. The prosecution acknowledged at trial that the report was in their file and was not disclosed to the defense in Brady disclosures. Officer Greer's entire probable cause for the warrantless search rested on the claimed marijuana odor. A lab report directly contradicting the existence of any marijuana in the vehicle is squarely exculpatory material under Brady v. Maryland, 373 U.S. 83 (1963), and People v. Lester, 232 Mich. App. 262 (1998). Suppression of this report deprived the defense of the factual predicate to mount a Fourth Amendment suppression motion and deprived the fact-finder of the most direct evidence that Greer's stated probable cause did not exist.",
+    pageNumber: 46,
+    lineNumber: 9,
+    precedentName: "Brady v. Maryland",
+    precedentCitation: "373 U.S. 83 (1963) / People v. Lester, 232 Mich. App. 262 (1998)",
+    precedentType: "BINDING",
+    courtRuling: "The prosecution must disclose all material exculpatory evidence in its possession prior to trial; suppression of a lab report directly contradicting the officer's stated probable cause is a Brady violation requiring a new trial.",
+    materialSimilarity: "The Crime Lab report was in the prosecution's file before trial, not disclosed, and directly negates the only factual basis for the warrantless search. Without the marijuana odor, there was no automobile exception probable cause. Without the search, no contraband. Without the contraband, no conviction.",
+    proceduralStatus: "Preserved",
+    anticipatedBlock: "State will argue harmless error: the trial court credited Greer's in-court testimony and the lab report goes to weight, not admissibility. State may also argue that the defense received the report at trial when defense counsel displayed it as Exhibit D-4.",
+    breakthroughArgument: "Disclosure at trial of a Brady item that the prosecution had for six weeks does not cure the violation — People v. Schumacher, 276 Mich. App. 165 (2007). Suppression of the report prevented pre-trial suppression motion practice. Had counsel known of the negative lab result before trial, the entire Fourth Amendment suppression motion would have been filed. The Crime Lab report is the factual predicate that unlocks the Fourth Amendment claim.",
+    legalVehicle: "MCR 6.500 Motion for Relief from Judgment",
+    survivability: "Strong",
+  },
+  {
+    issueTitle: "Fourth Amendment — Warrantless Vehicle Search Without Valid Probable Cause",
+    transcriptExcerpt: "I smelled what I believed to be marijuana. I asked Mr. Porter to step out. I then conducted a search of the interior. [...] The camera malfunctioned on that shift. There is no footage. [...] The Wayne County Crime Lab found no marijuana residue.",
+    legalAnalysis: "Officer Greer's warrantless search of Porter's vehicle rested entirely on a claimed marijuana odor. The automobile exception to the warrant requirement permits a warrantless search only if there is probable cause — a fair probability that contraband will be found. Here, the Crime Lab report finding no marijuana residue in the vehicle directly contradicts Greer's claimed odor. The dash-cam footage that would have corroborated or refuted the claimed traffic violation was 'destroyed' due to a 'malfunction' logged the day after the stop. Under Arizona v. Gant, 556 U.S. 332 (2009), and People v. Kazmierczak, 461 Mich. 411 (2000), when the factual predicate for probable cause is negated by objective evidence, the search is unconstitutional and the fruits must be suppressed. All evidence recovered — the firearm, the scale, and the narcotics — is fruit of the poisonous tree.",
+    pageNumber: 44,
+    lineNumber: 19,
+    precedentName: "Arizona v. Gant",
+    precedentCitation: "556 U.S. 332 (2009) / People v. Kazmierczak, 461 Mich. 411 (2000)",
+    precedentType: "BINDING",
+    courtRuling: "Evidence recovered from a warrantless vehicle search must be suppressed if the factual predicate for probable cause — the claimed odor — is contradicted by objective laboratory evidence.",
+    materialSimilarity: "The Crime Lab report showing no marijuana residue combined with the absence of dash-cam footage leaves Greer's odor claim entirely uncorroborated. Suppression would eliminate all physical evidence and require acquittal on all three counts.",
+    proceduralStatus: "Defaulted",
+    anticipatedBlock: "Defense counsel failed to move to suppress before trial under MCR 6.419, which is the prescribed vehicle. Post-conviction review will require showing cause (Brady suppression of the lab report) and prejudice (all physical evidence would be suppressed). State will argue that counsel strategically bypassed suppression to avoid alerting the court.",
+    breakthroughArgument: "The procedural default is excused by the Brady violation itself — People v. Reed, 449 Mich. 375 (1995). Counsel could not have filed a meaningful suppression motion without knowing the Crime Lab report existed. The Brady violation is the cause for the procedural default on the Fourth Amendment claim, and the prejudice is total: suppression eliminates every item of physical evidence.",
+    legalVehicle: "MCR 6.500 Motion for Relief from Judgment",
+    survivability: "Strong",
+  },
+  {
+    issueTitle: "Ineffective Assistance of Counsel — Failure to Move to Suppress After Brady Disclosure at Trial",
+    transcriptExcerpt: "MR. MWAMBA: Your Honor, we do not raise a suppression motion at this time. We rely on our challenge to the credibility of the stop and the search through cross-examination.",
+    legalAnalysis: "When defense counsel Kevin Mwamba received the Brady-suppressed Crime Lab report mid-trial showing no marijuana residue in the vehicle, he had an immediate obligation to move for a mistrial and/or suppression of the vehicle search. Instead, counsel announced on the record that he would 'not raise a suppression motion at this time' and would rely on cross-examination. This decision had no plausible strategic justification. The Crime Lab report directly negated the automobile exception probable cause. A suppression motion, combined with the Brady violation, would have required the court either to grant suppression or to declare a mistrial. Counsel's failure to pursue either remedy constitutes deficient performance under Strickland v. Washington, 466 U.S. 668 (1984), and People v. Pickens, 446 Mich. 298 (1994). The prejudice is obvious: all physical evidence would have been suppressed.",
+    pageNumber: 47,
+    lineNumber: 1,
+    precedentName: "Strickland v. Washington",
+    precedentCitation: "466 U.S. 668 (1984) / People v. Pickens, 446 Mich. 298 (1994)",
+    precedentType: "BINDING",
+    courtRuling: "Defense counsel is constitutionally required to pursue suppression when mid-trial Brady disclosure reveals that the People's probable cause is objectively contradicted; failure to do so is deficient performance with obvious prejudice.",
+    materialSimilarity: "Counsel received the Brady material in open court, acknowledged its significance through introduction as Exhibit D-4, and then immediately announced no suppression motion. No reasonable defense attorney would forgo a suppression motion after receiving a lab report eliminating the prosecution's only probable cause theory.",
+    proceduralStatus: "Preserved",
+    anticipatedBlock: "State will invoke Strickland's strong presumption of competence and argue counsel strategically chose credibility-based cross-examination over suppression to avoid alerting the bench to other weaknesses. State may argue counsel had a tactical reason not to interrupt trial.",
+    breakthroughArgument: "There is no plausible tactical reason to forgo suppression after receiving mid-trial Brady material negating probable cause. Cross-examination is not a substitute for suppression — a successful suppression motion eliminates all physical evidence and requires acquittal; cross-examination merely creates doubt. Under People v. Trakhtenberg, 493 Mich. 38 (2012), courts must objectively assess whether counsel's choice was grounded in reasonable professional judgment.",
+    legalVehicle: "MCR 6.500 Motion for Relief from Judgment",
+    survivability: "Strong",
+  },
+  {
+    issueTitle: "Newly Discovered Evidence — Dash-Cam Malfunction Report Inconsistencies",
+    transcriptExcerpt: "The camera malfunctioned on that shift. There is no footage. [...] I submitted a malfunction report the following day.",
+    legalAnalysis: "Officer Greer testified that his dash-cam malfunctioned on the night of the stop and that he submitted a malfunction report the following day. A post-conviction FOIA request to the Detroit Police Department revealed that (1) no malfunction report for Greer's unit exists for that date in the department's equipment maintenance database, (2) Greer's cruiser received routine maintenance and a camera firmware update three days before the stop, and (3) department records show the camera unit was operational the same evening Greer claims it malfunctioned, based on diagnostic pings logged to the server. Under MCR 6.508(D)(3), newly discovered evidence warrants relief from judgment when it was not discoverable at trial with reasonable diligence and when there is a reasonable probability that, but for the evidence, the outcome would have been different. The FOIA records were not in the prosecution's file and were not available to the defense at trial.",
+    pageNumber: 45,
+    lineNumber: 14,
+    precedentName: "People v. Cress",
+    precedentCitation: "664 N.W.2d 174 (Mich. 2003)",
+    precedentType: "BINDING",
+    courtRuling: "Newly discovered evidence warrants a new trial or evidentiary hearing when it was not discoverable at trial with due diligence and creates a reasonable probability of a different outcome.",
+    materialSimilarity: "FOIA records showing no malfunction report exists and that the camera was operational during Greer's shift would directly impeach his testimony about the absence of footage, suggesting the footage may have been deliberately withheld or deleted. Combined with the Brady violation on the Crime Lab report, a pattern of evidence suppression emerges that is independently sufficient to meet the newly discovered evidence standard.",
+    proceduralStatus: "Preserved",
+    anticipatedBlock: "State will argue the FOIA records are irrelevant — even if the camera was operational, it does not prove the stop was unlawful or that footage was intentionally suppressed. State may also argue the post-conviction petition is untimely under MCR 6.502(G).",
+    breakthroughArgument: "Under People v. Swain, 288 Mich. App. 609 (2010), evidence of an officer's intentional destruction or suppression of potentially exculpatory footage is independently sufficient for a new trial. The FOIA records, combined with the Brady violation on the Crime Lab report, establish a systemic pattern of evidence suppression that satisfies both the newly discovered evidence standard and the due-process grounds for MCR 6.500 relief.",
+    legalVehicle: "MCR 6.500 Motion for Relief from Judgment",
+    survivability: "Moderate",
+  },
+];
+
+export async function seedMichiganDemoCase(): Promise<void> {
+  try {
+    const existing = await db
+      .select({ id: casesTable.id })
+      .from(casesTable)
+      .where(eq(casesTable.caseNumber, MI_DEMO_CASE_NUMBER))
+      .limit(1);
+
+    if (existing.length > 0) {
+      const caseId = existing[0].id;
+      const demoDoc = await db
+        .select({ id: documentsTable.id, status: documentsTable.status, findingCount: documentsTable.findingCount })
+        .from(documentsTable)
+        .where(eq(documentsTable.caseId, caseId))
+        .limit(1)
+        .then((rows) => rows[0] ?? null);
+
+      const needsRestore = !demoDoc || demoDoc.status === "error" || demoDoc.status === "pending" || (demoDoc.findingCount ?? 0) === 0;
+      if (!needsRestore) {
+        logger.info({ caseId }, "Michigan demo case already exists and is healthy — skipping seed");
+        return;
+      }
+
+      logger.info({ caseId }, "Michigan demo case is corrupted — restoring...");
+      await db.transaction(async (tx) => {
+        let docId: number;
+        if (!demoDoc) {
+          const [newDoc] = await tx.insert(documentsTable).values({ caseId, title: "Bench Trial Transcript — Day 3, November 14, 2019", documentType: "transcript", content: MI_DEMO_TRANSCRIPT, status: "analyzed" }).returning();
+          docId = newDoc.id;
+        } else {
+          docId = demoDoc.id;
+          await tx.delete(findingsTable).where(eq(findingsTable.documentId, docId));
+        }
+        for (const f of MI_DEMO_FINDINGS) {
+          await tx.insert(findingsTable).values({ caseId, documentId: docId, issueTitle: f.issueTitle, transcriptExcerpt: f.transcriptExcerpt, legalAnalysis: f.legalAnalysis, pageNumber: f.pageNumber, lineNumber: f.lineNumber, precedentName: f.precedentName, precedentCitation: f.precedentCitation, precedentType: f.precedentType, courtRuling: f.courtRuling, materialSimilarity: f.materialSimilarity, proceduralStatus: f.proceduralStatus, anticipatedBlock: f.anticipatedBlock, breakthroughArgument: f.breakthroughArgument, legalVehicle: f.legalVehicle, survivability: f.survivability });
+        }
+        await tx.update(documentsTable).set({ status: "analyzed", findingCount: MI_DEMO_FINDINGS.length }).where(eq(documentsTable.id, docId));
+        await tx.update(casesTable).set({ hasAnalysis: true }).where(eq(casesTable.id, caseId));
+      });
+      logger.info({ caseId }, "Michigan demo case restored");
+      return;
+    }
+
+    logger.info("Seeding Michigan demo case...");
+    await db.transaction(async (tx) => {
+      const [miCase] = await tx.insert(casesTable).values({
+        title: "People v. Marcus Porter — MI DEMO",
+        defendantName: "Marcus DeShawn Porter",
+        caseNumber: MI_DEMO_CASE_NUMBER,
+        jurisdiction: "Wayne County Circuit Court, State of Michigan",
+        notes: "DEMO CASE — Michigan post-conviction example showcasing the MCR 6.500 Motion for Relief from Judgment, 6th Circuit federal ladder, and Michigan-specific executive relief options including Clean Slate expungement.",
+        hasAnalysis: true,
+        hasMotion: false,
+      }).returning();
+
+      const [miDoc] = await tx.insert(documentsTable).values({
+        caseId: miCase.id,
+        title: "Bench Trial Transcript — Day 3, November 14, 2019",
+        documentType: "transcript",
+        content: MI_DEMO_TRANSCRIPT,
+        status: "analyzed",
+      }).returning();
+
+      for (const f of MI_DEMO_FINDINGS) {
+        await tx.insert(findingsTable).values({ caseId: miCase.id, documentId: miDoc.id, issueTitle: f.issueTitle, transcriptExcerpt: f.transcriptExcerpt, legalAnalysis: f.legalAnalysis, pageNumber: f.pageNumber, lineNumber: f.lineNumber, precedentName: f.precedentName, precedentCitation: f.precedentCitation, precedentType: f.precedentType, courtRuling: f.courtRuling, materialSimilarity: f.materialSimilarity, proceduralStatus: f.proceduralStatus, anticipatedBlock: f.anticipatedBlock, breakthroughArgument: f.breakthroughArgument, legalVehicle: f.legalVehicle, survivability: f.survivability });
+      }
+
+      await tx.update(documentsTable).set({ findingCount: MI_DEMO_FINDINGS.length }).where(eq(documentsTable.id, miDoc.id));
+      logger.info({ caseId: miCase.id }, "Michigan demo case seeded successfully");
+    });
+  } catch (err) {
+    logger.error({ err }, "Failed to seed Michigan demo case");
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OHIO DEMO CASE
+// ─────────────────────────────────────────────────────────────────
+
+const OH_DEMO_CASE_NUMBER = "DEMO-OHIO-2021050678";
+
+const OH_DEMO_TRANSCRIPT = `STATE OF OHIO
+IN THE COURT OF COMMON PLEAS, CUYAHOGA COUNTY
+
+STATE OF OHIO,
+    Plaintiff,
+
+    vs.                                     Case No. CR-21-650678-A
+
+DEMETRIUS LEON COLE,
+    Defendant.
+
+TRANSCRIPT OF JURY TRIAL — DAY 2
+Honorable Robert F. Andreassen, Presiding
+September 8, 2021
+
+Appearances:
+    For the State: Assistant Prosecuting Attorney Carmen Ruiz
+    For the Defense: Attorney Paul Wheatley
+    Court Reporter: Patricia Okonkwo
+
+---
+
+THE COURT: Let's go back on the record. Ms. Ruiz, call your next witness.
+
+MS. RUIZ: State calls Detective Sergeant Harold Binns.
+
+DIRECT EXAMINATION BY MS. RUIZ:
+
+Page 31, Line 1
+Q: Detective Binns, on February 10th, 2021, you initiated a traffic stop of a vehicle on Superior Avenue?
+A: I did. The vehicle had a broken tail lamp.
+
+Q: What happened during that stop?
+A: I ran the plates — registered to a rental company, which is a common indicator. The driver was Demetrius Cole, and his companion, a man later identified as Jerome Mack, appeared nervous, kept looking in the side mirror.
+
+Q: Did you search the vehicle?
+A: I asked for consent. Mr. Cole refused. I then determined I had reasonable suspicion of criminal activity and called for a K-9 unit.
+
+Q: And the K-9 alerted?
+A: K-9 Ares alerted to the rear seat area. That gave us probable cause. We found 312 grams of fentanyl and $14,400 in cash beneath the rear seat.
+
+Page 31, Line 22
+Q: Was Mr. Mack also arrested?
+A: Yes. He had a prior felony narcotics conviction. Both were charged.
+
+Q: Did Mr. Mack eventually cooperate with the State?
+A: He entered into a cooperation agreement. In exchange for a reduced sentence, he agreed to testify that Cole had full knowledge of and control over the drugs.
+
+MS. RUIZ: Nothing further.
+
+CROSS-EXAMINATION BY MR. WHEATLEY:
+
+Page 32, Line 8
+Q: Detective Binns, you said the rental car was a 'common indicator.' Is driving a rental car a crime?
+A: No, but it is a factor in the totality —
+
+Q: Moving on. Ares the K-9 — how long had Ares been on duty that day before the alert?
+A: I'm not certain. Several hours.
+
+Q: Are you aware of studies showing K-9 alert accuracy decreases significantly after 4–5 hours of duty?
+A: I'm aware there are discussions in the literature.
+
+Q: Ares had been on duty for 7 hours and 22 minutes when he alerted on Cole's vehicle. You have access to the K-9 duty logs, don't you?
+A: Yes.
+
+Q: And the alert was to the rear seat area — but the narcotics were under the rear seat, beneath a panel. Is it typical for K-9 to alert to a location and the contraband be concealed three layers deep?
+A: Dogs can detect odors through surfaces.
+
+Page 33, Line 1
+Q: Detective, what did Jerome Mack receive for his testimony?
+A: The charges were amended. He pled to a single count of possession with a sentence recommendation of 18 months rather than the mandatory 5-year minimum he faced.
+
+Q: That's a difference of three and a half years?
+A: Approximately.
+
+Q: Were the full terms of Mr. Mack's deal disclosed to the defense before trial?
+A: The cooperation agreement was disclosed.
+
+Q: The full terms — including that the State agreed to write a letter recommending early parole consideration?
+A: I'm not aware of a separate parole letter.
+
+Page 33, Line 18
+MR. WHEATLEY: Your Honor, I would ask the State to produce any communications between the prosecuting office and the Parole Board or Adult Parole Authority regarding Jerome Mack.
+
+MS. RUIZ: The State is not aware of any such communications that were not disclosed.
+
+THE COURT: We'll take up any discovery issues at the close of evidence.
+
+Page 34, Line 4
+MR. WHEATLEY: Nothing further.
+
+[Defense rested without calling witnesses.]
+
+Page 37, Line 2
+[JURY INSTRUCTION — ACCOMPLICE TESTIMONY]
+
+THE COURT: Ladies and gentlemen, you have heard testimony from Jerome Mack, who testified under a plea agreement. You should consider the testimony of an accomplice with caution and weigh it carefully. An accomplice has a personal interest in the outcome of this trial.
+
+MR. WHEATLEY: Your Honor, the defense requests a specific instruction that the jury must be satisfied, beyond the accomplice's testimony alone, that sufficient corroborating evidence of guilt exists.
+
+THE COURT: The standard instruction will suffice, Mr. Wheatley.
+
+Page 37, Line 22
+[VERDICT — September 8, 2021]
+
+THE COURT: Has the jury reached a verdict?
+FOREPERSON: We have. Guilty, Your Honor. Guilty on all counts.
+
+THE COURT: Sentencing is set for October 21, 2021.
+
+[END OF TRANSCRIPT]
+Certified by: Patricia Okonkwo, Official Court Reporter
+`;
+
+const OH_DEMO_FINDINGS = [
+  {
+    issueTitle: "Brady Violation — Suppression of State Letter Recommending Early Parole for Cooperating Witness Mack",
+    transcriptExcerpt: "Were the full terms of Mr. Mack's deal disclosed? [...] The State is not aware of any such communications [...] including that the State agreed to write a letter recommending early parole consideration? [...] I'm not aware of a separate parole letter.",
+    legalAnalysis: "Jerome Mack was the State's sole witness with personal knowledge linking Cole to the narcotics. Mack's testimony was secured through a cooperation agreement reducing his exposure from a mandatory 5-year minimum to 18 months. A post-conviction public records request to the Ohio Adult Parole Authority revealed a letter on file from the Cuyahoga County Prosecutor's Office, dated January 18, 2021 — three weeks before trial — recommending early parole consideration for Mack contingent on his cooperation with the State. This letter was not disclosed to the defense. Under Brady v. Maryland, 373 U.S. 83 (1963), and Giglio v. United States, 405 U.S. 150 (1972), the prosecution must disclose all agreements or benefits provided to a cooperating witness, including informal promises that bear on the witness's credibility. A parole letter from the prosecuting office directly affects Mack's incentive to testify falsely and is material impeachment evidence that belongs in the defense's hands before trial.",
+    pageNumber: 33,
+    lineNumber: 1,
+    precedentName: "Giglio v. United States",
+    precedentCitation: "405 U.S. 150 (1972) / Brady v. Maryland, 373 U.S. 83 (1963)",
+    precedentType: "BINDING",
+    courtRuling: "The prosecution must disclose all benefits, agreements, and informal promises provided to cooperating witnesses whose credibility is central to the State's case; suppression of a parole recommendation letter constitutes a Brady/Giglio violation requiring a new trial.",
+    materialSimilarity: "Mack was the only witness who placed Cole's knowledge and control over the narcotics. The parole letter tripled the disclosed benefit Mack received for his testimony. Had the jury known the State had personally advocated for Mack's early parole — not merely reduced charges — it would have been free to reject Mack's testimony entirely. Without Mack, the State had only the K-9 alert and circumstantial location evidence.",
+    proceduralStatus: "Preserved",
+    anticipatedBlock: "State will argue the parole letter was aspirational and informal — not a binding promise — and that the cooperation agreement itself was disclosed. State will invoke harmless error: the K-9 alert and the narcotics themselves established possession.",
+    breakthroughArgument: "Ohio courts apply Giglio broadly to cover informal benefits as well as formal agreements. State v. Johnston, 39 Ohio St.3d 48 (1988). A letter from the prosecutor's office to the APA is not informal — it is an official act of advocacy on Mack's behalf. Without Mack's testimony, possession with intent requires additional proof of knowledge and control, which the State could not establish from the K-9 alert and physical evidence alone.",
+    legalVehicle: "Ohio Revised Code § 2953.21 Post-Conviction Petition",
+    survivability: "Strong",
+  },
+  {
+    issueTitle: "Fourth Amendment — Unlawful Pretextual Traffic Stop and Improper K-9 Expansion",
+    transcriptExcerpt: "The vehicle had a broken tail lamp. [...] I ran the plates — registered to a rental company, which is a common indicator. [...] I asked for consent. Mr. Cole refused. I then determined I had reasonable suspicion of criminal activity and called for a K-9 unit.",
+    legalAnalysis: "Under Rodriguez v. United States, 575 U.S. 348 (2015), once the purpose of a lawful traffic stop is completed, police may not extend the stop for a K-9 sniff without independent reasonable articulable suspicion of criminal activity. Here, Binns's proffered 'reasonable suspicion' to extend the stop and call K-9 was: (1) the vehicle was a rental, and (2) the passenger appeared nervous. Under Illinois v. Caballes, 543 U.S. 405 (2005) as limited by Rodriguez, neither of these factors — alone or in combination — constitutes the particularized, objective facts required for reasonable suspicion of criminal activity. The K-9 alert was the fruit of an unlawfully extended stop. Under the exclusionary rule, all evidence discovered as a result of the illegal extension — the narcotics and the cash — must be suppressed. Defense counsel failed to move to suppress under Ohio Crim.R. 12, waiving the argument for direct appeal without an IAC finding.",
+    pageNumber: 31,
+    lineNumber: 1,
+    precedentName: "Rodriguez v. United States",
+    precedentCitation: "575 U.S. 348 (2015) / Illinois v. Caballes, 543 U.S. 405 (2005)",
+    precedentType: "BINDING",
+    courtRuling: "A traffic stop may not be extended beyond the time necessary for the stop's purpose without independent reasonable articulable suspicion of criminal activity; a rental car and nervous passenger are insufficient to extend a stop for a drug K-9.",
+    materialSimilarity: "The uncontroverted facts — rental car, nervous passenger — do not meet Rodriguez's particularized suspicion standard. K-9 Ares had been on duty for 7+ hours when he alerted, raising additional reliability concerns. Suppression would eliminate the narcotics and cash, and without physical evidence, only Mack's compromised testimony remains.",
+    proceduralStatus: "Defaulted",
+    anticipatedBlock: "Defense counsel failed to file a suppression motion under Ohio Crim.R. 12(C), which is the mandatory vehicle. Post-conviction review requires cause (IAC) and prejudice (suppression). State will invoke procedural default and argue the facts supported extension.",
+    breakthroughArgument: "The failure to move to suppress is the IAC claim — Paul Wheatley cross-examined Binns on the K-9's hours and the rental car indicator but never translated that cross-examination into a suppression motion. Prejudice is clear: suppression removes all physical evidence. Under State v. Bradley, 42 Ohio St.3d 136 (1989), counsel's failure to pursue a meritorious suppression motion is deficient performance per se.",
+    legalVehicle: "Ohio Revised Code § 2953.21 Post-Conviction Petition",
+    survivability: "Strong",
+  },
+  {
+    issueTitle: "Ineffective Assistance of Counsel — Failure to Request Mandatory Corroboration Instruction on Accomplice Testimony",
+    transcriptExcerpt: "The defense requests a specific instruction that the jury must be satisfied, beyond the accomplice's testimony alone, that sufficient corroborating evidence of guilt exists. [...] The standard instruction will suffice, Mr. Wheatley.",
+    legalAnalysis: "Ohio Revised Code § 2923.03(D) mandates that when accomplice testimony is the primary evidence of guilt, the trial court must instruct the jury that it may not rely on accomplice testimony alone and must find independent corroborating evidence. Defense counsel requested a corroboration instruction; the court denied it with the standard instruction. Counsel did not object on the record or proffer the statutory instruction. Under State v. Greer, 39 Ohio St.3d 236 (1988), failure to give the ORC § 2923.03(D) instruction when accomplice testimony is central is reversible error — the defendant need not show prejudice because the statute itself reflects the legislature's judgment that uncorroborated accomplice testimony is inherently dangerous. Mack was the sole witness with knowledge of Cole's control and intent. Without the mandatory corroboration instruction, the jury was not equipped to evaluate whether the physical evidence was independently sufficient.",
+    pageNumber: 37,
+    lineNumber: 2,
+    precedentName: "State v. Greer",
+    precedentCitation: "39 Ohio St.3d 236 (1988) / Ohio Revised Code § 2923.03(D)",
+    precedentType: "BINDING",
+    courtRuling: "When accomplice testimony is central to the conviction, Ohio Revised Code § 2923.03(D) requires a corroboration instruction; failure to give it is reversible error that does not require a showing of prejudice.",
+    materialSimilarity: "Mack was the State's only witness on knowledge and intent. Without the corroboration instruction, the jury was never told it needed independent evidence beyond Mack's word to convict. If the corroboration instruction had been given, the jury would have been forced to determine whether the K-9 alert and physical location alone — absent knowledge testimony — were sufficient.",
+    proceduralStatus: "Preserved",
+    anticipatedBlock: "State will argue the standard accomplice instruction adequately cautioned the jury, and that the corroboration requirement under § 2923.03(D) applies to conspiracy charges, not complicity. State may also argue substantial evidence corroborated Mack: the drugs were under Cole's seat.",
+    breakthroughArgument: "Ohio courts have repeatedly held that § 2923.03(D) applies when one co-defendant testifies against another under a plea agreement on a charge that includes complicity elements. State v. Yarbrough, 95 Ohio St.3d 227 (2002). The narcotics were under the rear seat — a shared area of a rental car with two occupants — and without the corroboration instruction, the jury could not properly evaluate whether that location independently established Cole's knowing possession.",
+    legalVehicle: "Ohio Revised Code § 2953.21 Post-Conviction Petition",
+    survivability: "Moderate",
+  },
+  {
+    issueTitle: "Newly Discovered Evidence — K-9 Duty Log Showing Ares Was Beyond Recommended Alert Threshold",
+    transcriptExcerpt: "Ares had been on duty for 7 hours and 22 minutes when he alerted on Cole's vehicle. [...] Are you aware of studies showing K-9 alert accuracy decreases significantly after 4–5 hours of duty? [...] I'm aware there are discussions in the literature.",
+    legalAnalysis: "Defense counsel questioned Detective Binns about K-9 Ares's duty hours at trial but had no documentary evidence. A post-conviction public records request produced Ares's complete duty logs showing 7 hours 22 minutes of active duty before the alert, and the Cleveland Police Department's own K-9 Unit Manual — which was not disclosed pre-trial — specifies that alerts after 6 hours of continuous duty are flagged for supervisory review and are presumptively unreliable without a verification protocol. The Cuyahoga County K-9 handler's certification records further show that Ares had three 'missed detection' events in his last 90-day performance review. None of these records were disclosed to the defense. Under ORC § 2953.23, newly discovered evidence warrants a hearing when there is a reasonable probability that the evidence, had it been available, would have produced a different verdict. A drug dog whose department's own manual flags alerts after 6 hours as unreliable — and who had three recent missed detections — directly undermines the sole probable cause basis for the search.",
+    pageNumber: 32,
+    lineNumber: 8,
+    precedentName: "Florida v. Harris",
+    precedentCitation: "568 U.S. 237 (2013) / Ohio Revised Code § 2953.23",
+    precedentType: "BINDING",
+    courtRuling: "Newly discovered K-9 performance records — including duty logs, departmental reliability standards, and recent missed-detection events — are material newly discovered evidence when they directly undermine the probable cause basis for the search and were not disclosed pre-trial.",
+    materialSimilarity: "Under Florida v. Harris, courts must examine a K-9's totality-of-the-circumstances reliability, including training records, performance history, and duty conditions. The department's own manual and Ares's performance records are precisely the evidence Harris contemplates. Combined with the Brady violation on the Mack parole letter, a pattern of Brady non-disclosure emerges that independently supports § 2953.23 relief.",
+    proceduralStatus: "Preserved",
+    anticipatedBlock: "State will argue the K-9 logs were public records available pre-trial through a FOIA request, and that defense counsel's failure to obtain them is not excused. State will also argue the alert was valid regardless of hours because the narcotics were actually found.",
+    breakthroughArgument: "Pre-trial FOIA requests for K-9 duty logs are not standard defense practice, and the department's internal K-9 manual — which itself establishes the reliability threshold — is not a publicly indexed document. State v. Elmore, 111 Ohio St.3d 515 (2006) holds that newly discovered evidence includes undisclosed departmental standards that the prosecution possessed and which would have affected the suppression calculus. The physical discovery of narcotics does not retroactively validate an unconstitutional K-9 deployment.",
+    legalVehicle: "Ohio Revised Code § 2953.23 Post-Conviction Petition (Newly Discovered Evidence)",
+    survivability: "Moderate",
+  },
+];
+
+export async function seedOhioDemoCase(): Promise<void> {
+  try {
+    const existing = await db
+      .select({ id: casesTable.id })
+      .from(casesTable)
+      .where(eq(casesTable.caseNumber, OH_DEMO_CASE_NUMBER))
+      .limit(1);
+
+    if (existing.length > 0) {
+      const caseId = existing[0].id;
+      const demoDoc = await db
+        .select({ id: documentsTable.id, status: documentsTable.status, findingCount: documentsTable.findingCount })
+        .from(documentsTable)
+        .where(eq(documentsTable.caseId, caseId))
+        .limit(1)
+        .then((rows) => rows[0] ?? null);
+
+      const needsRestore = !demoDoc || demoDoc.status === "error" || demoDoc.status === "pending" || (demoDoc.findingCount ?? 0) === 0;
+      if (!needsRestore) {
+        logger.info({ caseId }, "Ohio demo case already exists and is healthy — skipping seed");
+        return;
+      }
+
+      logger.info({ caseId }, "Ohio demo case is corrupted — restoring...");
+      await db.transaction(async (tx) => {
+        let docId: number;
+        if (!demoDoc) {
+          const [newDoc] = await tx.insert(documentsTable).values({ caseId, title: "Jury Trial Transcript — Day 2, September 8, 2021", documentType: "transcript", content: OH_DEMO_TRANSCRIPT, status: "analyzed" }).returning();
+          docId = newDoc.id;
+        } else {
+          docId = demoDoc.id;
+          await tx.delete(findingsTable).where(eq(findingsTable.documentId, docId));
+        }
+        for (const f of OH_DEMO_FINDINGS) {
+          await tx.insert(findingsTable).values({ caseId, documentId: docId, issueTitle: f.issueTitle, transcriptExcerpt: f.transcriptExcerpt, legalAnalysis: f.legalAnalysis, pageNumber: f.pageNumber, lineNumber: f.lineNumber, precedentName: f.precedentName, precedentCitation: f.precedentCitation, precedentType: f.precedentType, courtRuling: f.courtRuling, materialSimilarity: f.materialSimilarity, proceduralStatus: f.proceduralStatus, anticipatedBlock: f.anticipatedBlock, breakthroughArgument: f.breakthroughArgument, legalVehicle: f.legalVehicle, survivability: f.survivability });
+        }
+        await tx.update(documentsTable).set({ status: "analyzed", findingCount: OH_DEMO_FINDINGS.length }).where(eq(documentsTable.id, docId));
+        await tx.update(casesTable).set({ hasAnalysis: true }).where(eq(casesTable.id, caseId));
+      });
+      logger.info({ caseId }, "Ohio demo case restored");
+      return;
+    }
+
+    logger.info("Seeding Ohio demo case...");
+    await db.transaction(async (tx) => {
+      const [ohCase] = await tx.insert(casesTable).values({
+        title: "State v. Demetrius Cole — OH DEMO",
+        defendantName: "Demetrius Leon Cole",
+        caseNumber: OH_DEMO_CASE_NUMBER,
+        jurisdiction: "Cuyahoga County Court of Common Pleas, State of Ohio",
+        notes: "DEMO CASE — Ohio post-conviction example showcasing the ORC § 2953.21 post-conviction petition, 6th Circuit federal ladder, and Ohio-specific executive relief options including Adult Parole Authority review.",
+        hasAnalysis: true,
+        hasMotion: false,
+      }).returning();
+
+      const [ohDoc] = await tx.insert(documentsTable).values({
+        caseId: ohCase.id,
+        title: "Jury Trial Transcript — Day 2, September 8, 2021",
+        documentType: "transcript",
+        content: OH_DEMO_TRANSCRIPT,
+        status: "analyzed",
+      }).returning();
+
+      for (const f of OH_DEMO_FINDINGS) {
+        await tx.insert(findingsTable).values({ caseId: ohCase.id, documentId: ohDoc.id, issueTitle: f.issueTitle, transcriptExcerpt: f.transcriptExcerpt, legalAnalysis: f.legalAnalysis, pageNumber: f.pageNumber, lineNumber: f.lineNumber, precedentName: f.precedentName, precedentCitation: f.precedentCitation, precedentType: f.precedentType, courtRuling: f.courtRuling, materialSimilarity: f.materialSimilarity, proceduralStatus: f.proceduralStatus, anticipatedBlock: f.anticipatedBlock, breakthroughArgument: f.breakthroughArgument, legalVehicle: f.legalVehicle, survivability: f.survivability });
+      }
+
+      await tx.update(documentsTable).set({ findingCount: OH_DEMO_FINDINGS.length }).where(eq(documentsTable.id, ohDoc.id));
+      logger.info({ caseId: ohCase.id }, "Ohio demo case seeded successfully");
+    });
+  } catch (err) {
+    logger.error({ err }, "Failed to seed Ohio demo case");
+  }
+}
