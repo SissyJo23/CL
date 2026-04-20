@@ -178,6 +178,26 @@ router.get("/cases/:caseId/documents/:id", async (req, res) => {
   res.json(row);
 });
 
+router.patch("/cases/:caseId/documents/:id", async (req, res) => {
+  const caseId = Number(req.params.caseId);
+  const id = Number(req.params.id);
+  const { title } = req.body as { title?: string };
+  if (!title || typeof title !== "string" || !title.trim()) {
+    res.status(400).json({ error: "title is required" });
+    return;
+  }
+  const [updated] = await db
+    .update(documentsTable)
+    .set({ title: title.trim(), updatedAt: new Date() })
+    .where(and(eq(documentsTable.id, id), eq(documentsTable.caseId, caseId)))
+    .returning();
+  if (!updated) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  res.json(updated);
+});
+
 router.delete("/cases/:caseId/documents/:id", async (req, res) => {
   const caseId = Number(req.params.caseId);
   const id = Number(req.params.id);

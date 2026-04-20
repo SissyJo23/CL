@@ -1207,6 +1207,89 @@ export const useDeleteDocument = <
 };
 
 /**
+ * @summary Rename a document
+ */
+export const getRenameDocumentUrl = (caseId: number, id: number) => {
+  return `/api/cases/${caseId}/documents/${id}`;
+};
+
+export const renameDocument = async (
+  caseId: number,
+  id: number,
+  body: { title: string },
+  options?: RequestInit,
+): Promise<import("./api.schemas").Document> => {
+  return customFetch<import("./api.schemas").Document>(getRenameDocumentUrl(caseId, id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(body),
+  });
+};
+
+export const getRenameDocumentMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof renameDocument>>,
+    TError,
+    { caseId: number; id: number; data: { title: string } },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof renameDocument>>,
+  TError,
+  { caseId: number; id: number; data: { title: string } },
+  TContext
+> => {
+  const mutationKey = ["renameDocument"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof renameDocument>>,
+    { caseId: number; id: number; data: { title: string } }
+  > = (props) => {
+    const { caseId, id, data } = props ?? {};
+    return renameDocument(caseId, id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RenameDocumentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof renameDocument>>
+>;
+export type RenameDocumentMutationError = ErrorType<unknown>;
+
+export const useRenameDocument = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof renameDocument>>,
+    TError,
+    { caseId: number; id: number; data: { title: string } },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof renameDocument>>,
+  TError,
+  { caseId: number; id: number; data: { title: string } },
+  TContext
+> => {
+  return useMutation(getRenameDocumentMutationOptions(options));
+};
+
+/**
  * @summary Run exhaustive AI analysis on a document (SSE stream)
  */
 export const getAnalyzeDocumentUrl = (caseId: number, id: number) => {

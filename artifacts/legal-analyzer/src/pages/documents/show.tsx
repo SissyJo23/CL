@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "wouter";
-import { useGetDocument, getGetDocumentQueryKey, useListFindings, getListFindingsQueryKey } from "@workspace/api-client-react";
+import { useGetDocument, getGetDocumentQueryKey, useListFindings, getListFindingsQueryKey, useRenameDocument } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Play, Loader2, ShieldOff, Trash2, FileDown, Scale, ExternalLink } from "lucide-react";
+import { ArrowLeft, Play, Loader2, ShieldOff, Trash2, FileDown, Scale, ExternalLink, Pencil, Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import FindingCard from "@/components/findings/FindingCard";
 import CategoryFilter from "@/components/categories/CategoryFilter";
@@ -36,9 +36,12 @@ export default function DocumentShow() {
   const [nomeritStatus, setNomeritStatus] = useState<string>("");
   const [nomeritComplete, setNomeritComplete] = useState(false);
   const [nomeritPriorStatus, setNomeritPriorStatus] = useState<"error" | null>(null);
+  const [isRenamingTitle, setIsRenamingTitle] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const renameDocumentMutation = useRenameDocument();
 
   useEffect(() => {
     if (initialFindings) setLiveFindings(initialFindings);
@@ -197,6 +200,35 @@ export default function DocumentShow() {
     }
   };
 
+  const startRenamingTitle = () => {
+    setIsRenamingTitle(true);
+    setRenameValue(doc?.title ?? "");
+  };
+
+  const cancelRenamingTitle = () => {
+    setIsRenamingTitle(false);
+    setRenameValue("");
+  };
+
+  const handleRenameTitle = () => {
+    const trimmed = renameValue.trim();
+    if (!trimmed || !doc) return;
+    renameDocumentMutation.mutate(
+      { caseId, id: documentId, data: { title: trimmed } },
+      {
+        onSuccess: () => {
+          setIsRenamingTitle(false);
+          setRenameValue("");
+          queryClient.invalidateQueries({ queryKey: getGetDocumentQueryKey(caseId, documentId) });
+          toast({ title: "Document renamed" });
+        },
+        onError: () => {
+          toast({ title: "Error", description: "Could not rename document.", variant: "destructive" });
+        },
+      },
+    );
+  };
+
   const handleClearAll = () => {
     if (!window.confirm("Clear all findings from this view? (Saved findings in the database are not deleted.)")) return;
     setLiveFindings([]);
@@ -318,7 +350,46 @@ export default function DocumentShow() {
                     </Badge>
                   )}
                 </div>
-                <h1 className="text-3xl font-serif font-medium tracking-tight">{doc.title}</h1>
+                {isRenamingTitle ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      className="text-2xl font-serif font-medium tracking-tight bg-transparent border-b-2 border-primary outline-none flex-1 min-w-0 py-0.5 text-foreground"
+                      value={renameValue}
+                      autoFocus
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleRenameTitle();
+                        if (e.key === "Escape") cancelRenamingTitle();
+                      }}
+                    />
+                    <button
+                      className="p-2 rounded-md text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center"
+                      onClick={handleRenameTitle}
+                      disabled={renameDocumentMutation.isPending || !renameValue.trim()}
+                      title="Save"
+                    >
+                      {renameDocumentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    </button>
+                    <button
+                      className="p-2 rounded-md text-muted-foreground hover:bg-muted transition-colors shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center"
+                      onClick={cancelRenamingTitle}
+                      title="Cancel"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 group/title mt-1">
+                    <h1 className="text-3xl font-serif font-medium tracking-tight">{doc.title}</h1>
+                    <button
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors opacity-0 group-hover/title:opacity-100 focus:opacity-100 shrink-0"
+                      onClick={startRenamingTitle}
+                      title="Rename document"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
                 {isAnalyzing && statusMessage && (
                   <p className="mt-1 text-xs text-muted-foreground font-mono">{statusMessage}</p>
                 )}

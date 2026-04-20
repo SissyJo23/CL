@@ -1,12 +1,12 @@
 import { useParams, Link } from "wouter";
-import { useGetCase, getGetCaseQueryKey, useListDocuments, getListDocumentsQueryKey, useCreateDocument, useDeleteDocument, useListCourtSessions, getListCourtSessionsQueryKey, useGenerateCaseStrategy, useGetCaseStrategy, getGetCaseStrategyQueryKey } from "@workspace/api-client-react";
+import { useGetCase, getGetCaseQueryKey, useListDocuments, getListDocumentsQueryKey, useCreateDocument, useDeleteDocument, useRenameDocument, getGetDocumentQueryKey, useListCourtSessions, getListCourtSessionsQueryKey, useGenerateCaseStrategy, useGetCaseStrategy, getGetCaseStrategyQueryKey } from "@workspace/api-client-react";
 import type { CreateDocumentBodyDocumentType } from "@workspace/api-client-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch, Milestone, User, Users, BookOpen, Shield, Star, ChevronRight, ChevronDown, AlertTriangle, MapPin } from "lucide-react";
+import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Pencil, Check, X, Gavel, Clock, GitBranch, Milestone, User, Users, BookOpen, Shield, Star, ChevronRight, ChevronDown, AlertTriangle, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -168,10 +168,13 @@ export default function CaseShow() {
 
   const createDocument = useCreateDocument();
   const deleteDocument = useDeleteDocument();
+  const renameDocument = useRenameDocument();
   const generateStrategy = useGenerateCaseStrategy();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [renamingDocId, setRenamingDocId] = useState<number | null>(null);
+  const [renameValue, setRenameValue] = useState("");
 
   const strategy = strategyData?.strategy;
   const hasAnalysis = currentCase?.hasAnalysis;
@@ -284,6 +287,37 @@ export default function CaseShow() {
         },
         onError: () => {
           toast({ title: "Error", description: "Could not delete document.", variant: "destructive" });
+        },
+      },
+    );
+  };
+
+  const startRenaming = (docId: number, currentTitle: string) => {
+    setConfirmDeleteId(null);
+    setRenamingDocId(docId);
+    setRenameValue(currentTitle);
+  };
+
+  const cancelRenaming = () => {
+    setRenamingDocId(null);
+    setRenameValue("");
+  };
+
+  const handleRenameDocument = (docId: number) => {
+    const trimmed = renameValue.trim();
+    if (!trimmed) return;
+    renameDocument.mutate(
+      { caseId, id: docId, data: { title: trimmed } },
+      {
+        onSuccess: () => {
+          setRenamingDocId(null);
+          setRenameValue("");
+          queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
+          queryClient.invalidateQueries({ queryKey: getGetDocumentQueryKey(caseId, docId) });
+          toast({ title: "Document renamed" });
+        },
+        onError: () => {
+          toast({ title: "Error", description: "Could not rename document.", variant: "destructive" });
         },
       },
     );
@@ -1040,73 +1074,115 @@ export default function CaseShow() {
                     const displayFindingCount = thisIsDone ? live.findingCount : doc.findingCount;
 
                     const isConfirming = confirmDeleteId === doc.id;
+                    const isRenaming = renamingDocId === doc.id;
 
                     return (
-                      <div key={doc.id} className="relative group/card">
-                        <Link href={`/cases/${caseId}/documents/${doc.id}`}>
-                          <div className={`group flex items-center p-4 bg-card border rounded-xl transition-all cursor-pointer ${isThisRunning ? "border-blue-300 dark:border-blue-600 bg-blue-50/30 dark:bg-blue-900/5" : "hover:bg-accent border-border"}`}>
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 transition-colors ${isThisRunning ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600" : "bg-muted text-muted-foreground group-hover:text-foreground"}`}>
-                              {isThisRunning ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5" />}
+                      <div key={doc.id} className="relative">
+                        {/* Rename inline overlay */}
+                        {isRenaming ? (
+                          <div className="flex items-center gap-2 p-4 bg-card border border-primary/40 rounded-xl">
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center mr-0 shrink-0 bg-primary/10 text-primary">
+                              <Pencil className="w-4 h-4" />
                             </div>
-                            <div className="flex-1 min-w-0 pr-8">
-                              <h3 className="font-medium text-foreground truncate">{doc.title}</h3>
-                              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                                <span className="capitalize">{doc.documentType.replace("_", " ")}</span>
-                                <span>•</span>
-                                <span>{format(new Date(doc.createdAt), "MMM d, yyyy")}</span>
+                            <input
+                              className="flex-1 min-w-0 bg-transparent border-b border-primary/50 focus:border-primary outline-none text-foreground font-medium px-1 py-0.5 text-sm"
+                              value={renameValue}
+                              autoFocus
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleRenameDocument(doc.id);
+                                if (e.key === "Escape") cancelRenaming();
+                              }}
+                              placeholder="Document title"
+                            />
+                            <button
+                              className="p-2 rounded-md text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center"
+                              onClick={() => handleRenameDocument(doc.id)}
+                              disabled={renameDocument.isPending || !renameValue.trim()}
+                              title="Save new name"
+                            >
+                              {renameDocument.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                            </button>
+                            <button
+                              className="p-2 rounded-md text-muted-foreground hover:bg-muted transition-colors shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center"
+                              onClick={cancelRenaming}
+                              title="Cancel"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-stretch gap-0">
+                            <Link href={`/cases/${caseId}/documents/${doc.id}`} className="flex-1 min-w-0">
+                              <div className={`group flex items-center p-4 bg-card border rounded-l-xl transition-all cursor-pointer h-full ${isThisRunning ? "border-blue-300 dark:border-blue-600 bg-blue-50/30 dark:bg-blue-900/5" : "hover:bg-accent border-border"}`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 transition-colors shrink-0 ${isThisRunning ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600" : "bg-muted text-muted-foreground group-hover:text-foreground"}`}>
+                                  {isThisRunning ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5" />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-medium text-foreground truncate">{doc.title}</h3>
+                                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                                    <span className="capitalize">{doc.documentType.replace("_", " ")}</span>
+                                    <span>•</span>
+                                    <span>{format(new Date(doc.createdAt), "MMM d, yyyy")}</span>
+                                  </div>
+                                  {isThisRunning && live.message && (
+                                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{live.message}</p>
+                                  )}
+                                </div>
+                                <div className="flex flex-col items-end gap-2 ml-4 shrink-0">
+                                  {getStatusBadge(doc.id, doc.status)}
+                                  {(doc.status === "analyzed" || thisIsDone) && displayFindingCount != null && (
+                                    <span className="text-xs font-medium bg-muted px-2 py-0.5 rounded-full">
+                                      {displayFindingCount} findings
+                                    </span>
+                                  )}
+                                  {needsAnalysis && !isRunningAll && (
+                                    <span className="text-xs font-medium text-primary flex items-center gap-1 group-hover:underline">
+                                      <Play className="w-3 h-3 fill-current" />
+                                      Run Analysis
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                              {isThisRunning && live.message && (
-                                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{live.message}</p>
-                              )}
-                            </div>
-                            <div className="flex flex-col items-end gap-2 ml-4 shrink-0 pr-8">
-                              {getStatusBadge(doc.id, doc.status)}
-                              {(doc.status === "analyzed" || thisIsDone) && displayFindingCount != null && (
-                                <span className="text-xs font-medium bg-muted px-2 py-0.5 rounded-full">
-                                  {displayFindingCount} findings
-                                </span>
-                              )}
-                              {needsAnalysis && !isRunningAll && (
-                                <span className="text-xs font-medium text-primary flex items-center gap-1 group-hover:underline">
-                                  <Play className="w-3 h-3 fill-current" />
-                                  Run Analysis
-                                </span>
+                            </Link>
+                            {/* Action buttons: always visible, touch-friendly */}
+                            <div className={`flex flex-col border-y border-r rounded-r-xl overflow-hidden shrink-0 ${isThisRunning ? "border-blue-300 dark:border-blue-600" : "border-border"}`}>
+                              <button
+                                className="flex-1 flex items-center justify-center px-3 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors min-w-[44px]"
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); startRenaming(doc.id, doc.title); }}
+                                title="Rename document"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                              <div className="h-px bg-border" />
+                              {isConfirming ? (
+                                <div className="flex-1 flex flex-col items-center justify-center px-2 gap-1 py-1 min-w-[60px]">
+                                  <button
+                                    className="text-[10px] text-red-600 dark:text-red-400 font-semibold hover:underline leading-tight"
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteDocument(doc.id); }}
+                                    disabled={deleteDocument.isPending}
+                                  >
+                                    {deleteDocument.isPending ? "…" : "Delete"}
+                                  </button>
+                                  <button
+                                    className="text-[10px] text-muted-foreground hover:underline leading-tight"
+                                    onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  className="flex-1 flex items-center justify-center px-3 text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors min-w-[44px]"
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(doc.id); }}
+                                  title="Delete document"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
                               )}
                             </div>
                           </div>
-                        </Link>
-                        {/* Delete button — visible on hover (desktop) / always (mobile) */}
-                        <div className="absolute top-3 right-3">
-                          {isConfirming ? (
-                            <div
-                              className="flex items-center gap-1"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <button
-                                className="text-xs text-red-600 dark:text-red-400 font-medium hover:underline"
-                                onClick={() => handleDeleteDocument(doc.id)}
-                                disabled={deleteDocument.isPending}
-                              >
-                                {deleteDocument.isPending ? "Deleting…" : "Delete"}
-                              </button>
-                              <span className="text-xs text-muted-foreground">/</span>
-                              <button
-                                className="text-xs text-muted-foreground hover:underline"
-                                onClick={() => setConfirmDeleteId(null)}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              className="opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
-                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(doc.id); }}
-                              title="Delete document"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
+                        )}
                       </div>
                     );
                   })}
