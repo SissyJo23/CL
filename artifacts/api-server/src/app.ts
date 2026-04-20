@@ -10,11 +10,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// TEMPORARY LOGIN ROUTE - THIS WILL MAKE LOGIN WORK
+// TEMPORARY LOGIN ROUTE — THIS WILL MAKE LOGIN WORK
 app.post("/api/auth/login", (req, res) => {
   const { email, password } = req.body || {};
   logger.info({ email }, "Temp login attempt");
 
+  // Return a fake token so the frontend can log in
   res.json({
     token: "temp-debug-token-" + Date.now(),
     user: { email, id: 999, name: "Test User" }
