@@ -1,6 +1,6 @@
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
-import { Search, Scale, Layers, User, Heart, BookOpen, Users } from "lucide-react";
+import { Search, Scale, Layers, User, Heart, BookOpen } from "lucide-react";
 
 const APP_URL = "/";
 const DEMO_URL = "/cases/1";
