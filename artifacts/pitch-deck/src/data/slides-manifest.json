@@ -5,7 +5,7 @@
     "filepath": "src/pages/slides/Slide1Title.tsx",
     "title": "From CaseLight to Freedom",
     "description": "Hero title slide — brand headline with courtroom image",
-    "speakerNotes": ""
+    "speakerNotes": "Welcome, and thank you for being here. CaseLight exists because the distance between an unjust conviction and freedom is often measured not in evidence, but in missed deadlines and buried procedural errors. We built a platform that closes that gap — with legal-grade AI that turns raw transcripts and documents into actionable appellate strategy. What you'll see today is not a legal research toy. It's a precision instrument that's already changing how attorneys fight for their clients."
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567802",
@@ -13,7 +13,7 @@
     "filepath": "src/pages/slides/Slide2Problem.tsx",
     "title": "The Problem",
     "description": "Most post-conviction motions dismissed on procedural grounds — Joseph Lagerman founding case",
-    "speakerNotes": ""
+    "speakerNotes": "The numbers are staggering: the vast majority of post-conviction motions never reach the merits — they're dismissed on procedural grounds before a judge ever reads the substance. Joseph Lagerman's case is what made this real for us. His trial record contained documented ineffective assistance, but the motion died because counsel missed a filing deadline buried in a 400-page transcript. That single failure cost him years. CaseLight was built so that story stops repeating — so no meritorious claim gets lost because the paperwork overwhelmed the attorney."
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567810",
@@ -21,7 +21,7 @@
     "filepath": "src/pages/slides/Slide3Audience.tsx",
     "title": "Who This Is For",
     "description": "4-audience framing: Incarcerated, Families & Advocates, Defense Attorneys, Appellate Counsel",
-    "speakerNotes": ""
+    "speakerNotes": "CaseLight serves four interconnected audiences, each with a different need but a shared stake in the outcome. Incarcerated individuals and their families get clarity — a plain-language view of where their case actually stands. Advocates and innocence organizations get a triage tool that helps them allocate limited volunteer hours to the strongest cases. Defense attorneys and appellate counsel get a professional-grade analysis engine that compresses weeks of document review into hours. When all four groups work from the same structured picture of a case, the entire system becomes more effective."
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567803",
@@ -29,7 +29,7 @@
     "filepath": "src/pages/slides/Slide3HowItWorks.tsx",
     "title": "How It Works",
     "description": "Three-step flow: Upload, Analyze, Simulate",
-    "speakerNotes": ""
+    "speakerNotes": "The workflow is designed to match how attorneys already think — not to force a new process onto them. You upload any combination of trial transcripts, motion filings, or appellate records. CaseLight runs a line-by-line analysis across 24 legal categories, surfacing findings with citations and strength ratings. Then, before you file anything, you simulate the motion against an adversarial AI judge to stress-test your arguments. Three steps: Upload, Analyze, Simulate — and you walk out with a strategy, not just a summary."
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567809",
@@ -37,7 +37,7 @@
     "filepath": "src/pages/slides/Slide4BeforeAfter.tsx",
     "title": "Before / After",
     "description": "Source document transcript input versus categorized, cited, weighted findings output",
-    "speakerNotes": ""
+    "speakerNotes": "This is the transformation CaseLight delivers. On the left: a raw transcript — thousands of lines of testimony, objections, and colloquy that no one has time to read twice. On the right: a structured set of findings, each tagged to a legal category, grounded in a specific citation, and rated by evidentiary strength. What used to take a paralegal two weeks of manual review happens in under an hour. More importantly, the output is built for courtrooms — cited, weighted, and ready to drop directly into a motion."
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567804",
@@ -45,7 +45,7 @@
     "filepath": "src/pages/slides/Slide5FindingClassifier.tsx",
     "title": "The Finding Classifier",
     "description": "Line-by-line audit across 24 legal categories",
-    "speakerNotes": ""
+    "speakerNotes": "The Finding Classifier is the analytical core of CaseLight. It reads every line of every document and tags each one against 24 legal categories — from ineffective assistance of counsel to Brady violations, prosecutorial misconduct, and AEDPA procedural issues. Each finding is assigned a strength rating and anchored to an exact passage in the source material. Attorneys don't have to trust the AI blindly — every conclusion is traceable back to the line that generated it. That traceability is what makes this useful in court, not just interesting in a demo."
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567805",
@@ -53,7 +53,7 @@
     "filepath": "src/pages/slides/Slide6CumulativeError.tsx",
     "title": "Cumulative Error + Strategic Roadmap",
     "description": "Cumulative Error Brief and Prioritized Strategic Roadmap",
-    "speakerNotes": ""
+    "speakerNotes": "Individual errors matter — but cumulative error is often where appeals are actually won. CaseLight automatically identifies when multiple findings, each insufficient on its own, combine into a pattern that clears the prejudice threshold. It then generates a prioritized strategic roadmap: which motions to file first, which issues to preserve for federal review, and which deadlines are approaching. Attorneys don't just get a list of problems — they get a sequenced plan of attack that accounts for AEDPA timing and procedural exhaustion requirements."
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567806",
@@ -61,7 +61,7 @@
     "filepath": "src/pages/slides/Slide7CourtSimulator.tsx",
     "title": "The Court Simulator",
     "description": "4+ adversarial rounds, skeptical judge, multiple motion modes, proof-of-concept results",
-    "speakerNotes": ""
+    "speakerNotes": "Filing a motion without testing it is like walking into trial without a moot court. The Court Simulator runs your motion through four or more adversarial rounds against an AI judge calibrated to be skeptical — the same posture most post-conviction courts take by default. It surfaces the weakest points in your argument before opposing counsel does. You can run it in multiple motion modes — habeas, direct appeal, ineffective assistance — and iterate until the argument holds. Our proof-of-concept results show attorneys refining and strengthening their arguments significantly before filing."
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567807",
@@ -69,7 +69,7 @@
     "filepath": "src/pages/slides/Slide8Integrity.tsx",
     "title": "The Integrity Pitch",
     "description": "CaseLight doesn't give false hope — precision instrument, not a win button",
-    "speakerNotes": ""
+    "speakerNotes": "We want to say this plainly: CaseLight is not a win button, and we won't pretend otherwise. When a case lacks sufficient grounds for relief, the platform says so — clearly, with reasons. We believe the most valuable thing we can give a family waiting for news is an accurate picture, not a hopeful one. That commitment to honesty is what makes attorneys trust CaseLight with their clients. It also means that when CaseLight does flag strong grounds, that signal carries real weight — because it doesn't flag everything."
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567808",
@@ -77,6 +77,6 @@
     "filepath": "src/pages/slides/Slide9Closing.tsx",
     "title": "From CaseLight to Freedom",
     "description": "Closing slide — brand headline, tagline, live URL",
-    "speakerNotes": ""
+    "speakerNotes": "Every case in our system represents a person — and in many cases, a family — waiting to understand whether justice is still possible for them. CaseLight exists to make that answer more accurate, more accessible, and more actionable than it has ever been before. We're not replacing attorneys; we're giving them the leverage to fight harder and smarter. If you believe the legal system should be as rigorous about correcting its mistakes as it is about making them, we'd love to talk about building that future together. Thank you."
   }
 ]
