@@ -13,7 +13,7 @@ const MODE_ICONS: Record<UserMode, React.ReactNode> = {
 };
 
 const MODE_LABELS: Record<UserMode, string> = {
-  inmate: "Inmate",
+  inmate: "Pro Se",
   advocate: "Advocate",
   attorney: "Attorney",
   appellate: "Appellate",
@@ -50,29 +50,44 @@ export default function Navbar() {
                 {MODE_ICONS[mode]}
                 <span className="text-xs font-medium">{MODE_LABELS[mode]}</span>
               </SelectTrigger>
-              <SelectContent align="end">
+              <SelectContent align="end" className="w-64">
+                <div className="px-2 pt-2 pb-1">
+                  <p className="text-[10px] font-sans uppercase tracking-widest text-muted-foreground mb-1">Choose your starting point</p>
+                </div>
                 <SelectItem value="inmate">
-                  <div className="flex items-center gap-2">
-                    <User className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span>Inmate</span>
+                  <div className="flex items-start gap-2 py-0.5">
+                    <User className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                      <div className="font-medium text-sm">Incarcerated / Pro Se</div>
+                      <div className="text-xs text-muted-foreground leading-tight">Plain-language findings — no legal background required</div>
+                    </div>
                   </div>
                 </SelectItem>
                 <SelectItem value="advocate">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span>Advocate</span>
+                  <div className="flex items-start gap-2 py-0.5">
+                    <Users className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                      <div className="font-medium text-sm">Family / Advocate</div>
+                      <div className="text-xs text-muted-foreground leading-tight">Fighting for someone — here's what you need to know</div>
+                    </div>
                   </div>
                 </SelectItem>
                 <SelectItem value="attorney">
-                  <div className="flex items-center gap-2">
-                    <Scale className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span>Attorney</span>
+                  <div className="flex items-start gap-2 py-0.5">
+                    <Scale className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                      <div className="font-medium text-sm">Defense Attorney</div>
+                      <div className="text-xs text-muted-foreground leading-tight">Full legal analysis, citations, and strategic roadmap</div>
+                    </div>
                   </div>
                 </SelectItem>
                 <SelectItem value="appellate">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span>Appellate</span>
+                  <div className="flex items-start gap-2 py-0.5">
+                    <BookOpen className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                      <div className="font-medium text-sm">Appellate / Post-Conviction</div>
+                      <div className="text-xs text-muted-foreground leading-tight">Federal readiness, AEDPA tracking, exhaustion ladder</div>
+                    </div>
                   </div>
                 </SelectItem>
               </SelectContent>

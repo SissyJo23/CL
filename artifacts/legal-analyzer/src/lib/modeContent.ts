@@ -3,7 +3,7 @@ import type { UserMode } from "@/contexts/UserModeContext";
 export type { UserMode };
 
 export const MODE_LABELS: Record<UserMode, string> = {
-  inmate: "Inmate",
+  inmate: "Pro Se",
   advocate: "Advocate",
   attorney: "Attorney",
   appellate: "Appellate",
@@ -86,16 +86,22 @@ export function emptyStateMessage(context: string, mode: UserMode): string {
 }
 
 export function heroHeading(mode: UserMode): string | null {
-  if (mode === "inmate") return "Review your case record. Find every error. Know your options.";
-  if (mode === "advocate") return "Help the person you're fighting for.";
+  if (mode === "inmate") return "Your record. Every error. Every option. In plain language.";
+  if (mode === "advocate") return "Find the argument. Fight for the person who needs it.";
+  if (mode === "attorney") return "From CaseLight to Freedom — one case at a time.";
+  if (mode === "appellate") return "Every avenue, exhausted. Every argument, tested.";
   return null;
 }
 
 export function heroSubtext(mode: UserMode): string | null {
   if (mode === "inmate")
-    return "Upload your court documents and CaseLight will analyze them for legal errors, missed issues, and grounds for relief — line by line.";
+    return "Upload your court documents and CaseLight will read every page looking for legal errors, missed issues, and grounds for relief — then explain what it found in plain language.";
   if (mode === "advocate")
-    return "Upload court records and CaseLight will identify legal errors, explain what they mean, and show what can be done next.";
+    return "Upload the case record and CaseLight will identify every legal error, explain what each one means, and show exactly what can be done next.";
+  if (mode === "attorney")
+    return "Upload transcripts and court documents. CaseLight flags every error across 24 legal categories, maps each finding to precedent, and builds the cumulative argument automatically.";
+  if (mode === "appellate")
+    return "CaseLight tracks AEDPA deadlines, maps the exhaustion ladder, identifies federally-preserved claims, and stress-tests every argument in adversarial court simulation before you file.";
   return null;
 }
 
