@@ -1,4 +1,6 @@
-const API_BASE = "https://caselight-api.onrender.com";
+export const API_BASE = "https://caselight-api.onrender.com";
+
+
 
 export function getToken(): string | null {
   return localStorage.getItem("cl_token");
