@@ -12,3 +12,9 @@ id = "AjhwEcHRWzgETQ18twyAp"
 uri = "file://artifacts/pitch-deck/public/court-simulator.png"
 type = "image"
 title = "generated_image"
+
+[[generated]]
+id = "h-faNJYZB7xTRD2Gs-kzU"
+uri = "file://artifacts/landing/public/og-banner.png"
+type = "image"
+title = "generated_image"
