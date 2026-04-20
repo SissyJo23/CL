@@ -1,5 +1,5 @@
-import React from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { FileText, ChevronRight, Scale, Shield, BarChart3, Gavel, BrainCircuit, Activity, Heart, User, Users, BookOpen, Sparkles } from "lucide-react";
 
 const APP_URL = "https://best-possible.replit.app";
@@ -16,6 +16,234 @@ const FadeIn = ({ children, delay = 0, className = "" }: { children: React.React
     >
       {children}
     </motion.div>
+  );
+};
+
+const DEMO_STEPS = [
+  {
+    label: "Upload Documents",
+    step: "01",
+    panel: () => (
+      <div className="p-5 space-y-3">
+        <p className="text-xs font-sans uppercase tracking-widest text-[#c8a96e] mb-4">Case Documents — State v. Lagerman</p>
+        {[
+          { name: "Trial Transcript Vol. 1", type: "Court Transcript", status: "ready", pages: 212 },
+          { name: "Officer Houdek Police Report", type: "Police Report", status: "ready", pages: 18 },
+          { name: "No-Merit Report (Crawford)", type: "No-Merit Report", status: "ready", pages: 34 },
+          { name: "Sentencing Transcript", type: "Court Transcript", status: "ready", pages: 67 },
+        ].map((doc, i) => (
+          <div key={i} className="flex items-center justify-between bg-[#1a2744] border border-white/10 rounded px-4 py-3">
+            <div className="flex items-center gap-3">
+              <FileText className="w-4 h-4 text-[#c8a96e] shrink-0" />
+              <div>
+                <div className="text-white text-sm font-sans">{doc.name}</div>
+                <div className="text-white/40 text-xs font-sans">{doc.type} · {doc.pages} pages</div>
+              </div>
+            </div>
+            <span className="text-xs font-sans px-2 py-1 rounded bg-emerald-900/60 text-emerald-300 border border-emerald-700/50">
+              Ready
+            </span>
+          </div>
+        ))}
+        <div className="border-2 border-dashed border-white/20 rounded px-4 py-4 text-center">
+          <p className="text-white/40 text-xs font-sans">Drop additional files here — PDF, DOCX, or image</p>
+        </div>
+      </div>
+    ),
+  },
+  {
+    label: "AI Finds Issues",
+    step: "02",
+    panel: () => (
+      <div className="p-5 space-y-3">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-sans uppercase tracking-widest text-[#c8a96e]">Analysis Results — 47 Findings</p>
+          <span className="text-xs font-sans text-white/40">Trial Transcript Vol. 1</span>
+        </div>
+        {[
+          {
+            title: "Miranda Rights Waiver — Invocation Ambiguity",
+            excerpt: '"I think I might want a lawyer" — Officer: "Are you sure?" — Suspect: "I guess not..."',
+            vehicle: "Federal Habeas § 2254",
+            strength: "Strong",
+            color: "text-emerald-300 bg-emerald-900/60 border-emerald-700/50",
+          },
+          {
+            title: "Brady Violation — Suppressed Lab Report",
+            excerpt: "DA File Index, Item 22: 'Hair analysis — inconclusive' — Never disclosed to defense",
+            vehicle: "Brady/Giglio Motion",
+            strength: "Strong",
+            color: "text-emerald-300 bg-emerald-900/60 border-emerald-700/50",
+          },
+          {
+            title: "Ineffective Assistance — Failure to Investigate Alibi",
+            excerpt: "Counsel notes: 'Alibi witness not contacted per client request' — No record of advice given",
+            vehicle: "§ 974.06 Motion",
+            strength: "Moderate",
+            color: "text-amber-300 bg-amber-900/50 border-amber-700/40",
+          },
+        ].map((f, i) => (
+          <div key={i} className="bg-[#1a2744] border border-white/10 rounded px-4 py-3 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-white text-sm font-sans leading-snug">{f.title}</span>
+              <span className={`shrink-0 text-xs font-sans px-2 py-0.5 rounded border ${f.color}`}>{f.strength}</span>
+            </div>
+            <p className="text-white/50 text-xs font-sans italic leading-relaxed">"{f.excerpt}"</p>
+            <span className="inline-block text-xs font-sans px-2 py-0.5 rounded bg-[#243060] text-[#c8a96e] border border-[#c8a96e]/30">{f.vehicle}</span>
+          </div>
+        ))}
+      </div>
+    ),
+  },
+  {
+    label: "Simulate the Court",
+    step: "03",
+    panel: () => (
+      <div className="p-5 space-y-3">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-sans uppercase tracking-widest text-[#c8a96e]">Court Simulation — Round 2 of 4</p>
+          <span className="text-xs font-sans text-white/40">Federal Habeas § 2254</span>
+        </div>
+        <div className="bg-red-950/40 border border-red-800/40 rounded px-4 py-3">
+          <p className="text-xs font-sans uppercase tracking-widest text-red-400 mb-2">The State</p>
+          <p className="text-white/80 text-sm font-serif leading-relaxed italic">
+            "Defense counsel's failure to contact the alibi witness was a strategic decision entitled to deference under Strickland. There is no reasonable probability a single alibi witness would have changed the outcome given three eyewitness identifications."
+          </p>
+        </div>
+        <div className="bg-[#1a2744] border border-white/20 rounded px-4 py-3">
+          <p className="text-xs font-sans uppercase tracking-widest text-white/50 mb-2 flex items-center gap-1.5"><Gavel className="w-3 h-3" /> The Court</p>
+          <p className="text-white/70 text-sm font-serif leading-relaxed italic">
+            "Counsel, the record shows no note of any advice given regarding the alibi witness. How do you distinguish this from Wiggins v. Smith, where the failure to investigate was held per se unreasonable?"
+          </p>
+        </div>
+        <div className="bg-[#1a3a2a] border border-emerald-800/40 rounded px-4 py-3">
+          <p className="text-xs font-sans uppercase tracking-widest text-emerald-400 mb-2">The Defense</p>
+          <p className="text-white/80 text-sm font-serif leading-relaxed italic">
+            "Under Wiggins, the failure to investigate cannot be excused without documentation of advice rendered. The record is silent — and silence defeats the presumption of strategy."
+          </p>
+        </div>
+      </div>
+    ),
+  },
+  {
+    label: "Generate the Motion",
+    step: "04",
+    panel: () => (
+      <div className="p-5 space-y-3">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-sans uppercase tracking-widest text-[#c8a96e]">Generated Motion — Ready to File</p>
+          <span className="text-xs font-sans px-2 py-0.5 rounded bg-emerald-900/60 text-emerald-300 border border-emerald-700/50">Complete</span>
+        </div>
+        <div className="bg-[#1a2744] border border-white/10 rounded px-5 py-4 space-y-3 font-serif">
+          <p className="text-white/90 text-sm text-center font-bold tracking-wide">
+            MOTION FOR POST-CONVICTION RELIEF<br />
+            PURSUANT TO WIS. STAT. § 974.06
+          </p>
+          <p className="text-white/90 text-sm text-center">State v. Joseph Lagerman, Case No. 2009CF004521</p>
+          <div className="border-t border-white/10 pt-3">
+            <p className="text-[#c8a96e] text-xs font-sans uppercase tracking-widest mb-2">I. Introduction</p>
+            <p className="text-white/70 text-xs leading-relaxed">
+              Petitioner Joseph Lagerman, by counsel, respectfully moves this Court for post-conviction relief. The trial record discloses three independent constitutional violations — each independently reversible — that in combination denied Petitioner a fundamentally fair trial under <span className="text-[#c8a96e]">Chambers v. Mississippi, 410 U.S. 284 (1973)</span>...
+            </p>
+          </div>
+          <div className="border-t border-white/10 pt-3">
+            <p className="text-[#c8a96e] text-xs font-sans uppercase tracking-widest mb-2">II. Standard of Review</p>
+            <p className="text-white/70 text-xs leading-relaxed">
+              Constitutional claims are reviewed de novo. <span className="text-[#c8a96e]">State v. Thiel, 264 Wis. 2d 571 (2003)</span>. Ineffective assistance claims require deficiency and prejudice under <span className="text-[#c8a96e]">Strickland v. Washington, 466 U.S. 668 (1984)</span>...
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2 pt-1">
+          <button className="flex-1 text-xs font-sans py-2 rounded bg-[#c8a96e] text-[#0d1b3e] font-semibold">Download PDF</button>
+          <button className="flex-1 text-xs font-sans py-2 rounded border border-white/20 text-white/70">Copy Text</button>
+        </div>
+      </div>
+    ),
+  },
+];
+
+const DemoPreview = () => {
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (paused) return;
+    intervalRef.current = setInterval(() => {
+      setActive((prev) => (prev + 1) % DEMO_STEPS.length);
+    }, 3500);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [paused]);
+
+  const ActivePanel = DEMO_STEPS[active].panel;
+
+  return (
+    <div
+      className="mt-20 rounded-xl overflow-hidden border border-white/10 shadow-2xl"
+      style={{ background: "#0d1b3e" }}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      {/* Browser chrome */}
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10" style={{ background: "#0a1530" }}>
+        <div className="flex gap-1.5">
+          <span className="w-3 h-3 rounded-full bg-red-500/60" />
+          <span className="w-3 h-3 rounded-full bg-yellow-500/60" />
+          <span className="w-3 h-3 rounded-full bg-green-500/60" />
+        </div>
+        <div className="flex-1 mx-4">
+          <div className="bg-white/5 rounded text-center text-xs font-sans text-white/30 py-0.5 px-3 max-w-xs mx-auto">
+            best-possible.replit.app/cases/1
+          </div>
+        </div>
+        <div className="w-12" />
+      </div>
+
+      {/* Step tabs */}
+      <div className="flex border-b border-white/10" style={{ background: "#0a1530" }}>
+        {DEMO_STEPS.map((s, i) => (
+          <button
+            key={i}
+            onClick={() => { setActive(i); setPaused(true); }}
+            className={`flex-1 py-2.5 px-2 text-xs font-sans transition-all duration-300 border-b-2 ${
+              active === i
+                ? "text-[#c8a96e] border-[#c8a96e] bg-white/5"
+                : "text-white/40 border-transparent hover:text-white/70"
+            }`}
+          >
+            <span className="hidden sm:inline">{s.step}. </span>{s.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Panel content */}
+      <div className="min-h-[340px] md:min-h-[360px] relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={active}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <ActivePanel />
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Progress dots */}
+      <div className="flex justify-center gap-2 py-3 border-t border-white/10" style={{ background: "#0a1530" }}>
+        {DEMO_STEPS.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => { setActive(i); setPaused(true); }}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              active === i ? "bg-[#c8a96e] w-5" : "bg-white/20 hover:bg-white/40"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
   );
 };
 
@@ -292,6 +520,10 @@ export default function App() {
               </FadeIn>
             ))}
           </div>
+
+          <FadeIn delay={0.2}>
+            <DemoPreview />
+          </FadeIn>
         </div>
       </section>
 
