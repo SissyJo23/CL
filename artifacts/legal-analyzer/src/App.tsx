@@ -32,34 +32,111 @@ const queryClient = new QueryClient({
   },
 });
 
-function ProtectedRoute({ component: Component }: { component: () => JSX.Element }) {
+function AppRouter() {
   const [, setLocation] = useLocation();
-  if (!isAuthenticated()) {
-    setLocation("/login");
-    return null;
-  }
-  return <Component />;
-}
 
-function Router() {
+  // Simple protected wrapper that avoids render-side effects
+  const Protected = ({ children }: { children: React.ReactNode }) => {
+    if (!isAuthenticated()) {
+      // Small delay prevents router loop issues
+      setTimeout(() => setLocation("/login"), 10);
+      return null;
+    }
+    return <>{children}</>;
+  };
+
   return (
     <Switch>
+      {/* Public routes - always accessible */}
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
-      <Route path="/" component={() => <ProtectedRoute component={Home} />} />
-      <Route path="/cases" component={() => <ProtectedRoute component={CaseList} />} />
-      <Route path="/cases/new" component={() => <ProtectedRoute component={CaseNew} />} />
-      <Route path="/cases/:id" component={() => <ProtectedRoute component={CaseShow} />} />
-      <Route path="/cases/:id/pattern" component={() => <ProtectedRoute component={PatternPage} />} />
-      <Route path="/cases/:id/relief" component={() => <ProtectedRoute component={ReliefPage} />} />
-      <Route path="/cases/:caseId/documents/:id" component={() => <ProtectedRoute component={DocumentShow} />} />
-      <Route path="/cases/:caseId/documents/:id/nomerit" component={() => <ProtectedRoute component={NomeritPage} />} />
-      <Route path="/cases/:id/court/new" component={() => <ProtectedRoute component={CourtNew} />} />
-      <Route path="/cases/:caseId/court/:id/run" component={() => <ProtectedRoute component={CourtRun} />} />
-      <Route path="/cases/:caseId/court/:id" component={() => <ProtectedRoute component={CourtShow} />} />
-      <Route path="/cases/:caseId/motions" component={() => <ProtectedRoute component={MotionList} />} />
-      <Route path="/cases/:caseId/motions/:id" component={() => <ProtectedRoute component={MotionShow} />} />
-      <Route path="/about" component={() => <ProtectedRoute component={About} />} />
+
+      {/* Protected routes - redirect to login if not authenticated */}
+      <Route path="/" component={() => (
+        <Protected>
+          <Home />
+        </Protected>
+      )} />
+      
+      <Route path="/cases" component={() => (
+        <Protected>
+          <CaseList />
+        </Protected>
+      )} />
+      
+      <Route path="/cases/new" component={() => (
+        <Protected>
+          <CaseNew />
+        </Protected>
+      )} />
+      
+      <Route path="/cases/:id" component={() => (
+        <Protected>
+          <CaseShow />
+        </Protected>
+      )} />
+      
+      <Route path="/cases/:id/pattern" component={() => (
+        <Protected>
+          <PatternPage />
+        </Protected>
+      )} />
+      
+      <Route path="/cases/:id/relief" component={() => (
+        <Protected>
+          <ReliefPage />
+        </Protected>
+      )} />
+      
+      <Route path="/cases/:caseId/documents/:id" component={() => (
+        <Protected>
+          <DocumentShow />
+        </Protected>
+      )} />
+      
+      <Route path="/cases/:caseId/documents/:id/nomerit" component={() => (
+        <Protected>
+          <NomeritPage />
+        </Protected>
+      )} />
+      
+      <Route path="/cases/:id/court/new" component={() => (
+        <Protected>
+          <CourtNew />
+        </Protected>
+      )} />
+      
+      <Route path="/cases/:caseId/court/:id/run" component={() => (
+        <Protected>
+          <CourtRun />
+        </Protected>
+      )} />
+      
+      <Route path="/cases/:caseId/court/:id" component={() => (
+        <Protected>
+          <CourtShow />
+        </Protected>
+      )} />
+      
+      <Route path="/cases/:caseId/motions" component={() => (
+        <Protected>
+          <MotionList />
+        </Protected>
+      )} />
+      
+      <Route path="/cases/:caseId/motions/:id" component={() => (
+        <Protected>
+          <MotionShow />
+        </Protected>
+      )} />
+      
+      <Route path="/about" component={() => (
+        <Protected>
+          <About />
+        </Protected>
+      )} />
+
+      {/* Catch-all */}
       <Route component={NotFound} />
     </Switch>
   );
@@ -71,7 +148,7 @@ function App() {
       <UserModeProvider>
         <TooltipProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
+            <AppRouter />
           </WouterRouter>
           <Toaster />
         </TooltipProvider>
