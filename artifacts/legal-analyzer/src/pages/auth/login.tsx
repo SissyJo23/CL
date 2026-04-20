@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { setToken } from "@/lib/api";
+import { setToken, API_BASE } from "@/lib/api";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -10,9 +10,8 @@ export default function Login() {
 
   async function go() {
     try {
-      const url = "https://caselight-api.onrender.com/api/auth/login";
       const body = JSON.stringify({ email, password });
-      const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body });
+      const r = await fetch(API_BASE + "/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body });
       const d = await r.json();
       if (!r.ok) { setError(d.error); return; }
       setToken(d.token);
