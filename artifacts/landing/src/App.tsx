@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { FileText, ChevronRight, Scale, Shield, BarChart3, Gavel, BrainCircuit, Activity, Heart, User, Users, BookOpen } from "lucide-react";
+import { FileText, ChevronRight, Scale, Shield, BarChart3, Gavel, BrainCircuit, Activity, Heart, User, Users, BookOpen, Sparkles } from "lucide-react";
 
 const APP_URL = "https://best-possible.replit.app";
 const DEMO_URL = "https://best-possible.replit.app/cases/1";
@@ -243,46 +243,52 @@ export default function App() {
         </div>
       </section>
 
-      {/* 5. How it works */}
+      {/* 5. How It Works */}
       <section className="py-32 px-6 bg-background">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <FadeIn>
-            <div className="flex flex-col items-center text-center mb-24">
-              <span className="text-secondary font-sans font-bold tracking-widest uppercase mb-4 text-sm">The Process</span>
-              <h2 className="text-4xl md:text-5xl font-serif">Three steps. Every avenue explored.</h2>
+            <div className="flex flex-col items-center text-center mb-20">
+              <span className="text-secondary font-sans font-bold tracking-widest uppercase mb-4 text-sm">How It Works</span>
+              <h2 className="text-4xl md:text-5xl font-serif">Four steps from record to relief.</h2>
             </div>
           </FadeIn>
 
-          <div className="grid md:grid-cols-3 gap-12 relative">
-            <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-[1px] bg-border z-0" />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 relative">
+            <div className="hidden lg:block absolute top-10 left-[12%] right-[12%] h-[1px] bg-border z-0" />
 
             {[
               {
                 step: "01",
-                title: "Upload the Record",
-                desc: "Add transcripts, motions, police reports, and court orders — in any format. CaseLight accepts PDFs, images, Word documents, and plain text.",
                 icon: FileText,
+                title: "Upload Documents",
+                desc: "Add any case file — transcripts, motions, police reports — in any format.",
               },
               {
                 step: "02",
-                title: "Surface Every Issue",
-                desc: "CaseLight reads every page against 24 legal categories, extracting every finding with citations, relevant precedents, and legal weight — line by line.",
-                icon: Activity,
+                icon: BrainCircuit,
+                title: "AI Finds Issues",
+                desc: "CaseLight reads every page and flags constitutional errors, withheld evidence, and procedural violations.",
               },
               {
                 step: "03",
-                title: "Test It Before You File",
-                desc: "Run 4 adversarial rounds against the State before a skeptical judge. Know which arguments survive before they hit a real courtroom.",
                 icon: Gavel,
+                title: "Simulate the Court",
+                desc: "Run your arguments against an adversarial judge and the State before anything is filed.",
+              },
+              {
+                step: "04",
+                icon: Sparkles,
+                title: "Generate the Motion",
+                desc: "Export a court-ready brief with citations, precedents, and cumulative error arguments built in.",
               },
             ].map((item, i) => (
-              <FadeIn key={i} delay={i * 0.2} className="relative z-10 flex flex-col items-center text-center group">
-                <div className="w-24 h-24 bg-background border border-border flex items-center justify-center mb-8 transition-colors duration-500 group-hover:border-secondary group-hover:bg-muted">
-                  <span className="text-secondary font-serif text-2xl">{item.step}</span>
+              <FadeIn key={i} delay={i * 0.15} className="relative z-10 flex flex-col items-center text-center group">
+                <div className="w-20 h-20 bg-background border border-border flex items-center justify-center mb-6 transition-colors duration-500 group-hover:border-secondary group-hover:bg-muted">
+                  <span className="text-secondary font-serif text-xl">{item.step}</span>
                 </div>
-                <item.icon className="w-8 h-8 text-foreground/50 mb-6" />
-                <h3 className="text-2xl font-serif mb-4">{item.title}</h3>
-                <p className="text-muted-foreground font-sans leading-relaxed">{item.desc}</p>
+                <item.icon className="w-7 h-7 text-foreground/50 mb-5" />
+                <h3 className="text-xl font-serif mb-3">{item.title}</h3>
+                <p className="text-muted-foreground font-sans text-sm leading-relaxed">{item.desc}</p>
               </FadeIn>
             ))}
           </div>
