@@ -166,6 +166,7 @@ const DemoPreview = () => {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (paused) return;
@@ -175,13 +176,23 @@ const DemoPreview = () => {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [paused]);
 
+  const selectTab = (i: number) => {
+    setActive(i);
+    setPaused(true);
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => setPaused(false), 8000);
+  };
+
   const ActivePanel = DEMO_STEPS[active].panel;
 
   return (
     <div
       className="mt-20 rounded-xl overflow-hidden border border-white/10 shadow-2xl"
       style={{ background: "#0d1b3e" }}
-      onMouseEnter={() => setPaused(true)}
+      onMouseEnter={() => {
+        if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+        setPaused(true);
+      }}
       onMouseLeave={() => setPaused(false)}
     >
       {/* Browser chrome */}
@@ -204,7 +215,7 @@ const DemoPreview = () => {
         {DEMO_STEPS.map((s, i) => (
           <button
             key={i}
-            onClick={() => { setActive(i); setPaused(true); }}
+            onClick={() => selectTab(i)}
             className={`flex-1 py-2.5 px-2 text-xs font-sans transition-all duration-300 border-b-2 ${
               active === i
                 ? "text-[#c8a96e] border-[#c8a96e] bg-white/5"
@@ -236,7 +247,7 @@ const DemoPreview = () => {
         {DEMO_STEPS.map((_, i) => (
           <button
             key={i}
-            onClick={() => { setActive(i); setPaused(true); }}
+            onClick={() => selectTab(i)}
             className={`w-2 h-2 rounded-full transition-all duration-300 ${
               active === i ? "bg-[#c8a96e] w-5" : "bg-white/20 hover:bg-white/40"
             }`}
