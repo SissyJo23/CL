@@ -5,7 +5,11 @@ const TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 export const COOKIE_NAME = "caselight_auth";
 
 function getSecret(): string {
-  return process.env.JWT_SECRET || process.env.SESSION_SECRET || "dev-secret-do-not-use-in-production";
+  const secret = process.env.JWT_SECRET || process.env.SESSION_SECRET;
+  if (!secret) {
+    throw new Error("CaseLight auth requires JWT_SECRET or SESSION_SECRET to be set");
+  }
+  return secret;
 }
 
 export function createAuthToken(username: string): string {

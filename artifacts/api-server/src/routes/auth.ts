@@ -3,6 +3,15 @@ import { createAuthToken, verifyAuthToken, isAuthConfigured, COOKIE_NAME, TOKEN_
 
 const router = Router();
 
+const isProduction = process.env.NODE_ENV === "production";
+
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: "lax" as const,
+  path: "/",
+};
+
 router.post("/login", (req, res) => {
   if (!isAuthConfigured()) {
     res.json({ ok: true, authConfigured: false });
@@ -20,17 +29,12 @@ router.post("/login", (req, res) => {
     return;
   }
   const token = createAuthToken(username);
-  res.cookie(COOKIE_NAME, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    maxAge: TOKEN_EXPIRY_MS,
-    path: "/",
-  });
+  res.cookie(COOKIE_NAME, token, { ...COOKIE_OPTIONS, maxAge: TOKEN_EXPIRY_MS });
   res.json({ ok: true, authConfigured: true });
 });
 
 router.post("/logout", (_req, res) => {
-  res.clearCookie(COOKIE_NAME, { path: "/" });
+  res.clearCookie(COOKIE_NAME, COOKIE_OPTIONS);
   res.json({ ok: true });
 });
 
@@ -46,7 +50,7 @@ router.get("/me", (req, res) => {
   }
   const payload = verifyAuthToken(token);
   if (!payload) {
-    res.clearCookie(COOKIE_NAME, { path: "/" });
+    res.clearCookie(COOKIE_NAME, COOKIE_OPTIONS);
     res.json({ authenticated: false, authConfigured: true });
     return;
   }
