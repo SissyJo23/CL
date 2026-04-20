@@ -27,3 +27,4 @@ function AppRouter() {
     </Switch>
   );
 }
+export default App;
