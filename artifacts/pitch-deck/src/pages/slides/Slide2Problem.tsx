@@ -26,13 +26,24 @@ export default function Slide2Problem() {
           </div>
         </div>
 
-        <div className="flex flex-col justify-center items-center ml-auto w-[40vw]">
+        <div className="flex flex-col justify-center items-center ml-auto w-[40vw] gap-[2.5vh]">
           <div className="border border-accent border-opacity-30 p-[3vw]" style={{ background: "rgba(201,168,76,0.04)" }}>
             <p className="font-body font-medium text-primary leading-snug" style={{ fontSize: "1.7vw" }}>
               Most post-conviction motions are denied before the merits are ever heard —
             </p>
             <p className="font-body font-light text-muted mt-[2vh] leading-relaxed" style={{ fontSize: "1.6vw" }}>
               dismissed on procedural grounds that a thorough pre-filing review would have caught.
+            </p>
+          </div>
+          <div className="border border-accent border-opacity-15 p-[2vw]" style={{ background: "rgba(201,168,76,0.02)" }}>
+            <p className="font-body font-medium tracking-widest text-accent uppercase" style={{ fontSize: "1.1vw" }}>
+              The Founding Case
+            </p>
+            <p className="font-body font-light text-primary mt-[1.2vh] leading-snug" style={{ fontSize: "1.5vw" }}>
+              Joseph Lagerman
+            </p>
+            <p className="font-body font-light text-muted mt-[1vh] leading-relaxed" style={{ fontSize: "1.4vw" }}>
+              The case that proved the tool worked — and revealed how much the system had missed.
             </p>
           </div>
         </div>

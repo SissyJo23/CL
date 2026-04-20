@@ -6,11 +6,17 @@ export default function Slide9Closing() {
 
       <div className="relative h-full flex flex-col items-center justify-center text-center" style={{ paddingLeft: "7vw", paddingRight: "7vw" }}>
         <div className="w-[4vw] h-[0.2vh] bg-accent mb-[4vh]" />
-        <h1 className="font-display font-black text-primary tracking-tight leading-none" style={{ fontSize: "9vw" }}>
+        <p className="font-body font-medium text-primary tracking-widest uppercase" style={{ fontSize: "1.5vw" }}>
           CaseLight
+        </p>
+        <h1 className="font-display font-black text-primary tracking-tight leading-none mt-[1.5vh]" style={{ fontSize: "7vw" }}>
+          From CaseLight
+        </h1>
+        <h1 className="font-display font-black tracking-tight leading-none" style={{ fontSize: "7vw", color: "#C9A84C" }}>
+          to Freedom.
         </h1>
         <p className="font-body font-light text-muted mt-[2.5vh]" style={{ fontSize: "1.8vw" }}>
-          Stop guessing how a judge will rule.
+          CaseLight doesn't give false hope; but CaseLight won't stop at "No."
         </p>
         <div className="w-[4vw] h-[0.15vh] bg-accent opacity-50 mt-[4vh] mb-[4vh]" />
         <a

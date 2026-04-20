@@ -8,8 +8,8 @@ export default function Slide8Integrity() {
 
       <div className="relative h-full flex flex-col items-center justify-center text-center" style={{ paddingLeft: "10vw", paddingRight: "10vw" }}>
         <div className="w-[4vw] h-[0.2vh] bg-accent mb-[4vh]" />
-        <blockquote className="font-display font-bold text-primary leading-tight tracking-tight" style={{ fontSize: "5.5vw" }}>
-          "CaseLight isn't a win button&nbsp;— it's a precision instrument."
+        <blockquote className="font-display font-bold text-primary leading-tight tracking-tight" style={{ fontSize: "4.5vw" }}>
+          "CaseLight doesn't give false hope; but CaseLight won't stop at 'No.'"
         </blockquote>
         <div className="w-[4vw] h-[0.2vh] bg-accent mt-[4vh] mb-[3vh]" />
         <p className="font-body font-light text-muted leading-relaxed" style={{ fontSize: "1.8vw", maxWidth: "55vw" }}>

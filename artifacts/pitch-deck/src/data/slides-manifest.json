@@ -3,8 +3,8 @@
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567801",
     "position": 1,
     "filepath": "src/pages/slides/Slide1Title.tsx",
-    "title": "CaseLight",
-    "description": "Hero title slide with courtroom image and tagline",
+    "title": "From CaseLight to Freedom",
+    "description": "Hero title slide — brand headline with courtroom image",
     "speakerNotes": ""
   },
   {
@@ -12,12 +12,20 @@
     "position": 2,
     "filepath": "src/pages/slides/Slide2Problem.tsx",
     "title": "The Problem",
-    "description": "Most post-conviction motions dismissed on procedural grounds before merits heard",
+    "description": "Most post-conviction motions dismissed on procedural grounds — Joseph Lagerman founding case",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567810",
+    "position": 3,
+    "filepath": "src/pages/slides/Slide3Audience.tsx",
+    "title": "Who This Is For",
+    "description": "4-audience framing: Incarcerated, Families & Advocates, Defense Attorneys, Appellate Counsel",
     "speakerNotes": ""
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567803",
-    "position": 3,
+    "position": 4,
     "filepath": "src/pages/slides/Slide3HowItWorks.tsx",
     "title": "How It Works",
     "description": "Three-step flow: Upload, Analyze, Simulate",
@@ -25,7 +33,7 @@
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567809",
-    "position": 4,
+    "position": 5,
     "filepath": "src/pages/slides/Slide4BeforeAfter.tsx",
     "title": "Before / After",
     "description": "Source document transcript input versus categorized, cited, weighted findings output",
@@ -33,7 +41,7 @@
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567804",
-    "position": 5,
+    "position": 6,
     "filepath": "src/pages/slides/Slide5FindingClassifier.tsx",
     "title": "The Finding Classifier",
     "description": "Line-by-line audit across 24 legal categories",
@@ -41,7 +49,7 @@
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567805",
-    "position": 6,
+    "position": 7,
     "filepath": "src/pages/slides/Slide6CumulativeError.tsx",
     "title": "Cumulative Error + Strategic Roadmap",
     "description": "Cumulative Error Brief and Prioritized Strategic Roadmap",
@@ -49,7 +57,7 @@
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567806",
-    "position": 7,
+    "position": 8,
     "filepath": "src/pages/slides/Slide7CourtSimulator.tsx",
     "title": "The Court Simulator",
     "description": "4+ adversarial rounds, skeptical judge, multiple motion modes, proof-of-concept results",
@@ -57,18 +65,18 @@
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567807",
-    "position": 8,
+    "position": 9,
     "filepath": "src/pages/slides/Slide8Integrity.tsx",
     "title": "The Integrity Pitch",
-    "description": "Full-bleed dark quote slide on precision, not a win button, supported by State Win result",
+    "description": "CaseLight doesn't give false hope — precision instrument, not a win button",
     "speakerNotes": ""
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567808",
-    "position": 9,
+    "position": 10,
     "filepath": "src/pages/slides/Slide9Closing.tsx",
-    "title": "Closing",
-    "description": "CaseLight wordmark, live URL, call to action",
+    "title": "From CaseLight to Freedom",
+    "description": "Closing slide — brand headline, tagline, live URL",
     "speakerNotes": ""
   }
 ]
