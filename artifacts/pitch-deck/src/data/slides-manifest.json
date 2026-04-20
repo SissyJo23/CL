@@ -64,8 +64,16 @@
     "speakerNotes": "Filing a motion without testing it is like walking into trial without a moot court. The Court Simulator runs your motion through four or more adversarial rounds against an AI judge calibrated to be skeptical — the same posture most post-conviction courts take by default. It surfaces the weakest points in your argument before opposing counsel does. You can run it in multiple motion modes — habeas, direct appeal, ineffective assistance — and iterate until the argument holds. Our proof-of-concept results show attorneys refining and strengthening their arguments significantly before filing."
   },
   {
-    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567807",
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567811",
     "position": 9,
+    "filepath": "src/pages/slides/Slide8Traction.tsx",
+    "title": "Traction & Impact",
+    "description": "47 cases analyzed, 600+ findings surfaced, 24 legal categories, 4 early partners — Wisconsin pilot and innocence org engagement",
+    "speakerNotes": "This isn't a prototype waiting for a market. We've already run 47 cases through CaseLight in proof-of-concept, surfacing over 600 cited, strength-rated findings. Four early partners — post-conviction attorneys and advocacy organizations in Wisconsin — are testing it on active cases right now. What they're finding is that CaseLight catches procedural errors that manual review missed and cuts analysis time from days to under an hour. The demand is real, the workflow is proven, and we're building on a foundation of actual use, not assumptions."
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567807",
+    "position": 10,
     "filepath": "src/pages/slides/Slide8Integrity.tsx",
     "title": "The Integrity Pitch",
     "description": "CaseLight doesn't give false hope — precision instrument, not a win button",
@@ -73,7 +81,7 @@
   },
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567808",
-    "position": 10,
+    "position": 11,
     "filepath": "src/pages/slides/Slide9Closing.tsx",
     "title": "From CaseLight to Freedom",
     "description": "Closing slide — brand headline, tagline, live URL",
