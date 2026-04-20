@@ -11,10 +11,16 @@ import demoRouter from "./demo";
 import patternRouter from "./pattern";
 import reliefRouter from "./relief";
 import nomeritRouter from "./nomerit";
+import authRouter from "./auth";
+import { requireAuth } from "../lib/authMiddleware";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use("/auth", authRouter);
+
+router.use(requireAuth);
+
 router.use(casesRouter);
 router.use(documentsRouter);
 router.use(findingsRouter);

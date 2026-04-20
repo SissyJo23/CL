@@ -1,8 +1,9 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useEffect, useState } from "react";
-import { AlertTriangle, ShieldCheck, FolderOpen, Info, User, Users, Scale, BookOpen } from "lucide-react";
+import { AlertTriangle, ShieldCheck, FolderOpen, Info, User, Users, Scale, BookOpen, LogOut } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUserMode, type UserMode } from "@/contexts/UserModeContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const MODE_ICONS: Record<UserMode, React.ReactNode> = {
   inmate: <User className="w-3.5 h-3.5 shrink-0" />,
@@ -21,6 +22,13 @@ const MODE_LABELS: Record<UserMode, string> = {
 export default function Navbar() {
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
   const { mode, setMode } = useUserMode();
+  const { authenticated, authConfigured, logout } = useAuth();
+  const [, navigate] = useLocation();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login", { replace: true });
+  };
 
   useEffect(() => {
     fetch("/api/health")
@@ -78,6 +86,16 @@ export default function Navbar() {
               <Info className="w-4 h-4" />
               <span className="hidden sm:inline">About</span>
             </Link>
+            {authConfigured && authenticated && (
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                title="Sign out"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
+            )}
           </nav>
         </div>
       </header>
