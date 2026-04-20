@@ -15,10 +15,9 @@ app.post("/api/auth/login", (req, res) => {
   const { email, password } = req.body || {};
   logger.info({ email }, "Temp login attempt");
 
-  // Return a token so the app lets you in
   res.json({
     token: "temp-debug-token-" + Date.now(),
-    user: { email, id: 999 }
+    user: { email, id: 999, name: "Test User" }
   });
 });
 
@@ -26,8 +25,5 @@ app.post("/api/auth/login", (req, res) => {
 app.get("/", (req, res) => {
   res.json({ message: "CaseLight API is running - temp login active ✅" });
 });
-
-// Keep your other router if it exists
-// app.use("/api", router);   // comment this out for now if it causes issues
 
 export default app;
