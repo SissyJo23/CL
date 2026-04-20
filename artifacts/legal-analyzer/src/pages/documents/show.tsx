@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "wouter";
-import { useGetDocument, getGetDocumentQueryKey, useListFindings, getListFindingsQueryKey, useRenameDocument } from "@workspace/api-client-react";
+import { useGetDocument, getGetDocumentQueryKey, useListFindings, getListFindingsQueryKey, useRenameDocument, getListDocumentsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
@@ -220,6 +220,7 @@ export default function DocumentShow() {
           setIsRenamingTitle(false);
           setRenameValue("");
           queryClient.invalidateQueries({ queryKey: getGetDocumentQueryKey(caseId, documentId) });
+          queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
           toast({ title: "Document renamed" });
         },
         onError: () => {
@@ -382,7 +383,7 @@ export default function DocumentShow() {
                   <div className="flex items-center gap-2 group/title mt-1">
                     <h1 className="text-3xl font-serif font-medium tracking-tight">{doc.title}</h1>
                     <button
-                      className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors opacity-0 group-hover/title:opacity-100 focus:opacity-100 shrink-0"
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors sm:opacity-0 sm:group-hover/title:opacity-100 sm:focus:opacity-100 shrink-0"
                       onClick={startRenamingTitle}
                       title="Rename document"
                     >

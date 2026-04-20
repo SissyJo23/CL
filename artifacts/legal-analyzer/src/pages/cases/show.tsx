@@ -1156,16 +1156,17 @@ export default function CaseShow() {
                               </button>
                               <div className="h-px bg-border" />
                               {isConfirming ? (
-                                <div className="flex-1 flex flex-col items-center justify-center px-2 gap-1 py-1 min-w-[60px]">
+                                <div className="flex-1 flex flex-col items-stretch justify-center min-w-[60px]">
                                   <button
-                                    className="text-[10px] text-red-600 dark:text-red-400 font-semibold hover:underline leading-tight"
+                                    className="flex-1 flex items-center justify-center px-3 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors min-h-[40px]"
                                     onClick={(e) => { e.stopPropagation(); handleDeleteDocument(doc.id); }}
                                     disabled={deleteDocument.isPending}
                                   >
-                                    {deleteDocument.isPending ? "…" : "Delete"}
+                                    {deleteDocument.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Delete"}
                                   </button>
+                                  <div className="h-px bg-border" />
                                   <button
-                                    className="text-[10px] text-muted-foreground hover:underline leading-tight"
+                                    className="flex-1 flex items-center justify-center px-3 text-xs text-muted-foreground hover:bg-muted transition-colors min-h-[40px]"
                                     onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
                                   >
                                     Cancel
