@@ -35,10 +35,8 @@ const queryClient = new QueryClient({
 function AppRouter() {
   const [, setLocation] = useLocation();
 
-  // Simple protected wrapper that avoids render-side effects
   const Protected = ({ children }: { children: React.ReactNode }) => {
     if (!isAuthenticated()) {
-      // Small delay prevents router loop issues
       setTimeout(() => setLocation("/login"), 10);
       return null;
     }
@@ -47,96 +45,52 @@ function AppRouter() {
 
   return (
     <Switch>
-      {/* Public routes - always accessible */}
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
 
-      {/* Protected routes - redirect to login if not authenticated */}
       <Route path="/" component={() => (
-        <Protected>
-          <Home />
-        </Protected>
+        <Protected><Home /></Protected>
       )} />
-      
       <Route path="/cases" component={() => (
-        <Protected>
-          <CaseList />
-        </Protected>
+        <Protected><CaseList /></Protected>
       )} />
-      
       <Route path="/cases/new" component={() => (
-        <Protected>
-          <CaseNew />
-        </Protected>
+        <Protected><CaseNew /></Protected>
       )} />
-      
       <Route path="/cases/:id" component={() => (
-        <Protected>
-          <CaseShow />
-        </Protected>
+        <Protected><CaseShow /></Protected>
       )} />
-      
       <Route path="/cases/:id/pattern" component={() => (
-        <Protected>
-          <PatternPage />
-        </Protected>
+        <Protected><PatternPage /></Protected>
       )} />
-      
       <Route path="/cases/:id/relief" component={() => (
-        <Protected>
-          <ReliefPage />
-        </Protected>
+        <Protected><ReliefPage /></Protected>
       )} />
-      
       <Route path="/cases/:caseId/documents/:id" component={() => (
-        <Protected>
-          <DocumentShow />
-        </Protected>
+        <Protected><DocumentShow /></Protected>
       )} />
-      
       <Route path="/cases/:caseId/documents/:id/nomerit" component={() => (
-        <Protected>
-          <NomeritPage />
-        </Protected>
+        <Protected><NomeritPage /></Protected>
       )} />
-      
       <Route path="/cases/:id/court/new" component={() => (
-        <Protected>
-          <CourtNew />
-        </Protected>
+        <Protected><CourtNew /></Protected>
       )} />
-      
       <Route path="/cases/:caseId/court/:id/run" component={() => (
-        <Protected>
-          <CourtRun />
-        </Protected>
+        <Protected><CourtRun /></Protected>
       )} />
-      
       <Route path="/cases/:caseId/court/:id" component={() => (
-        <Protected>
-          <CourtShow />
-        </Protected>
+        <Protected><CourtShow /></Protected>
       )} />
-      
       <Route path="/cases/:caseId/motions" component={() => (
-        <Protected>
-          <MotionList />
-        </Protected>
+        <Protected><MotionList /></Protected>
       )} />
-      
       <Route path="/cases/:caseId/motions/:id" component={() => (
-        <Protected>
-          <MotionShow />
-        </Protected>
+        <Protected><MotionShow /></Protected>
       )} />
-      
       <Route path="/about" component={() => (
-        <Protected>
-          <About />
-        </Protected>
+        <Protected><About /></Protected>
       )} />
 
-      {/* Catch-all */}
       <Route component={NotFound} />
     </Switch>
   );
@@ -157,6 +111,4 @@ function App() {
   );
 }
 
-export const API_BASE = import.meta.env.VITE_API_URL 
-  ? import.meta.env.VITE_API_URL.replace(/\/$/, "") 
-  : "https://caselight-api.onrender.com";
+export default App;   // ← This line MUST be at the very end
