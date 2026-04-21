@@ -27,4 +27,20 @@ router.use(patternRouter);
 router.use(reliefRouter);
 router.use(nomeritRouter);
 
+// This is your new Login Door
+router.post("/auth/login", (req, res) => {
+  const { email, password } = req.body;
+  
+  // You can change 'admin@caselight.com' to your actual email later if you want.
+  if (email === 'admin@caselight.com' && password === 'password123') {
+    res.json({ 
+      success: true, 
+      token: "fake-jwt-token-for-now", 
+      user: { email: 'admin@caselight.com', name: 'Christy' } 
+    });
+  } else {
+    res.status(401).json({ success: false, message: "Invalid credentials" });
+  }
+});
+
 export default router;
