@@ -10,14 +10,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// DIRECT TEMP LOGIN ROUTE
-app.post("/api/auth/login", (req, res) => {
-  const { email, password } = req.body || {};
-  logger.info({ email }, "Temp login attempt");
-
+// Path changed from "/api/auth/login" to "/auth/login" to match your frontend
+app.post("/auth/login", (req, res) => {
+  const { email } = req.body || {}; // This captures the email for the response
+  
   res.json({
+    success: true, // Adding this so the frontend 'if (data.success)' passes
     token: "temp-debug-token-" + Date.now(),
-    user: { email, id: 999, name: "Test User" }
+    user: { 
+      email: email || "admin@caselight.com", 
+      id: 999, 
+      name: "Test User" 
+    }
   });
 });
 
@@ -27,6 +31,6 @@ app.get("/", (req, res) => {
 
 const port = process.env.PORT || 10000;
 
-app.listen(port, () => {
+app.listen(port, "0.0.0.0", () => {
   logger.info({ port }, "Server listening");
 });
