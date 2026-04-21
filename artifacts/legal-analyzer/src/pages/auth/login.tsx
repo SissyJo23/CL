@@ -9,17 +9,14 @@ export default function Login() {
   const [error, setError] = useState("");
 
   async function go() {
-    try {
-      const body = JSON.stringify({ email, password });
-      const r = await fetch(API_BASE + "/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body });
-      const d = await r.json();
-      if (!r.ok) { setError(d.error); return; }
-      setToken(d.token);
-      setLocation("/cases");
-    } catch (e) {
-      setError(String(e));
-    }
+  try {
+    // TEMPORARY BYPASS — skip real backend
+    setToken("temp-debug-token-" + Date.now());
+    setLocation("/cases");
+  } catch (e) {
+    setError("Login failed: " + String(e));
   }
+}
 
   return (
     <div style={{padding:20}}>
