@@ -1,16 +1,16 @@
 import { Route, Router as WouterRouter, Switch } from "wouter";
-// Import your dashboard or main page here
-import Dashboard from "@/pages/dashboard"; 
+// We are changing 'Dashboard' to 'Home' because that is the file you actually have
+import Home from "@/pages/home"; 
 
 function App() {
   return (
     <WouterRouter>
       <Switch>
-        {/* We are pointing the main paths to the Dashboard instead of Login */}
-        <Route path="/" component={Dashboard} />
-        <Route path="/login" component={Dashboard} />
-        {/* This is the 'catch-all' that ensures you get in no matter what */}
-        <Route component={Dashboard} />
+        {/* This forces the app to show the Home/Dashboard immediately */}
+        <Route path="/" component={Home} />
+        <Route path="/login" component={Home} />
+        {/* Catch-all: If anything goes wrong, just show the Home page */}
+        <Route component={Home} />
       </Switch>
     </WouterRouter>
   );
