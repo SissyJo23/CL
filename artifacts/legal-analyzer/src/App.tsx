@@ -1,15 +1,16 @@
 import { Route, Router as WouterRouter, Switch } from "wouter";
-import Login from "@/pages/auth/login";
-import Register from "@/pages/auth/register";
+// Import your dashboard or main page here
+import Dashboard from "@/pages/dashboard"; 
 
 function App() {
   return (
     <WouterRouter>
       <Switch>
-        <Route path="/login" component={Login} />
-        <Route path="/register" component={Register} />
-        <Route path="/" component={Login} />
-        <Route component={Login} />
+        {/* We are pointing the main paths to the Dashboard instead of Login */}
+        <Route path="/" component={Dashboard} />
+        <Route path="/login" component={Dashboard} />
+        {/* This is the 'catch-all' that ensures you get in no matter what */}
+        <Route component={Dashboard} />
       </Switch>
     </WouterRouter>
   );
