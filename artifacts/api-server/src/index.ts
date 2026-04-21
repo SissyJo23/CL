@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// TEMPORARY LOGIN ROUTE — THIS SHOULD FINALLY WORK
+// DIRECT TEMP LOGIN ROUTE
 app.post("/api/auth/login", (req, res) => {
   const { email, password } = req.body || {};
   logger.info({ email }, "Temp login attempt");
