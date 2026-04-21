@@ -30,3 +30,4 @@ const port = process.env.PORT || 10000;
 app.listen(port, () => {
   logger.info({ port }, "Server listening");
 });
+export default app;
