@@ -4,6 +4,8 @@ import Login from "@/pages/auth/login";
 import Home from "@/pages/home";
 import CasesNew from "@/pages/cases/new";
 import CasesList from "@/pages/cases/list";
+import Legal from "@/pages/legal";
+
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
@@ -20,6 +22,7 @@ function App() {
         <Route path="/home" component={() => <ProtectedRoute component={Home} />} />
         <Route path="/cases/new" component={() => <ProtectedRoute component={CasesNew} />} />
         <Route path="/cases" component={() => <ProtectedRoute component={CasesList} />} />
+        <Route path="/legal" component={Legal} />
         <Route component={() => <Redirect to="/login" />} />
       </Switch>
     </WouterRouter>
