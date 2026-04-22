@@ -19,29 +19,58 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       <Navbar />
 
-      <div className="p-6 border-b">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-      </div>
+      {/* Page Container */}
+      <div className="max-w-5xl w-full mx-auto px-6 py-12 flex-1">
+        {/* Header */}
+        <div className="mb-10">
+          <h1 className="text-4xl font-semibold text-slate-900">
+            Dashboard
+          </h1>
+          <p className="text-slate-500 mt-2">
+            Manage and analyze your legal cases.
+          </p>
+        </div>
 
-      <main className="flex-1 p-6 space-y-6">
-        <p>Welcome to CaseLight.</p>
+        {/* Primary Actions */}
+        <div className="bg-white rounded-2xl shadow-sm border p-8 mb-8">
+          <h2 className="text-lg font-medium text-slate-800 mb-4">
+            Start a New Case
+          </h2>
 
-        <Link href="/cases/new">
-          <Button size="lg" className="rounded-full px-8">
-            Create Case
-          </Button>
-        </Link>
+          <Link href="/cases/new">
+            <Button size="lg" className="rounded-xl px-8">
+              Create Case
+            </Button>
+          </Link>
+        </div>
 
+        {/* Recent Case */}
         {recentCase && (
-          <div className="p-4 border rounded-lg bg-muted">
-            <h2 className="font-semibold">Continue Where You Left Off</h2>
-            <p className="mt-2">{recentCase.title}</p>
+          <div className="bg-white rounded-2xl shadow-sm border p-8">
+            <h2 className="text-lg font-medium text-slate-800 mb-4">
+              Continue Where You Left Off
+            </h2>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xl font-semibold text-slate-900">
+                  {recentCase.title}
+                </p>
+                <p className="text-slate-500 text-sm mt-1">
+                  Resume analysis and drafting.
+                </p>
+              </div>
+
+              <Button variant="outline" className="rounded-xl">
+                Open Case
+              </Button>
+            </div>
           </div>
         )}
-      </main>
+      </div>
 
       <Disclaimer />
     </div>
