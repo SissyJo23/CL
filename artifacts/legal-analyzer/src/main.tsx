@@ -1,10 +1,36 @@
- import { createRoot } from "react-dom/client";
-import App from "./App";
-import "./index.css";
-import { setBaseUrl, setAuthTokenGetter } from "@workspace/api-client-react";
-import { getToken } from "@/lib/api";
+import express from "express";
+import cors from "cors";
+import pinoHttp from "pino-http";
+import { logger } from "./lib/logger";
 
-setBaseUrl("https://caselight-api.onrender.com");
-setAuthTokenGetter(() => "dev-token");
+const app = express();
 
-createRoot(document.getElementById("root")!).render(<App />); 
+app.use(pinoHttp({ logger }));
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Path changed from "/api/auth/login" to "/auth/login" to match your frontend
+app.post("/auth/login", (req, res) => {
+  const { email } = req.body || {}; // This captures the email for the response
+  
+  res.json({
+    success: true, // Adding this so the frontend 'if (data.success)' passes
+    token: "temp-debug-token-" + Date.now(),
+    user: { 
+      email: email || "admin@caselight.com", 
+      id: 999, 
+      name: "Test User" 
+    }
+  });
+});
+
+app.get("/", (req, res) => {
+  res.json({ message: "CaseLight API is running - temp login active ✅" });
+});
+
+const port = process.env.PORT || 10000;
+
+app.listen(port, "0.0.0.0", () => {
+  logger.info({ port }, "Server listening");
+});
