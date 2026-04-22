@@ -36,10 +36,39 @@ export default function Login() {
     }
   };
 return (
-  <div style={{ padding: 40 }}>
-    <h1 style={{ color: "red", fontSize: 40 }}>
-      THIS IS THE REAL LOGIN COMPONENT
-    </h1>
+  <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <form
+      onSubmit={handleLogin}
+      className="bg-white p-8 rounded-lg shadow-md w-full max-w-md"
+    >
+      <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
+
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+        className="w-full mb-4 p-3 border rounded"
+      />
+
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+        className="w-full mb-6 p-3 border rounded"
+      />
+
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="w-full bg-black text-white p-3 rounded"
+      >
+        {isLoading ? "Logging in..." : "Login"}
+      </button>
+    </form>
   </div>
 );
 }
