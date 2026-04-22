@@ -14,7 +14,11 @@ export default function Login() {
 
     try {
       // This sends your credentials to the 'Master Key' door on Render
-      const response = await fetch("https://caselight-api.onrender.com/login", {
+      const response = await fetch("https://caselight-api.onrender.com/auth/login", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email, password }),
+});
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
