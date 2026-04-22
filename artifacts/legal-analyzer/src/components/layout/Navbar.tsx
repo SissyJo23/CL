@@ -98,5 +98,5 @@ export default function Navbar() {
 
               <DropdownMenuContent align="end" className="w-44">
                 <DropdownMenuItem onClick={() => setMode("inmate")} className="flex items-center gap-2">
-                  <User className="w-3.5 h-3.5​​​​​​​​​​​​​​​​
+                  <User className="w-3.5 h-3.5​​​​​​​​​​​​​​​​ text-muted-forground” />
                   }
