@@ -3,7 +3,7 @@ import type { UserMode } from "@/contexts/UserModeContext";
 export type { UserMode };
 
 export const MODE_LABELS: Record<UserMode, string> = {
-  inmate: "Inmate",
+  inmate: "Defendant",
   advocate: "Advocate",
   attorney: "Attorney",
   appellate: "Appellate",
