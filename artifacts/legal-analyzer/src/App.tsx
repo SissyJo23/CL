@@ -6,12 +6,16 @@ function App() {
   return (
     <WouterRouter>
       <Switch>
-        {/* This sets the login page as the first thing people see */}
+        {/* Home page */}
+        <Route path="/" component={Home} />
+
+        {/* Login page */}
         <Route path="/login" component={Login} />
-        <Route path="/" component={Login} />
-        {/* This is where we will go once the login works */}
+
+        {/* Explicit home route */}
         <Route path="/home" component={Home} />
-        {/* If a page doesn't exist, send them back to login */}
+
+        {/* Fallback */}
         <Route component={Login} />
       </Switch>
     </WouterRouter>
