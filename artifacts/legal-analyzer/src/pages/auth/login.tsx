@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
+import { setAuthTokenGetter } from "@workspace/api-client-react";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -23,9 +23,12 @@ export default function Login() {
 
       if (response.ok && data.success) {
         localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("authToken", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
-        // ✅ Redirect to home
+        // Wire the token into every future API call
+        setAuthTokenGetter(() => localStorage.getItem("authToken"));
+
         setLocation("/home");
       } else {
         alert("Access Denied");
