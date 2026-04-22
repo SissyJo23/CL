@@ -11,9 +11,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // TEMPORARY LOGIN ROUTE — THIS WILL MAKE SIGN IN WORK
-app.post("/api/auth/login", (req, res) => {
-  const { email, password } = req.body || {};
-  logger.info({ email }, "Temp login attempt");
+
 
   res.json({
     token: "temp-debug-token-" + Date.now(),
