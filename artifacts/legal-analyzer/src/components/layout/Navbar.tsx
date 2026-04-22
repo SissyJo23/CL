@@ -1,7 +1,8 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useEffect, useState } from "react";
-import { AlertTriangle, ShieldCheck, FolderOpen, Info, User, Users, Scale, BookOpen } from "lucide-react";
+import { AlertTriangle, ShieldCheck, FolderOpen, Info, User, Users, Scale, BookOpen, LogOut } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useUserMode, type UserMode } from "@/contexts/UserModeContext";
 
 const MODE_ICONS: Record<UserMode, React.ReactNode> = {
@@ -52,6 +53,22 @@ function RotatingBanner({ mode }: { mode: UserMode }) {
 export default function Navbar() {
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
   const { mode, setMode } = useUserMode();
+  const [, setLocation] = useLocation();
+
+  const user = (() => {
+    try {
+      const stored = localStorage.getItem("user");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("user");
+    setLocation("/login");
+  };
 
   useEffect(() => {
     fetch("/api/health")
@@ -72,78 +89,13 @@ export default function Navbar() {
           </Link>
 
           <nav className="flex items-center gap-3">
-            <Select value={mode} onValueChange={(v) => setMode(v as UserMode)}>
-              <SelectTrigger className="h-8 text-xs border-border/60 bg-muted/30 hover:bg-muted/60 transition-colors w-auto min-w-0 gap-1.5 px-2.5 focus:ring-0 focus:ring-offset-0">
+
+            <DropdownMenu>
+              <DropdownMenuTrigger className="h-8 text-xs border border-border/60 bg-muted/30 hover:bg-muted/60 transition-colors rounded-md px-2.5 flex items-center gap-1.5 focus:outline-none">
                 {MODE_ICONS[mode]}
-                <span className="text-xs font-medium">
-                  {MODE_LABELS[mode]}
-                </span>
-              </SelectTrigger>
+                <span className="text-xs font-medium">{MODE_LABELS[mode]}</span>
+              </DropdownMenuTrigger>
 
-              <SelectContent align="end">
-                <SelectItem value="inmate">
-                  <div className="flex items-center gap-2">
-                    <User className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span>Defendant</span>
-                  </div>
-                </SelectItem>
-
-                <SelectItem value="advocate">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span>Advocate</span>
-                  </div>
-                </SelectItem>
-
-                <SelectItem value="attorney">
-                  <div className="flex items-center gap-2">
-                    <Scale className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span>Attorney</span>
-                  </div>
-                </SelectItem>
-
-                <SelectItem value="appellate">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span>Appellate</span>
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Link
-              href="/cases"
-              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <FolderOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">My Cases</span>
-            </Link>
-
-            <Link
-              href="/about"
-              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Info className="w-4 h-4" />
-              <span className="hidden sm:inline">About</span>
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      <RotatingBanner mode={mode} />
-
-      {hasApiKey === false && (
-        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 flex items-center gap-3 text-sm text-amber-800">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>
-            <strong>API key not configured.</strong> Add your Anthropic API key as the{" "}
-            <code className="font-mono bg-amber-100 px-1 rounded">
-              ANTHROPIC_API_KEY
-            </code>{" "}
-            secret to enable AI analysis and court simulation.
-          </span>
-        </div>
-      )}
-    </>
-  );
-}
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem onClick={() => setMode("inmate")} className="flex items-center gap-2">
+                  <User className="w-3.5 h-3.5​​​​​​​​​​​​​​​​
