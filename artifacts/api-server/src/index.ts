@@ -24,6 +24,17 @@ app.post("/auth/login", (req, res) => {
   });
 });
 
+app.get("/cases/recent", (req, res) => {
+  res.json({
+    case: {
+      id: 1,
+      title: "Sample Case",
+      hasAnalysis: true,
+      hasMotion: false,
+    },
+  });
+});
+
 app.get("/", (req, res) => {
   res.json({ message: "CaseLight API is running - temp login active ✅" });
 });
