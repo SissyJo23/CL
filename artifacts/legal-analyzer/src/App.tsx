@@ -1,11 +1,14 @@
 import { Route, Router as WouterRouter, Switch, Redirect } from "wouter";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { setAuthTokenGetter } from "@workspace/api-client-react";
 import Login from "@/pages/auth/login";
 import Home from "@/pages/home";
 import CasesNew from "@/pages/cases/new";
 import CasesList from "@/pages/cases/list";
 import Legal from "@/pages/legal";
 
+// Restore token on every page load/refresh
+setAuthTokenGetter(() => localStorage.getItem("authToken"));
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
