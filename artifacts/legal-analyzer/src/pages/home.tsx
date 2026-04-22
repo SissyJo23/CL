@@ -1,13 +1,10 @@
 import { Link } from "wouter";
-import { useGetRecentCase } from "@workspace/api-client-react";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Scale, FileText } from "lucide-react";
 
 export default function Home() {
-  const { data, isLoading } = useGetRecentCase();
-
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
 
@@ -22,7 +19,7 @@ export default function Home() {
 
       <main className="flex-1">
 
-        {/* Hero Section */}
+        {/* Hero */}
         <section className="px-6 py-20 text-center">
           <div className="max-w-3xl mx-auto space-y-6">
 
@@ -43,23 +40,21 @@ export default function Home() {
                 </Button>
               </Link>
 
-              {!isLoading && data?.case && (
-                <Link href={`/cases/${data.case.id}`}>
-                  <Button
-                    variant="outline"
-                    className="h-14 px-8 rounded-full text-base"
-                  >
-                    Continue Where You Left Off
-                  </Button>
-                </Link>
-              )}
+              <Link href="/cases">
+                <Button
+                  variant="outline"
+                  className="h-14 px-8 rounded-full text-base"
+                >
+                  View Cases
+                </Button>
+              </Link>
 
-              <Link href="/demo">
+              <Link href="/cases/new">
                 <Button
                   variant="ghost"
                   className="h-14 px-8 rounded-full text-base"
                 >
-                  Explore Sample Case
+                  Start Analysis
                 </Button>
               </Link>
 
@@ -67,22 +62,22 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Resume Strip */}
-        {!isLoading && data?.case && (
-          <section className="bg-muted border-y border-border py-6">
-            <div className="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
-                <p className="text-xs text-muted-foreground">Most Recent Case</p>
-                <p className="font-medium text-foreground">{data.case.title}</p>
-              </div>
-              <Link href={`/cases/${data.case.id}`}>
-                <Button variant="secondary" className="rounded-full px-6">
-                  Resume Work
-                </Button>
-              </Link>
+        {/* Resume Strip (static safe version) */}
+        <section className="bg-muted border-y border-border py-6">
+          <div className="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <p className="text-xs text-muted-foreground">Resume Your Work</p>
+              <p className="font-medium text-foreground">
+                Continue your most recent case.
+              </p>
             </div>
-          </section>
-        )}
+            <Link href="/cases">
+              <Button variant="secondary" className="rounded-full px-6">
+                Resume
+              </Button>
+            </Link>
+          </div>
+        </section>
 
         {/* How It Works */}
         <section className="px-6 py-20">
@@ -96,25 +91,31 @@ export default function Home() {
 
               <div className="bg-card border border-border rounded-xl p-6">
                 <FileText className="w-5 h-5 mb-3 text-muted-foreground" />
-                <h3 className="font-semibold text-foreground mb-2">Upload the Record</h3>
+                <h3 className="font-semibold text-foreground mb-2">
+                  Upload the Record
+                </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Add transcripts, rulings, and filings. CaseLight reads every page.
+                  Add transcripts, rulings, and filings.
                 </p>
               </div>
 
               <div className="bg-card border border-border rounded-xl p-6">
                 <Scale className="w-5 h-5 mb-3 text-muted-foreground" />
-                <h3 className="font-semibold text-foreground mb-2">Analyze the Law</h3>
+                <h3 className="font-semibold text-foreground mb-2">
+                  Analyze the Law
+                </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Errors are categorized and evaluated against procedural standards.
+                  Errors are categorized and evaluated.
                 </p>
               </div>
 
               <div className="bg-card border border-border rounded-xl p-6">
                 <ShieldCheck className="w-5 h-5 mb-3 text-muted-foreground" />
-                <h3 className="font-semibold text-foreground mb-2">Strengthen the Argument</h3>
+                <h3 className="font-semibold text-foreground mb-2">
+                  Strengthen the Argument
+                </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Simulate opposition before filing. Reinforce weaknesses before court.
+                  Simulate opposition before filing.
                 </p>
               </div>
 
