@@ -1,115 +1,128 @@
-import { useEffect, useState } from "react";
+import { Link } from "wouter";
+import { useGetRecentCase } from "@workspace/api-client-react";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
+import { ShieldCheck, Scale, FileText } from "lucide-react";
 
 export default function Home() {
-  const [recentCase, setRecentCase] = useState<any>(null);
-
-  useEffect(() => {
-    fetch("https://caselight-api.onrender.com/cases/recent")
-      .then((res) => res.json())
-      .then((data) => {
-        setRecentCase(data.case);
-      })
-      .catch((err) => console.error(err));
-  }, []);
+  const { data, isLoading } = useGetRecentCase();
 
   return (
-    <div className="min-h-screen bg-[#F5F1E8] flex flex-col">
+    <div className="min-h-[100dvh] flex flex-col bg-background">
+
+      {/* Confidential Banner */}
+      <div className="bg-slate-800 border-b border-slate-700 px-4 py-2 flex items-center justify-center gap-2 text-xs text-slate-200 font-medium tracking-wide">
+        <ShieldCheck className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+        <span>PRIVILEGED & CONFIDENTIAL — ATTORNEY WORK-PRODUCT — DO NOT DISCLOSE</span>
+        <ShieldCheck className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+      </div>
+
       <Navbar />
 
-      <div className="max-w-6xl mx-auto w-full px-6 py-16 flex-1">
+      <main className="flex-1">
 
         {/* Hero Section */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-semibold text-[#0B1C2D] tracking-tight">
-            Stop guessing how a judge will rule.
-          </h1>
-          <p className="text-[#3E4C59] mt-6 text-lg max-w-2xl mx-auto">
-            Upload your transcripts. Surface every legal error. 
-            Run your case through the gauntlet before you file.
-          </p>
+        <section className="px-6 py-20 text-center">
+          <div className="max-w-3xl mx-auto space-y-6">
 
-          <div className="mt-10">
-            <Link href="/cases/new">
-              <Button className="bg-[#0B1C2D] hover:bg-[#132B44] text-white px-10 py-6 rounded-full text-lg">
-                Create Case
-              </Button>
-            </Link>
-          </div>
-        </div>
+            <h1 className="font-serif text-4xl sm:text-5xl font-medium tracking-tight text-foreground leading-tight">
+              CaseLight
+            </h1>
 
-        {/* Continue Section */}
-        {recentCase && (
-          <div className="bg-white rounded-2xl shadow-md border border-[#E4DED2] p-8 mb-16">
-            <h2 className="text-xl font-semibold text-[#0B1C2D] mb-4">
-              Continue Where You Left Off
-            </h2>
+            <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+              Analyze transcripts. Surface reversible error. Draft motions that withstand scrutiny.
+            </p>
 
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <p className="text-lg font-medium text-[#0B1C2D]">
-                  {recentCase.title}
-                </p>
-                <p className="text-[#5F6C7B] mt-1">
-                  Resume analysis and drafting.
-                </p>
-              </div>
+            {/* Three Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
 
-              <Button
-                variant="outline"
-                className="border-[#0B1C2D] text-[#0B1C2D] rounded-full px-6"
-              >
-                Open Case
-              </Button>
+              <Link href="/cases/new">
+                <Button className="h-14 px-8 rounded-full text-base">
+                  Create Case
+                </Button>
+              </Link>
+
+              {!isLoading && data?.case && (
+                <Link href={`/cases/${data.case.id}`}>
+                  <Button
+                    variant="outline"
+                    className="h-14 px-8 rounded-full text-base"
+                  >
+                    Continue Where You Left Off
+                  </Button>
+                </Link>
+              )}
+
+              <Link href="/demo">
+                <Button
+                  variant="ghost"
+                  className="h-14 px-8 rounded-full text-base"
+                >
+                  Explore Sample Case
+                </Button>
+              </Link>
+
             </div>
           </div>
+        </section>
+
+        {/* Resume Strip */}
+        {!isLoading && data?.case && (
+          <section className="bg-muted border-y border-border py-6">
+            <div className="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Most Recent Case</p>
+                <p className="font-medium text-foreground">{data.case.title}</p>
+              </div>
+              <Link href={`/cases/${data.case.id}`}>
+                <Button variant="secondary" className="rounded-full px-6">
+                  Resume Work
+                </Button>
+              </Link>
+            </div>
+          </section>
         )}
 
         {/* How It Works */}
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold text-[#0B1C2D] mb-10">
-            How It Works
-          </h2>
+        <section className="px-6 py-20">
+          <div className="max-w-6xl mx-auto">
 
-          <div className="grid md:grid-cols-3 gap-10">
+            <h2 className="text-center font-serif text-2xl sm:text-3xl font-medium text-foreground mb-12">
+              How It Works
+            </h2>
 
-            <div>
-              <div className="text-[#0B1C2D] font-semibold mb-3">1</div>
-              <h3 className="font-medium text-[#0B1C2D] mb-2">
-                Upload
-              </h3>
-              <p className="text-[#5F6C7B]">
-                Add transcripts, motions, orders, and reports to the record.
-              </p>
+            <div className="grid md:grid-cols-3 gap-8">
+
+              <div className="bg-card border border-border rounded-xl p-6">
+                <FileText className="w-5 h-5 mb-3 text-muted-foreground" />
+                <h3 className="font-semibold text-foreground mb-2">Upload the Record</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Add transcripts, rulings, and filings. CaseLight reads every page.
+                </p>
+              </div>
+
+              <div className="bg-card border border-border rounded-xl p-6">
+                <Scale className="w-5 h-5 mb-3 text-muted-foreground" />
+                <h3 className="font-semibold text-foreground mb-2">Analyze the Law</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Errors are categorized and evaluated against procedural standards.
+                </p>
+              </div>
+
+              <div className="bg-card border border-border rounded-xl p-6">
+                <ShieldCheck className="w-5 h-5 mb-3 text-muted-foreground" />
+                <h3 className="font-semibold text-foreground mb-2">Strengthen the Argument</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Simulate opposition before filing. Reinforce weaknesses before court.
+                </p>
+              </div>
+
             </div>
-
-            <div>
-              <div className="text-[#0B1C2D] font-semibold mb-3">2</div>
-              <h3 className="font-medium text-[#0B1C2D] mb-2">
-                Analyze
-              </h3>
-              <p className="text-[#5F6C7B]">
-                CaseLight reads every page against legal categories.
-              </p>
-            </div>
-
-            <div>
-              <div className="text-[#0B1C2D] font-semibold mb-3">3</div>
-              <h3 className="font-medium text-[#0B1C2D] mb-2">
-                Simulate
-              </h3>
-              <p className="text-[#5F6C7B]">
-                Run adversarial rounds before filing.
-              </p>
-            </div>
-
           </div>
-        </div>
+        </section>
 
-      </div>
+      </main>
 
       <Disclaimer />
     </div>
