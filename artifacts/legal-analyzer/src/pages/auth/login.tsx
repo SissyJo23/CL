@@ -25,8 +25,8 @@ export default function Login() {
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("user", JSON.stringify(data.user));
 
-        // ✅ Redirect to root instead of /home
-        setLocation("/");
+        // ✅ Redirect to home
+        setLocation("/home");
       } else {
         alert("Access Denied");
       }
