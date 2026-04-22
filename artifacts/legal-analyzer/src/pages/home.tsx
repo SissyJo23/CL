@@ -6,16 +6,13 @@ import { ShieldCheck, Scale, FileText } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-
-
+    <div className="min-h-[100dvh] flex flex-col bg-background">
       <Navbar />
 
       <main className="flex-1">
-
         {/* Hero */}
         <section className="px-6 py-20 text-center">
           <div className="max-w-3xl mx-auto space-y-6">
-
             <h1 className="font-serif text-4xl sm:text-5xl font-medium tracking-tight text-foreground leading-tight">
               CaseLight
             </h1>
@@ -24,9 +21,7 @@ export default function Home() {
               Analyze transcripts. Surface reversible error. Draft motions that withstand scrutiny.
             </p>
 
-            {/* Three Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
-
               <Link href="/cases/new">
                 <Button className="h-14 px-8 rounded-full text-base">
                   Create Case
@@ -50,16 +45,17 @@ export default function Home() {
                   Start Analysis
                 </Button>
               </Link>
-
             </div>
           </div>
         </section>
 
-        {/* Resume Strip (static safe version) */}
+        {/* Resume Strip */}
         <section className="bg-muted border-y border-border py-6">
           <div className="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-              <p className="text-xs text-muted-foreground">Resume Your Work</p>
+              <p className="text-xs text-muted-foreground">
+                Resume Your Work
+              </p>
               <p className="font-medium text-foreground">
                 Continue your most recent case.
               </p>
@@ -75,13 +71,11 @@ export default function Home() {
         {/* How It Works */}
         <section className="px-6 py-20">
           <div className="max-w-6xl mx-auto">
-
             <h2 className="text-center font-serif text-2xl sm:text-3xl font-medium text-foreground mb-12">
               How It Works
             </h2>
 
             <div className="grid md:grid-cols-3 gap-8">
-
               <div className="bg-card border border-border rounded-xl p-6">
                 <FileText className="w-5 h-5 mb-3 text-muted-foreground" />
                 <h3 className="font-semibold text-foreground mb-2">
@@ -111,11 +105,9 @@ export default function Home() {
                   Simulate opposition before filing.
                 </p>
               </div>
-
             </div>
           </div>
         </section>
-
       </main>
 
       <Disclaimer />
