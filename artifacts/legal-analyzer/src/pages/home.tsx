@@ -6,14 +6,7 @@ import { ShieldCheck, Scale, FileText } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background">
-
-      {/* Confidential Banner */}
-      <div className="bg-slate-800 border-b border-slate-700 px-4 py-2 flex items-center justify-center gap-2 text-xs text-slate-200 font-medium tracking-wide">
-        <ShieldCheck className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-        <span>PRIVILEGED & CONFIDENTIAL — ATTORNEY WORK-PRODUCT — DO NOT DISCLOSE</span>
-        <ShieldCheck className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-      </div>
+    <div className="min-h-[100dvh] flex flex-col bg-
 
       <Navbar />
 
