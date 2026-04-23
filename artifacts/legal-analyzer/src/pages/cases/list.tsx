@@ -163,9 +163,10 @@ export default function CaseList() {
 
   const handleDeleteConfirm = () => {
     if (!pendingDelete) return;
-    deleteCase(pendingDelete.id);
+    deleteCase({ id: Number(pendingDelete.id) });
     setPendingDelete(null);
   };
+
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
       <Navbar />
