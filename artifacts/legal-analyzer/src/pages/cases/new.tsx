@@ -53,7 +53,7 @@ export default function CaseNew() {
         onSuccess: (data) => {
           queryClient.invalidateQueries({ queryKey: getListCasesQueryKey() });
           toast({ title: "Case created", description: "The workspace is ready." });
-          setLocation(`/cases/${data.id}`);
+          setLocation("/cases");
         },
         onError: () => {
           toast({ title: "Error", description: "Failed to create case", variant: "destructive" });
