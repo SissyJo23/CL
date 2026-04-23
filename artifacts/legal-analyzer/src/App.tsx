@@ -7,11 +7,10 @@ import CasesNew from "@/pages/cases/new";
 import CasesList from "@/pages/cases/list";
 import Legal from "@/pages/legal";
 
-// Restore token on every page load/refresh
 setAuthTokenGetter(() => localStorage.getItem("authToken"));
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const isLoggedIn = !!localStorage.getItem("authToken");
   if (!isLoggedIn) return <Redirect to="/login" />;
   return <Component />;
 }
