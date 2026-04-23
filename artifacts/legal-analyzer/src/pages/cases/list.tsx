@@ -1,22 +1,144 @@
-import { useState, useEffect } from "react";
-import { Link } from "wouter";
-import { useListCases } from "@workspace/api-client-react";
+import { useState, useEffect, useRef } from "react";
+import { Link, useLocation } from "wouter";
+import { useListCases, useDeleteCase } from "@workspace/api-client-react";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Plus, FolderOpen, CheckCircle2, Scale, MapPin } from "lucide-react";
+import {
+  Plus,
+  FolderOpen,
+  CheckCircle2,
+  Scale,
+  MapPin,
+  MoreVertical,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { format } from "date-fns";
 import { detectStateName, parseJurisdictionBadge } from "@/lib/jurisdictionBadge";
 
-type FilterState = "All" | "Wisconsin" | "Illinois" | "Indiana" | "Minnesota" | "Iowa" | "Michigan" | "Ohio" | "Other";
+type FilterState =
+  | "All"
+  | "Wisconsin"
+  | "Illinois"
+  | "Indiana"
+  | "Minnesota"
+  | "Iowa"
+  | "Michigan"
+  | "Ohio"
+  | "Other";
 
+// ── Kebab menu ──────────────────────────────────────────────────────────────
+function CaseCardMenu({
+  caseId,
+  onDelete,
+}: {
+  caseId: string;
+  onDelete: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [, navigate] = useLocation();
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={menuRef} className="relative" onClick={(e) => e.preventDefault()}>
+      <button
+        aria-label="Case actions"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
+        className="w-8 h-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+      >
+        <MoreVertical className="w-4 h-4" />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-9 z-50 w-36 rounded-lg border border-border bg-card shadow-lg py-1 text-sm">
+          <button
+            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-accent text-foreground transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(false);
+              navigate(`/cases/${caseId}/edit`);
+            }}
+          >
+            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+            Edit case
+          </button>
+          <button
+            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-destructive/10 text-destructive transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(false);
+              onDelete(caseId);
+            }}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Delete case
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Delete confirm dialog ────────────────────────────────────────────────────
+function DeleteConfirmDialog({
+  caseTitle,
+  onConfirm,
+  onCancel,
+}: {
+  caseTitle: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+      <div className="bg-card border border-border rounded-xl shadow-xl p-6 max-w-sm w-full">
+        <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+          <Trash2 className="w-5 h-5 text-destructive" />
+        </div>
+        <h2 className="text-base font-semibold text-foreground mb-1">Delete case?</h2>
+        <p className="text-sm text-muted-foreground mb-6">
+          <span className="font-medium text-foreground">"{caseTitle}"</span> and all its
+          documents and findings will be permanently deleted. This cannot be undone.
+        </p>
+        <div className="flex gap-3 justify-end">
+          <Button variant="outline" size="sm" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button variant="destructive" size="sm" onClick={onConfirm}>
+            Delete
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main page ────────────────────────────────────────────────────────────────
 export default function CaseList() {
   const { data: cases, isLoading } = useListCases();
+  const { mutate: deleteCase } = useDeleteCase();
   const [activeFilter, setActiveFilter] = useState<FilterState>("All");
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; title: string } | null>(null);
 
-  // Compute per-state counts (all 9 categories always present)
+  // Compute per-state counts
   const stateCounts = (cases ?? []).reduce<Record<FilterState, number>>(
     (acc, c) => {
       const s = detectStateName(c.jurisdiction);
@@ -27,26 +149,28 @@ export default function CaseList() {
     { All: 0, Wisconsin: 0, Illinois: 0, Indiana: 0, Minnesota: 0, Iowa: 0, Michigan: 0, Ohio: 0, Other: 0 },
   );
 
-  // Only show pills that have at least one case; "All" is always included
   const filterOptions: FilterState[] = (
     ["All", "Wisconsin", "Illinois", "Indiana", "Minnesota", "Iowa", "Michigan", "Ohio", "Other"] as FilterState[]
   ).filter((opt) => opt === "All" || (stateCounts[opt] ?? 0) > 0);
 
-  // If the active filter's pill is no longer visible (count dropped to 0), reset state to "All"
   useEffect(() => {
     if (activeFilter !== "All" && (stateCounts[activeFilter] ?? 0) === 0) {
       setActiveFilter("All");
     }
   }, [activeFilter, stateCounts]);
 
-  // Show filter bar only when cases span 2+ distinct states
   const showFilterBar = !isLoading && filterOptions.length > 2;
 
-  // Apply filter
   const filteredCases = (cases ?? []).filter((c) => {
     if (activeFilter === "All") return true;
     return detectStateName(c.jurisdiction) === activeFilter;
   });
+
+  const handleDeleteConfirm = () => {
+    if (!pendingDelete) return;
+    deleteCase(pendingDelete.id);
+    setPendingDelete(null);
+  };
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
@@ -65,7 +189,7 @@ export default function CaseList() {
           </Link>
         </div>
 
-        {/* State filter pills — only shown when 2+ distinct states are present */}
+        {/* State filter pills */}
         {showFilterBar && (
           <div className="flex flex-nowrap md:flex-wrap items-center gap-2 mb-5 overflow-x-auto md:overflow-visible pb-0.5 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {filterOptions.map((opt) => {
@@ -84,9 +208,7 @@ export default function CaseList() {
                   {opt}
                   <span
                     className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-semibold ${
-                      isActive
-                        ? "bg-background/20 text-background"
-                        : "bg-muted text-muted-foreground"
+                      isActive ? "bg-background/20 text-background" : "bg-muted text-muted-foreground"
                     }`}
                   >
                     {opt === "All" ? stateCounts["All"] : count}
@@ -97,6 +219,7 @@ export default function CaseList() {
           </div>
         )}
 
+        {/* Case list */}
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -113,20 +236,31 @@ export default function CaseList() {
                     <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mr-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0">
                       <FolderOpen className="w-5 h-5" />
                     </div>
+
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-foreground truncate">{c.title}</h3>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-muted-foreground">
                         {c.caseNumber && (
-                          <span>Case #: <span className="font-medium text-foreground">{c.caseNumber}</span></span>
+                          <span>
+                            Case #: <span className="font-medium text-foreground">{c.caseNumber}</span>
+                          </span>
                         )}
                         {c.defendantName && (
-                          <span>Defendant: <span className="font-medium text-foreground">{c.defendantName}</span></span>
+                          <span>
+                            Defendant: <span className="font-medium text-foreground">{c.defendantName}</span>
+                          </span>
                         )}
                         {c.documentCount != null && (
-                          <span><span className="font-medium text-foreground">{c.documentCount}</span> doc{c.documentCount !== 1 ? "s" : ""}</span>
+                          <span>
+                            <span className="font-medium text-foreground">{c.documentCount}</span>{" "}
+                            doc{c.documentCount !== 1 ? "s" : ""}
+                          </span>
                         )}
                         {c.findingCount != null && (
-                          <span><span className="font-medium text-foreground">{c.findingCount}</span> finding{c.findingCount !== 1 ? "s" : ""}</span>
+                          <span>
+                            <span className="font-medium text-foreground">{c.findingCount}</span>{" "}
+                            finding{c.findingCount !== 1 ? "s" : ""}
+                          </span>
                         )}
                         <span>{format(new Date(c.updatedAt), "MMM d, yyyy")}</span>
                       </div>
@@ -144,19 +278,31 @@ export default function CaseList() {
                         </div>
                       )}
                     </div>
+
+                    {/* Badges + action menu */}
                     <div className="flex items-center gap-2 ml-4 shrink-0">
                       {c.hasAnalysis && (
-                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
+                        <Badge
+                          variant="secondary"
+                          className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100"
+                        >
                           <CheckCircle2 className="w-3 h-3 mr-1" />
                           Analyzed
                         </Badge>
                       )}
                       {c.hasMotion && (
-                        <Badge variant="secondary" className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-100">
+                        <Badge
+                          variant="secondary"
+                          className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-100"
+                        >
                           <Scale className="w-3 h-3 mr-1" />
                           Motion
                         </Badge>
                       )}
+                      <CaseCardMenu
+                        caseId={c.id}
+                        onDelete={(id) => setPendingDelete({ id, title: c.title })}
+                      />
                     </div>
                   </div>
                 </Link>
@@ -164,14 +310,16 @@ export default function CaseList() {
             })}
           </div>
         ) : cases && cases.length > 0 ? (
-          // Filtered results are empty but total cases exist
           <div className="text-center py-16 border-2 border-dashed border-border rounded-xl bg-muted/20">
             <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
               <FolderOpen className="w-6 h-6 text-muted-foreground" />
             </div>
             <p className="text-sm font-medium text-foreground mb-1">No {activeFilter} cases</p>
             <p className="text-xs text-muted-foreground">
-              <button className="underline underline-offset-2 hover:text-foreground transition-colors" onClick={() => setActiveFilter("All")}>
+              <button
+                className="underline underline-offset-2 hover:text-foreground transition-colors"
+                onClick={() => setActiveFilter("All")}
+              >
                 View all cases
               </button>
             </p>
@@ -194,7 +342,17 @@ export default function CaseList() {
           </div>
         )}
       </main>
+
       <Disclaimer />
+
+      {/* Delete confirmation dialog */}
+      {pendingDelete && (
+        <DeleteConfirmDialog
+          caseTitle={pendingDelete.title}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setPendingDelete(null)}
+        />
+      )}
     </div>
   );
 }
