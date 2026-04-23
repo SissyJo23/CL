@@ -25,12 +25,12 @@ app.use((req: any, _res, next) => {
   const header = req.headers["authorization"] ?? "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
   if (token === "dev-token") {
-    req.userId = 999;
+    req.userId = 1;
   } else if (token) {
     const match = token.match(/^user-(\d+)$/);
     if (match) req.userId = Number(match[1]);
   }
-  if (!req.userId) req.userId = 999; // temp: allow unauthenticated access
+  if (!req.userId) req.userId = 1;
   next();
 });
 
@@ -42,8 +42,8 @@ app.post("/auth/login", (req, res) => {
   const { email } = req.body || {};
   res.json({
     success: true,
-    token: "user-999",
-    user: { email: email || "admin@caselight.com", id: 999, name: "CaseLight User" },
+    token: "user-1",
+    user: { email: email || "christymeade98@gmail.com", id: 1, name: "CaseLight User" },
   });
 });
 
