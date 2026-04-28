@@ -245,24 +245,36 @@ export default function FindingCard({ finding, caseId, documentId, onDeleted, on
                 <ChevronDown className={cn("w-4 h-4 transition-transform", crossCaseOpen && "rotate-180")} />
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="divide-y divide-border">
-                  {finding.crossCaseMatches.map((match: CrossCaseMatch, i: number) => (
-                    <div key={i} className="p-3 space-y-2">
-                      <div className="text-xs font-medium text-muted-foreground">
-                        Source: {match.sourceDocumentTitle}
-                      </div>
-                      <div className="text-sm italic border-l-2 border-primary/30 pl-2 text-foreground/80">
-                        "{match.matchedPassage}"
-                      </div>
-                      <div className="text-xs text-muted-foreground bg-muted/20 p-2 rounded">
-                        {match.explanation}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          )}
+                    <div className="grid grid-cols-2 divide-x divide-border border-t border-border mt-auto bg-slate-900/50">
+          <div className="flex flex-col">
+            <Button
+              variant="ghost"
+              className="rounded-none h-12 text-slate-300 hover:text-white hover:bg-blue-900/30"
+              onClick={() => setEditOpen(true)}
+              disabled={!caseId || !documentId}
+            >
+              <Pencil className="w-4 h-4 mr-2 text-blue-400" />
+              Reassign Category
+            </Button>
+            <span className="text-[10px] text-center pb-1 text-slate-500 italic">
+              Moves this finding to a different legal category.
+            </span>
+          </div>
+
+          <div className="flex flex-col">
+            <Button
+              variant="ghost"
+              className="rounded-none h-12 text-red-400/70 hover:text-red-400 hover:bg-red-950/30"
+              onClick={handleDelete}
+              disabled={!caseId || !documentId || deleteFinding.isPending}
+            >
+              {deleteFinding.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+              Remove Finding
+            </Button>
+            <span className="text-[10px] text-center pb-1 text-slate-500 italic">
+              Permanently deletes this record from the vault.
+            </span>
+          </div>
         </div>
 
         {isPlainMode && (() => {
