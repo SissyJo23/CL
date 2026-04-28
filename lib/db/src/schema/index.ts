@@ -8,3 +8,4 @@ export * from "./motions";
 export * from "./pattern-analyses";
 export * from "./relief-pathways";
 export * from "./nomerit-analyses";
+export * from "./deadlines";
