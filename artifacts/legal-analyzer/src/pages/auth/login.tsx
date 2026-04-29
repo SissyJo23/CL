@@ -21,7 +21,16 @@ export default function Login() {
 
       const data = await response.json();
 
-      if (response.ok && data.access_token) {
+      if if (response.ok && data.success) {
+  localStorage.setItem("authToken", data.token);
+  localStorage.setItem("isLoggedIn", "true");
+
+  setAuthTokenGetter(() => localStorage.getItem("authToken"));
+
+  setLocation("/home");
+} else {
+  alert("Access Denied");
+}
         // ✅ Store REAL backend JWT
         localStorage.setItem("authToken", data.access_token);
         localStorage.setItem("isLoggedIn", "true");
