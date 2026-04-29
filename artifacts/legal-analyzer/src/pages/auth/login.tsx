@@ -22,11 +22,11 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok && data.success) {
+        // ✅ Stable placeholder auth (no dependency on backend token yet)
+        localStorage.setItem("authToken", "logged-in");
         localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("authToken", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
 
-        // Wire the token into every future API call
+        // Ensure API client always reads latest token
         setAuthTokenGetter(() => localStorage.getItem("authToken"));
 
         setLocation("/home");
