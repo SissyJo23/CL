@@ -27,8 +27,7 @@ export default function Login() {
 
   setAuthTokenGetter(() => localStorage.getItem("authToken"));
 
-  setLocation("/home");
-} else {
+  setLocation("/home");} else {
   alert("Access Denied");
 }
         // ✅ Store REAL backend JWT
