@@ -11,7 +11,7 @@ export default function Home() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="px-6 py-20 text-center">
+        <section className="px-6 py-24 text-center">
           <div className="max-w-3xl mx-auto space-y-6">
             <h1 className="font-serif text-4xl sm:text-5xl font-medium tracking-tight text-foreground leading-tight">
               CaseLight
@@ -29,19 +29,13 @@ export default function Home() {
               </Link>
 
               <Link href="/cases">
-                <Button
-                  variant="outline"
-                  className="h-14 px-8 rounded-full text-base"
-                >
+                <Button variant="outline" className="h-14 px-8 rounded-full text-base">
                   View Cases
                 </Button>
               </Link>
 
               <Link href="/cases/new">
-                <Button
-                  variant="ghost"
-                  className="h-14 px-8 rounded-full text-base"
-                >
+                <Button variant="ghost" className="h-14 px-8 rounded-full text-base">
                   Start Analysis
                 </Button>
               </Link>
@@ -50,18 +44,18 @@ export default function Home() {
         </section>
 
         {/* Resume Strip */}
-        <section className="bg-muted border-y border-border py-6">
+        <section className="bg-muted border-y border-border py-8">
           <div className="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">
                 Resume Your Work
               </p>
-              <p className="font-medium text-foreground">
+              <p className="font-medium text-foreground mt-0.5">
                 Continue your most recent case.
               </p>
             </div>
             <Link href="/cases">
-              <Button variant="secondary" className="rounded-full px-6">
+              <Button variant="secondary" className="rounded-full px-8">
                 Resume
               </Button>
             </Link>
@@ -69,40 +63,40 @@ export default function Home() {
         </section>
 
         {/* How It Works */}
-        <section className="px-6 py-20">
+        <section className="px-6 py-24">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-center font-serif text-2xl sm:text-3xl font-medium text-foreground mb-12">
+            <h2 className="text-center font-serif text-2xl sm:text-3xl font-medium text-foreground mb-16">
               How It Works
             </h2>
 
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-card border border-border rounded-xl p-6">
-                <FileText className="w-5 h-5 mb-3 text-muted-foreground" />
-                <h3 className="font-semibold text-foreground mb-2">
+              <div className="bg-card border border-border rounded-xl p-8 space-y-3">
+                <FileText className="w-5 h-5 text-muted-foreground" />
+                <h3 className="font-semibold text-foreground">
                   Upload the Record
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Add transcripts, rulings, and filings.
+                  Add transcripts, rulings, and filings to build a complete picture of the case.
                 </p>
               </div>
 
-              <div className="bg-card border border-border rounded-xl p-6">
-                <Scale className="w-5 h-5 mb-3 text-muted-foreground" />
-                <h3 className="font-semibold text-foreground mb-2">
+              <div className="bg-card border border-border rounded-xl p-8 space-y-3">
+                <Scale className="w-5 h-5 text-muted-foreground" />
+                <h3 className="font-semibold text-foreground">
                   Analyze the Law
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Errors are categorized and evaluated.
+                  Every error is identified, categorized, and evaluated against binding precedent.
                 </p>
               </div>
 
-              <div className="bg-card border border-border rounded-xl p-6">
-                <ShieldCheck className="w-5 h-5 mb-3 text-muted-foreground" />
-                <h3 className="font-semibold text-foreground mb-2">
+              <div className="bg-card border border-border rounded-xl p-8 space-y-3">
+                <ShieldCheck className="w-5 h-5 text-muted-foreground" />
+                <h3 className="font-semibold text-foreground">
                   Strengthen the Argument
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Simulate opposition before filing.
+                  Simulate the State's opposition before you file. Know where your argument holds.
                 </p>
               </div>
             </div>
