@@ -3,7 +3,6 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
-// Added local development fallback values to prevent environment crash errors
 const rawPort = process.env.PORT || "5173";
 const port = Number(rawPort);
 
@@ -11,6 +10,7 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
+// Render will look for a trailing slash or absolute path base
 const basePath = process.env.BASE_PATH || "/";
 
 export default defineConfig({
@@ -33,7 +33,7 @@ export default defineConfig({
   },
   server: {
     port,
-    host: "localhost", // Switched from 0.0.0.0 to localhost for seamless local routing
+    host: "0.0.0.0", // Reverted back to 0.0.0.0 so Render's internal router can bind to it
     allowedHosts: true,
     fs: {
       strict: true,
@@ -42,6 +42,7 @@ export default defineConfig({
   },
   preview: {
     port,
-    host: "localhost",
+    host: "0.0.0.0",
+    allowedHosts: true,
   },
 });
