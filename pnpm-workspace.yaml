@@ -1,13 +1,13 @@
 packages:
-  - 'artifacts/*'
-  - 'lib/*'
-  - 'lib/integrations/*'
-  - 'scripts'
+  - artifacts/*
+  - lib/*
+  - lib/integrations/*
+  - scripts
 
 autoInstallPeers: false
 
-# Restructured catalog mapping to match modern pnpm standards
 catalog:
+  '@replit/vite-plugin-cartographer': '0.5.1'  # 👈 Copy-paste this dummy fallback line here
   '@tailwindcss/vite': ^4.1.14
   '@tanstack/react-query': ^5.90.21
   '@types/node': ^25.3.3
@@ -27,7 +27,6 @@ catalog:
   vite: ^7.3.0
   zod: 3.25.76
 
-# Allows compilation of native engines on your local operating system
 onlyBuiltDependencies:
   - '@swc/core'
   - esbuild
