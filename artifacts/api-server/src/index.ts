@@ -22,9 +22,7 @@ app.use(pinoHttp({ logger }));
 
 // Configured strict CORS handling for cross-domain requests
 ts
-const allowedOrigins = [ "https://caselightai.com", "https://www.caselightai.com", "https://onrender.com",...(process.env.CORS_ORIGIN? process.env.CORS_ORIGIN.split(","): []),
-].map((origin) => origin.trim()).filter(Boolean);
-``` If you want, after you make just that one replacement, paste **only those 6–8 lines back here**, and I’ll verify before you redeploy._
+const allowedOrigins = [ "https://caselightai.com", "https://www.caselightai.com", "https://onrender.com",...(process.env.CORS_ORIGIN? process.env.CORS_ORIGIN.split(","): []), ].map((origin) => origin.trim()).filter(Boolean); That is the main fix. Optional cleanup: In the cors check, if you see: allowedOrigins.indexOf(origin)!== -1 you can change it to: allowedOrigins.includes(origin) That part is optional. The important part is the allowedOrigins replacement above. Also make sure your Render environment variable CORS_ORIGIN is exactly this: https://caselightai.com,https://www.caselightai.com,https://onrender.com
 
 app.use(cors({
   origin: (origin, callback) => {
