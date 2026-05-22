@@ -21,7 +21,7 @@ app.set("trust proxy", true);
 app.use(pinoHttp({ logger }));
 
 // Configured strict CORS handling for cross-domain requests
-ts
+
 const allowedOrigins = [ "https://caselightai.com", "https://www.caselightai.com", "https://onrender.com",...(process.env.CORS_ORIGIN? process.env.CORS_ORIGIN.split(","): []), ].map((origin) => origin.trim()).filter(Boolean);
 
 app.use(cors({
