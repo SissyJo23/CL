@@ -127,7 +127,10 @@ router.post(
     const files = req.files as Express.Multer.File[] | undefined;
     const documentType = (req.body as { documentType?: string }).documentType ?? "other";
 
+    logger.info({ caseId, fileCount: files?.length ?? 0, documentType }, "Document upload initiated");
+
     if (!files || files.length === 0) {
+      logger.warn({ caseId }, "Upload request with no files");
       res.status(400).json({ error: "No files provided" });
       return;
     }
@@ -137,26 +140,37 @@ router.post(
 
     for (const file of files) {
       try {
+        logger.info({ fileName: file.originalname, fileSize: file.size }, "Extracting text from file");
         const content = await extractTextFromFile(file);
+        logger.info({ fileName: file.originalname, contentLength: content.length }, "Text extraction complete");
+        
         if (!content.trim()) {
+          logger.warn({ fileName: file.originalname }, "No text extracted from file");
           results.push({ name: file.originalname, status: "error", error: "No text extracted" });
           continue;
         }
         const title = file.originalname.replace(/\.[^.]+$/, "");
         const parsed = insertDocumentSchema.safeParse({ caseId, title, documentType, content });
         if (!parsed.success) {
+          logger.warn({ fileName: file.originalname, validationError: parsed.error.issues }, "Schema validation failed");
           results.push({ name: file.originalname, status: "error", error: "Validation failed" });
           continue;
         }
         const [row] = await db.insert(documentsTable).values(parsed.data).returning();
         created.push(row);
+        logger.info({ fileName: file.originalname, documentId: row.id }, "Document inserted successfully");
         results.push({ name: file.originalname, status: "ok" });
       } catch (err) {
-        results.push({ name: file.originalname, status: "error", error: err instanceof Error ? err.message : "Processing failed" });
+        const errorMsg = err instanceof Error ? err.message : "Processing failed";
+        logger.error({ fileName: file.originalname, error: errorMsg, err }, "File processing error");
+        results.push({ name: file.originalname, status: "error", error: errorMsg });
       }
     }
 
+    logger.info({ caseId, filesCreated: created.length, filesAttempted: files.length, results }, "Upload batch complete");
+
     if (created.length === 0) {
+      logger.error({ caseId, results }, "No files could be processed");
       res.status(422).json({ error: "No files could be processed", details: results });
       return;
     }
