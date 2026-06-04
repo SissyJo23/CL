@@ -22,6 +22,7 @@ export default function DocumentShow() {
   const {  doc, isLoading: docLoading } = useGetDocument(caseId, documentId, {
     query: { enabled: !!documentId, queryKey: getGetDocumentQueryKey(caseId, documentId) },
   });
+
   const {  initialFindings, isLoading: findingsLoading } = useListFindings(caseId, documentId, {
     query: { enabled: !!documentId, queryKey: getListFindingsQueryKey(caseId, documentId) },
   });
@@ -93,7 +94,10 @@ export default function DocumentShow() {
               setIsRunningNomerit(false);
               setNomeritStatus("");
               setNomeritComplete(true);
-              toast({ title: "No-Merit Analysis Complete", description: "IAAC arguments and draft motion are ready." });
+              toast({
+                title: "No-Merit Analysis Complete",
+                description: "IAAC arguments and draft motion are ready.",
+              });
               navigate(`/cases/${caseId}/documents/${documentId}/nomerit`);
             } else if (event.type === "error") {
               setIsRunningNomerit(false);
@@ -109,7 +113,11 @@ export default function DocumentShow() {
       console.error(error);
       setIsRunningNomerit(false);
       setNomeritStatus("");
-      toast({ title: "Connection Error", description: "Failed to connect to no-merit analysis stream.", variant: "destructive" });
+      toast({
+        title: "Connection Error",
+        description: "Failed to connect to no-merit analysis stream.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -154,7 +162,10 @@ export default function DocumentShow() {
               setStatusMessage("");
               queryClient.invalidateQueries({ queryKey: getGetDocumentQueryKey(caseId, documentId) });
               queryClient.invalidateQueries({ queryKey: getListFindingsQueryKey(caseId, documentId) });
-              toast({ title: "Analysis Complete", description: "We went through every line. Here's everything we found." });
+              toast({
+                title: "Analysis Complete",
+                description: "We went through every line. Here's everything we found.",
+              });
             } else if (event.type === "error") {
               setIsAnalyzing(false);
               setStatusMessage("");
@@ -169,7 +180,11 @@ export default function DocumentShow() {
       console.error(error);
       setIsAnalyzing(false);
       setStatusMessage("");
-      toast({ title: "Connection Error", description: "Failed to connect to analysis stream.", variant: "destructive" });
+      toast({
+        title: "Connection Error",
+        description: "Failed to connect to analysis stream.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -186,9 +201,10 @@ export default function DocumentShow() {
       setRedactedContent(data.redacted);
       toast({
         title: "Transcript Cleaned",
-        description: data.changesCount > 0
-          ? `${data.changesCount} sensitive item(s) redacted (SSN, DOB, phone, email).`
-          : "No sensitive data patterns found.",
+        description:
+          data.changesCount > 0
+            ? `${data.changesCount} sensitive item(s) redacted (SSN, DOB, phone, email).`
+            : "No sensitive data patterns found.",
       });
     } catch {
       toast({ title: "Error", description: "Failed to redact document.", variant: "destructive" });
@@ -245,7 +261,13 @@ export default function DocumentShow() {
   <div class="finding">
     <div class="finding-num">Finding #${i + 1}</div>
     <div class="finding-title">${f.issueTitle}</div>
-    ${f.pageNumber != null || f.lineNumber != null ? `<div class="citation">📄 ${f.pageNumber != null ? \`Page ${f.pageNumber}\` : ""}${f.lineNumber != null ? \` · Line ${f.lineNumber}\` : ""}</div>` : ""}
+    ${
+      f.pageNumber != null || f.lineNumber != null
+        ? `<div class="citation">📄 ${f.pageNumber != null ? `Page ${f.pageNumber}` : ""}${
+            f.lineNumber != null ? ` · Line ${f.lineNumber}` : ""
+          }</div>`
+        : ""
+    }
     <div class="excerpt">"${f.transcriptExcerpt}"</div>
     <div class="section-label">Legal Analysis</div>
     <div class="analysis">${f.legalAnalysis}</div>
@@ -282,98 +304,6 @@ export default function DocumentShow() {
   });
 
   const displayContent = redactedContent ?? doc?.content ?? "";
-
-  const handleUploadDocument = async () => {
-    if (uploadFiles.length === 0) {
-      toast({
-        title: "Validation Error",
-        description: "Please select at least one file.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsUploading(true);
-
-    try {
-      const formData = new FormData();
-      for (const file of uploadFiles) {
-        formData.append("files", file);
-      }
-      formData.append("documentType", docType);
-
-      const res = await fetch(`/api/cases/${caseId}/documents/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      let  any = null;
-      try {
-        data = await res.json();
-      } catch {
-        data = null;
-      }
-
-      if (!res.ok) {
-        throw new Error(data?.error ?? "Upload failed");
-      }
-
-      queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
-      setOpen(false);
-      setDocTitle("");
-      setDocContent("");
-      setUploadFiles([]);
-
-      toast({
-        title: "Upload complete",
-        description: `${Array.isArray(data) ? data.length : 1} file(s) processed.`,
-      });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to upload file";
-      toast({
-        title: "Upload Error",
-        description: msg,
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const getStatusBadge = (docId: number, dbStatus: string) => {
-    const live = liveFindings.find((f) => f.id === docId);
-    if (live) {
-      if (live.phase === "running") return (
-        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
-          <Loader2 className="w-3 h-3 mr-1 animate-spin" /> Analyzing
-        </Badge>
-      );
-      if (live.phase === "done") return (
-        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
-          <CheckCircle2 className="w-3 h-3 mr-1" /> Analyzed
-        </Badge>
-      );
-      if (live.phase === "error") return (
-        <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" /> Error</Badge>
-      );
-    }
-    switch (dbStatus) {
-      case "analyzed": return (
-        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
-          <CheckCircle2 className="w-3 h-3 mr-1" /> Analyzed
-        </Badge>
-      );
-      case "analyzing": return (
-        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
-          <Loader2 className="w-3 h-3 mr-1 animate-spin" /> Analyzing
-        </Badge>
-      );
-      case "error": return (
-        <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" /> Error</Badge>
-      );
-      default: return <Badge variant="outline" className="text-muted-foreground">Pending</Badge>;
-    }
-  };
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
@@ -428,7 +358,11 @@ export default function DocumentShow() {
                   ) : (
                     <Button
                       size="lg"
-                      className={`shadow-sm text-white ${nomeritPriorStatus === "error" ? "bg-destructive hover:bg-destructive/90" : "bg-violet-700 hover:bg-violet-800"}`}
+                      className={`shadow-sm text-white ${
+                        nomeritPriorStatus === "error"
+                          ? "bg-destructive hover:bg-destructive/90"
+                          : "bg-violet-700 hover:bg-violet-800"
+                      }`}
                       onClick={handleRunNomeritAnalysis}
                       disabled={isRunningNomerit}
                       title={nomeritPriorStatus === "error" ? "Previous analysis failed — click to retry" : undefined}
@@ -479,12 +413,7 @@ export default function DocumentShow() {
                   Clean Transcript
                 </Button>
                 {liveFindings.length > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleExport}
-                    title="Export all findings to a print-ready report"
-                  >
+                  <Button variant="outline" size="sm" onClick={handleExport} title="Export all findings to a print-ready report">
                     <FileDown className="w-3.5 h-3.5 mr-1.5" />
                     Export PDF
                   </Button>
@@ -549,15 +478,11 @@ export default function DocumentShow() {
                     <div className="flex flex-col items-center justify-center h-full text-muted-foreground space-y-4">
                       <Loader2 className="w-8 h-8 animate-spin opacity-50" />
                       <p className="font-serif text-lg">Reading the record...</p>
-                      {statusMessage && (
-                        <p className="text-xs font-mono text-center max-w-xs">{statusMessage}</p>
-                      )}
+                      {statusMessage && <p className="text-xs font-mono text-center max-w-xs">{statusMessage}</p>}
                     </div>
                   ) : doc.status === "analyzed" ? (
                     <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed border-border rounded-xl bg-muted/10">
-                      <p className="font-serif text-xl text-foreground mb-2">
-                        Nothing was skipped. Every word was read.
-                      </p>
+                      <p className="font-serif text-xl text-foreground mb-2">Nothing was skipped. Every word was read.</p>
                       <p className="text-muted-foreground">No actionable findings in this selection.</p>
                     </div>
                   ) : (
