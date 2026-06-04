@@ -1,469 +1,1179 @@
-import { useState, useEffect } from "react";
-import { useParams, Link, useLocation } from "wouter";
-import { useGetDocument, getGetDocumentQueryKey, useListFindings, getListFindingsQueryKey } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useParams, Link } from "wouter";
+import { useGetCase, getGetCaseQueryKey, useListDocuments, getListDocumentsQueryKey, useCreateDocument, useDeleteDocument, useListCourtSessions, getListCourtSessionsQueryKey, useGenerateCaseStrateg[...] } from "@workspace/api-client-react";
+import type { CreateDocumentBodyDocumentType } from "@workspace/api-client-react";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Play, Loader2, ShieldOff, Trash2, FileDown, Scale, ExternalLink, CheckCircle2, AlertCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import FindingCard from "@/components/findings/FindingCard";
-import CategoryFilter from "@/components/categories/CategoryFilter";
-import type { Finding } from "@workspace/api-client-react";
+import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch, Milestone, User, User[...] } from "lucide-react";
+import { format } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { useUserMode, type UserMode } from "@/contexts/UserModeContext";
+import { MODE_LABELS } from "@/lib/modeContent";
+import { parseJurisdictionBadge } from "@/lib/jurisdictionBadge";
 
-export default function DocumentShow() {
+const MODE_ICONS: Record<UserMode, React.ReactNode> = {
+  inmate: <User className="w-3 h-3" />,
+  advocate: <Users className="w-3 h-3" />,
+  attorney: <Scale className="w-3 h-3" />,
+  appellate: <BookOpen className="w-3 h-3" />,
+};
+
+type CaseFindingSummary = {
+  id: number;
+  issueTitle: string;
+  survivability: string | null;
+  proceduralStatus: string | null;
+  legalVehicle: string | null;
+  anticipatedBlock: string | null;
+  categoryId: number | null;
+  documentId: number;
+  documentTitle: string;
+  createdAt: string;
+};
+
+type FindingSeverity = "Critical" | "High" | "Medium" | "Low";
+
+function deriveSeverity(survivability: string | null, proceduralStatus: string | null): FindingSeverity {
+  if (survivability === "Strong" && proceduralStatus === "Preserved") return "Critical";
+  if (survivability === "Strong") return "High";
+  if (survivability === "Moderate") return "Medium";
+  return "Low";
+}
+
+const SEVERITY_ORDER: Record<FindingSeverity, number> = {
+  Critical: 0,
+  High: 1,
+  Medium: 2,
+  Low: 3,
+};
+
+const SEVERITY_STYLES: Record<FindingSeverity, string> = {
+  Critical: "bg-red-100 text-red-900 dark:bg-red-900/40 dark:text-red-200 border-red-300 dark:border-red-700",
+  High: "bg-orange-100 text-orange-900 dark:bg-orange-900/40 dark:text-orange-200 border-orange-300 dark:border-orange-700",
+  Medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700",
+  Low: "bg-muted text-muted-foreground border-border",
+};
+
+const PROCEDURAL_STYLES: Record<string, string> = {
+  Preserved: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
+  Defaulted: "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800",
+  Unclear: "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800",
+};
+
+type LadderStep = {
+  step: number;
+  court: string;
+  description: string;
+  status: "Completed" | "Pending" | "Available" | "Blocked";
+  completedAt: string | null;
+  notes: string | null;
+};
+
+type FederalReadyClaim = {
+  issueTitle: string;
+  amendment: string;
+  readyReason: string;
+};
+
+type ReliefPathway = {
+  id: number;
+  caseId: number;
+  jurisdiction: string | null;
+  ladderStatus: LadderStep[] | null;
+  aedpaDeadline: string | null;
+  aedpaTolled: boolean;
+  aedpaIsEstimate?: boolean;
+  federalReadyClaims: FederalReadyClaim[] | null;
+  martinezApplies: boolean | null;
+  martinezReason?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+const LADDER_SHORT: Record<number, string> = {
+  1: "Trial Court",
+  2: "Court of Appeals",
+  3: "State Supreme Court",
+  4: "U.S. District Court",
+  5: "Circuit Court of Appeals",
+  6: "SCOTUS",
+};
+
+type PathwayResult =
+  | { status: "ok"; data: ReliefPathway }
+  | { status: "not_found" }
+  | { status: "unsupported_jurisdiction" }
+  | { status: "error" };
+
+function truncateSentences(text: string, n: number): string {
+  const sentences = text.match(/[^.!?]+[.!?]+/g) ?? [text];
+  return sentences.slice(0, n).join(" ").trim();
+}
+
+type LiveStatus = {
+  phase: "running" | "done" | "error";
+  message: string;
+  findingCount: number;
+};
+
+export default function CaseShow() {
   const params = useParams();
-  const caseId = parseInt(params.caseId || "0", 10);
-  const documentId = parseInt(params.id || "0", 10);
-  const [, navigate] = useLocation();
+  const caseId = parseInt(params.id || "0", 10);
+  const { mode, setMode } = useUserMode();
+  const { data: currentCase, isLoading: caseLoading } = useGetCase(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseQueryKey(caseId) } });
+  const { data: documents, isLoading: docsLoading } = useListDocuments(caseId, { query: { enabled: !!caseId, queryKey: getListDocumentsQueryKey(caseId) } });
+  const { data: strategyData, isLoading: strategyLoading } = useGetCaseStrategy(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseStrategyQueryKey(caseId) } });
+  const { data: courtSessions } = useListCourtSessions(caseId, { query: { enabled: !!caseId, queryKey: getListCourtSessionsQueryKey(caseId) } });
+  const { data: pathwayResult, isLoading: reliefLoading } = useQuery<PathwayResult>({
+    queryKey: ["relief-pathway", caseId],
+    queryFn: async () => {
+      const res = await fetch(`/api/cases/${caseId}/relief-pathway`);
+      if (res.status === 404) return { status: "not_found" } as PathwayResult;
+      if (res.status === 422) return { status: "unsupported_jurisdiction" } as PathwayResult;
+      if (!res.ok) return { status: "error" } as PathwayResult;
+      const data = await res.json();
+      return { status: "ok", data } as PathwayResult;
+    },
+    enabled: !!caseId,
+    retry: false,
+  });
+  const reliefPathway = pathwayResult?.status === "ok" ? pathwayResult.data : null;
+  const [federalExpanded, setFederalExpanded] = useState(true);
+  const [findingsExpanded, setFindingsExpanded] = useState(true);
+  const [showAllFindings, setShowAllFindings] = useState(false);
 
-  const {  doc, isLoading: docLoading } = useGetDocument(caseId, documentId, {
-    query: { enabled: !!documentId, queryKey: getGetDocumentQueryKey(caseId, documentId) },
+  const { data: caseFindingsRaw, isLoading: findingsLoading } = useQuery<CaseFindingSummary[]>({
+    queryKey: ["case-findings-summary", caseId],
+    queryFn: async () => {
+      const res = await fetch(`/api/cases/${caseId}/findings`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!caseId,
   });
 
-  const {  initialFindings, isLoading: findingsLoading } = useListFindings(caseId, documentId, {
-    query: { enabled: !!documentId, queryKey: getListFindingsQueryKey(caseId, documentId) },
+  const caseFindings = (caseFindingsRaw ?? []).slice().sort((a, b) => {
+    const aOrder = SEVERITY_ORDER[deriveSeverity(a.survivability, a.proceduralStatus)];
+    const bOrder = SEVERITY_ORDER[deriveSeverity(b.survivability, b.proceduralStatus)];
+    return aOrder - bOrder;
   });
 
-  const [liveFindings, setLiveFindings] = useState<Finding[]>([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState<Set<number>>(new Set());
-  const [isRedacting, setIsRedacting] = useState(false);
-  const [redactedContent, setRedactedContent] = useState<string | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string>("");
-  const [isRunningNomerit, setIsRunningNomerit] = useState(false);
-  const [nomeritStatus, setNomeritStatus] = useState<string>("");
-  const [nomeritComplete, setNomeritComplete] = useState(false);
-  const [nomeritPriorStatus, setNomeritPriorStatus] = useState<"error" | null>(null);
-
+  const createDocument = useCreateDocument();
+  const deleteDocument = useDeleteDocument();
+  const generateStrategy = useGenerateCaseStrategy();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (initialFindings) setLiveFindings(initialFindings);
-  }, [initialFindings]);
+  const strategy = strategyData?.strategy;
+  const hasAnalysis = currentCase?.hasAnalysis;
 
-  useEffect(() => {
-    if (doc?.documentType === "no_merit_report") {
-      fetch(`/api/cases/${caseId}/documents/${documentId}/nomerit-analysis`)
-        .then((r) => {
-          if (!r.ok) return null;
-          return r.json();
-        })
-        .then((data) => {
-          if (!data) return;
-          if (data.status === "complete") setNomeritComplete(true);
-          if (data.status === "error") setNomeritPriorStatus("error");
-        })
-        .catch(() => {});
-    }
-  }, [doc, caseId, documentId]);
+  const pendingDocs = (documents ?? []).filter((d) => d.status === "pending" || d.status === "error");
+  const hasPendingDocs = pendingDocs.length > 0;
+  const hasAnyFindings = (documents ?? []).some((d) => (d.findingCount ?? 0) > 0);
 
-  const handleRunNomeritAnalysis = async () => {
-    setIsRunningNomerit(true);
-    setNomeritPriorStatus(null);
-    setNomeritStatus("Starting no-merit analysis...");
-    try {
-      const response = await fetch(`/api/cases/${caseId}/documents/${documentId}/analyze-nomerit`, {
-        method: "POST",
-      });
-      if (!response.body) throw new Error("No response body");
+  // Analyze All state
+  const [isRunningAll, setIsRunningAll] = useState(false);
+  const [liveStatuses, setLiveStatuses] = useState<Map<number, LiveStatus>>(new Map());
+  const [batchProgress, setBatchProgress] = useState<{ done: number; total: number } | null>(null);
+  const abortRef = useRef(false);
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-
-        for (const line of lines) {
-          if (!line.startsWith("")) continue;
-          const jsonStr = line.slice(5).trim();
-          if (!jsonStr) continue;
-
-          try {
-            const event = JSON.parse(jsonStr);
-            if (event.type === "status") {
-              setNomeritStatus(event.message ?? "");
-            } else if (event.type === "done") {
-              setIsRunningNomerit(false);
-              setNomeritStatus("");
-              setNomeritComplete(true);
-              toast({ title: "No-Merit Analysis Complete", description: "IAAC arguments and draft motion are ready." });
-              navigate(`/cases/${caseId}/documents/${documentId}/nomerit`);
-            } else if (event.type === "error") {
-              setIsRunningNomerit(false);
-              setNomeritStatus("");
-              toast({ title: "Analysis Error", description: event.message, variant: "destructive" });
-            }
-          } catch {
-            console.error("Failed to parse SSE event", line);
-          }
-        }
-      }
-    } catch (error) {
-      console.error(error);
-      setIsRunningNomerit(false);
-      setNomeritStatus("");
-      toast({
-        title: "Connection Error",
-        description: "Failed to connect to no-merit analysis stream.",
-        variant: "destructive",
-      });
-    }
+  const setLive = (docId: number, update: Partial<LiveStatus>) => {
+    setLiveStatuses((prev) => {
+      const next = new Map(prev);
+      const cur = next.get(docId) ?? { phase: "running", message: "", findingCount: 0 };
+      next.set(docId, { ...cur, ...update });
+      return next;
+    });
   };
 
-  const handleRunAnalysis = async () => {
-    setIsAnalyzing(true);
-    setLiveFindings([]);
-    setStatusMessage("Starting analysis...");
-
+  const analyzeDocument = async (docId: number): Promise<void> => {
+    setLive(docId, { phase: "running", message: "Starting analysis…", findingCount: 0 });
     try {
-      const response = await fetch(`/api/cases/${caseId}/documents/${documentId}/analyze`, {
-        method: "POST",
-      });
+      const response = await fetch(`/api/cases/${caseId}/documents/${docId}/analyze?mode=${mode}`, { method: "POST" });
+
+      if (!response.ok) {
+        let msg = "Analysis failed.";
+        try { const b = await response.json(); if (b?.error) msg = b.error; } catch { /* ignore */ }
+        setLive(docId, { phase: "error", message: msg });
+        return;
+      }
 
       if (!response.body) throw new Error("No response body");
-
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+      let findingCount = 0;
 
       while (true) {
+        if (abortRef.current) { reader.cancel(); return; }
         const { value, done } = await reader.read();
         if (done) break;
-
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
         buffer = lines.pop() ?? "";
-
         for (const line of lines) {
-          if (!line.startsWith("")) continue;
+          if (!line.startsWith("data:")) continue;
           const jsonStr = line.slice(5).trim();
           if (!jsonStr) continue;
-
           try {
             const event = JSON.parse(jsonStr);
             if (event.type === "finding") {
-              setLiveFindings((prev) => [...prev, event.data]);
+              findingCount++;
+              setLive(docId, { phase: "running", message: `${findingCount} finding${findingCount === 1 ? "" : "s"} found…`, findingCount });
             } else if (event.type === "status") {
-              setStatusMessage(event.message ?? "");
-            } else if (event.type === "cross_case_done") {
-              queryClient.invalidateQueries({ queryKey: getListFindingsQueryKey(caseId, documentId) });
+              setLive(docId, { message: event.message ?? "" });
             } else if (event.type === "done") {
-              setIsAnalyzing(false);
-              setStatusMessage("");
-              queryClient.invalidateQueries({ queryKey: getGetDocumentQueryKey(caseId, documentId) });
-              queryClient.invalidateQueries({ queryKey: getListFindingsQueryKey(caseId, documentId) });
-              toast({ title: "Analysis Complete", description: "We went through every line. Here's everything we found." });
+              setLive(docId, { phase: "done", message: `${findingCount} finding${findingCount === 1 ? "" : "s"} extracted`, findingCount });
             } else if (event.type === "error") {
-              setIsAnalyzing(false);
-              setStatusMessage("");
-              toast({ title: "Analysis Error", description: event.message, variant: "destructive" });
+              setLive(docId, { phase: "error", message: event.message ?? "Analysis failed." });
             }
-          } catch {
-            console.error("Failed to parse SSE event", line);
-          }
+          } catch { /* ignore malformed SSE */ }
         }
       }
-    } catch (error) {
-      console.error(error);
-      setIsAnalyzing(false);
-      setStatusMessage("");
-      toast({ title: "Connection Error", description: "Failed to connect to analysis stream.", variant: "destructive" });
-    }
-  };
-
-  const handleCleanTranscript = async () => {
-    if (!doc) return;
-    setIsRedacting(true);
-    try {
-      const response = await fetch("/api/redact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: redactedContent ?? doc.content }),
-      });
-      const data = await response.json();
-      setRedactedContent(data.redacted);
-      toast({
-        title: "Transcript Cleaned",
-        description:
-          data.changesCount > 0
-            ? `${data.changesCount} sensitive item(s) redacted (SSN, DOB, phone, email).`
-            : "No sensitive data patterns found.",
-      });
     } catch {
-      toast({ title: "Error", description: "Failed to redact document.", variant: "destructive" });
+      setLive(docId, { phase: "error", message: "Connection lost during analysis." });
+    }
+  };
+
+  const handleAnalyzeAll = async () => {
+    const queue = (documents ?? []).filter((d) => d.status === "pending" || d.status === "error");
+    if (queue.length === 0) return;
+
+    abortRef.current = false;
+    setIsRunningAll(true);
+    setBatchProgress({ done: 0, total: queue.length });
+    setLiveStatuses(new Map());
+
+    let completed = 0;
+    for (const doc of queue) {
+      if (abortRef.current) break;
+      await analyzeDocument(doc.id);
+      completed++;
+      setBatchProgress({ done: completed, total: queue.length });
+    }
+
+    setIsRunningAll(false);
+    queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
+    queryClient.invalidateQueries({ queryKey: getGetCaseQueryKey(caseId) });
+    queryClient.invalidateQueries({ queryKey: ["case-findings-summary", caseId] });
+    toast({
+      title: "Analysis Complete",
+      description: `All ${queue.length} document${queue.length === 1 ? "" : "s"} have been processed.`,
+    });
+  };
+
+  const handleDeleteDocument = (docId: number) => {
+    deleteDocument.mutate(
+      { caseId, id: docId },
+      {
+        onSuccess: () => {
+          setConfirmDeleteId(null);
+          queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
+          queryClient.invalidateQueries({ queryKey: getGetCaseQueryKey(caseId) });
+          queryClient.invalidateQueries({ queryKey: ["case-findings-summary", caseId] });
+          toast({ title: "Document removed" });
+        },
+        onError: () => {
+          toast({ title: "Error", description: "Could not delete document.", variant: "destructive" });
+        },
+      },
+    );
+  };
+
+  const handleGenerateStrategy = () => {
+    generateStrategy.mutate(
+      { id: caseId },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetCaseStrategyQueryKey(caseId) });
+          toast({ title: "Case Strategy Generated", description: "Cumulative error brief and strategic roadmap are ready." });
+        },
+        onError: () => {
+          toast({ title: "Error", description: "Failed to generate strategy. Make sure documents have been analyzed first.", variant: "destructive" });
+        },
+      },
+    );
+  };
+
+  const [open, setOpen] = useState(false);
+  const [docTitle, setDocTitle] = useState("");
+  const [docType, setDocType] = useState<CreateDocumentBodyDocumentType>("transcript");
+  const [docContent, setDocContent] = useState("");
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [inputMode, setInputMode] = useState<"paste" | "upload">("paste");
+
+  const handleCreateDocument = () => {
+    if (!docTitle || !docContent) {
+      toast({ title: "Validation Error", description: "Title and content are required.", variant: "destructive" });
+      return;
+    }
+    createDocument.mutate(
+      { caseId, data: { title: docTitle, documentType: docType, content: docContent } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
+          setOpen(false); setDocTitle(""); setDocContent("");
+          toast({ title: "Document Added", description: "The document is now in the workspace." });
+        },
+        onError: () => { toast({ title: "Error", description: "Failed to add document.", variant: "destructive" }); },
+      },
+    );
+  };
+
+  const readFileAsText = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
+      reader.readAsText(file);
+    });
+  };
+
+  const handleUploadDocument = async () => {
+    if (uploadFiles.length === 0) {
+      toast({ title: "Validation Error", description: "Please select at least one file.", variant: "destructive" });
+      return;
+    }
+    setIsUploading(true);
+    try {
+      // Try FormData first (works on desktop and modern iOS)
+      const formData = new FormData();
+      for (const file of uploadFiles) formData.append("files", file);
+      formData.append("documentType", docType);
+
+      let res = await fetch(`/api/cases/${caseId}/documents/upload`, { method: "POST", body: formData });
+      
+      // If upload fails and we're on a device that might not support FormData well, fall back to text extraction
+      if (!res.ok && uploadFiles.length > 0) {
+        toast({ title: "Upload Note", description: "Using fallback method for file conversion…", variant: "default" });
+        
+        // Read files as text and create documents via paste endpoint
+        for (const file of uploadFiles) {
+          try {
+            const content = await readFileAsText(file);
+            if (!content.trim()) {
+              toast({ title: "Warning", description: `${file.name} appears to be empty or binary.`, variant: "destructive" });
+              continue;
+            }
+            const title = file.name.replace(/\.[^.]+$/, "");
+            
+            // Use the paste endpoint instead
+            const pasteRes = await fetch(`/api/cases/${caseId}/documents`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ title, documentType: docType, content }),
+            });
+            
+            if (!pasteRes.ok) {
+              throw new Error(`Failed to create document: ${pasteRes.statusText}`);
+            }
+          } catch (err) {
+            const errMsg = err instanceof Error ? err.message : "Failed to process file";
+            toast({ title: "File Error", description: `${file.name}: ${errMsg}`, variant: "destructive" });
+          }
+        }
+        queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
+        setOpen(false);
+        setUploadFiles([]);
+        toast({ title: "Documents Added", description: "Files converted and documents are ready for analysis." });
+        return;
+      }
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Upload failed" }));
+        toast({ title: "Upload Error", description: err.error ?? "Upload failed", variant: "destructive" });
+        return;
+      }
+      const created: { title: string }[] = await res.json().catch(() => []);
+      queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
+      setOpen(false); setDocTitle(""); setUploadFiles([]);
+      const count = created.length;
+      toast({ title: count === 1 ? "Document Uploaded" : `${count} Documents Uploaded`, description: "Text extracted and documents are ready for analysis." });
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : "Failed to upload file";
+      toast({ title: "Upload Error", description: errMsg, variant: "destructive" });
     } finally {
-      setIsRedacting(false);
+      setIsUploading(false);
     }
   };
 
-  const handleClearAll = () => {
-    if (!window.confirm("Clear all findings from this view? (Saved findings in the database are not deleted.)")) return;
-    setLiveFindings([]);
-    setRedactedContent(null);
-    setSelectedCategories(new Set());
-    setStatusMessage("");
-    toast({ title: "View Cleared", description: "Findings hidden from view. Re-run analysis to reload." });
-  };
-
-  const handleExport = () => {
-    if (!doc || liveFindings.length === 0) return;
-
-    const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>${doc.title} — CaseLight Findings Report</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Georgia, serif; font-size: 12pt; line-height: 1.5; color: #111; padding: 1in; }
-    .header { border-bottom: 2pt solid #111; padding-bottom: 10pt; margin-bottom: 20pt; }
-    .header h1 { font-size: 18pt; font-weight: bold; }
-    .header p { font-size: 10pt; color: #555; margin-top: 4pt; }
-    .privilege { background: #222; color: #fff; text-align: center; padding: 8pt; font-size: 9pt; letter-spacing: 1px; margin-bottom: 20pt; }
-    .finding { page-break-inside: avoid; border: 1pt solid #ccc; border-radius: 4pt; padding: 14pt; margin-bottom: 16pt; }
-    .finding-num { font-size: 9pt; color: #666; font-family: monospace; margin-bottom: 4pt; }
-    .finding-title { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; }
-    .citation { font-size: 9pt; font-family: monospace; color: #555; margin-bottom: 8pt; }
-    .excerpt { background: #f7f7f7; border-left: 3pt solid #888; padding: 8pt 10pt; font-style: italic; font-size: 11pt; margin-bottom: 10pt; }
-    .section-label { font-size: 9pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #444; margin-bottom: 4pt; }
-    .analysis { font-size: 11pt; margin-bottom: 10pt; }
-    .precedent { background: #f0f4ff; border: 1pt solid #ccd; padding: 8pt; margin-bottom: 10pt; font-size: 10pt; }
-    .footer { margin-top: 30pt; border-top: 1pt solid #ccc; padding-top: 10pt; font-size: 9pt; color: #666; text-align: center; }
-  </style>
-</head>
-<body>
-  <div class="privilege">PRIVILEGED &amp; CONFIDENTIAL — ATTORNEY WORK-PRODUCT — DO NOT DISCLOSE</div>
-  <div class="header">
-    <h1>${doc.title}</h1>
-    <p>Document Type: ${doc.documentType.replace(/_/g, " ")} &nbsp;|&nbsp; Generated: ${new Date().toLocaleString()} &nbsp;|&nbsp; Findings: ${liveFindings.length}</p>
-  </div>
-  ${liveFindings
-    .map(
-      (f, i) => `
-  <div class="finding">
-    <div class="finding-num">Finding #${i + 1}</div>
-    <div class="finding-title">${f.issueTitle}</div>
-    ${f.pageNumber != null || f.lineNumber != null ? `<div class="citation">📄 ${f.pageNumber != null ? `Page ${f.pageNumber}` : ""}${f.lineNumber != null ? ` · Line ${f.lineNumber}` : ""}</div>` : ""}
-    <div class="excerpt">"${f.transcriptExcerpt}"</div>
-    <div class="section-label">Legal Analysis</div>
-    <div class="analysis">${f.legalAnalysis}</div>
-    ${f.precedentName ? `<div class="precedent"><strong>${f.precedentName}</strong>${f.precedentCitation ? ` — ${f.precedentCitation}` : ""}${f.precedentType ? ` [${f.precedentType}]` : ""}<br/>${f.courtRuling ? `<em>Ruling:</em> ${f.courtRuling}<br/>` : ""}${f.materialSimilarity ? `<em>Similarity:</em> ${f.materialSimilarity}` : ""}</div>` : ""}
-  </div>`,
-    )
-    .join("\n")}
-  <div class="footer">Generated by CaseLight &mdash; For attorney use only &mdash; Not for public disclosure</div>
-</body>
-</html>`;
-
-    const win = window.open("", "_blank");
-    if (win) {
-      win.document.write(html);
-      win.document.close();
-      win.focus();
-      setTimeout(() => win.print(), 500);
+  const getStatusBadge = (docId: number, dbStatus: string) => {
+    const live = liveStatuses.get(docId);
+    if (live) {
+      if (live.phase === "running") return (
+        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+          <Loader2 className="w-3 h-3 mr-1 animate-spin" /> Analyzing
+        </Badge>
+      );
+      if (live.phase === "done") return (
+        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
+          <CheckCircle2 className="w-3 h-3 mr-1" /> Analyzed
+        </Badge>
+      );
+      if (live.phase === "error") return (
+        <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" /> Error</Badge>
+      );
+    }
+    switch (dbStatus) {
+      case "analyzed": return (
+        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
+          <CheckCircle2 className="w-3 h-3 mr-1" /> Analyzed
+        </Badge>
+      );
+      case "analyzing": return (
+        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+          <Loader2 className="w-3 h-3 mr-1 animate-spin" /> Analyzing
+        </Badge>
+      );
+      case "error": return (
+        <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" /> Error</Badge>
+      );
+      default: return <Badge variant="outline" className="text-muted-foreground">Pending</Badge>;
     }
   };
-
-  const filteredFindings = liveFindings.filter((f) => {
-    if (selectedCategories.size === 0) return true;
-    if (f.categoryId == null) return false;
-    return selectedCategories.has(f.categoryId);
-  });
-
-  const displayContent = redactedContent ?? doc?.content ?? "";
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
-        <Link
-          href={`/cases/${caseId}`}
-          className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
+      <main className="flex-1 container mx-auto px-4 py-8 max-w-5xl">
+        <Link href="/" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-6 transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Case
+          Back to Home
         </Link>
 
-        {docLoading ? (
-          <Skeleton className="h-12 w-1/2" />
-        ) : doc ? (
-          <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-6">
+        {caseLoading ? (
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-2/3" />
+            <Skeleton className="h-4 w-1/3" />
+          </div>
+        ) : currentCase ? (
+          <div className="space-y-8">
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
               <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <Badge variant="outline" className="uppercase font-mono text-[10px] tracking-wider">
-                    {doc.documentType.replace("_", " ")}
-                  </Badge>
-                  {doc.status === "analyzing" || isAnalyzing ? (
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                      <Loader2 className="w-3 h-3 mr-1 animate-spin" /> Analyzing Record
-                    </Badge>
-                  ) : doc.status === "pending" ? (
-                    <Badge variant="outline">Pending Analysis</Badge>
-                  ) : null}
-                  {redactedContent && (
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      <ShieldOff className="w-3 h-3 mr-1" /> Redacted View
-                    </Badge>
-                  )}
+                <h1 className="text-3xl font-serif font-medium tracking-tight text-foreground">{currentCase.title}</h1>
+                <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-sm text-muted-foreground">
+                  {currentCase.caseNumber && <span>Case #: <span className="font-medium text-foreground">{currentCase.caseNumber}</span></span>}
+                  {currentCase.defendantName && <span>Defendant: <span className="font-medium text-foreground">{currentCase.defendantName}</span></span>}
+                  {(() => {
+                    const jBadge = parseJurisdictionBadge(currentCase.jurisdiction);
+                    if (!jBadge) return null;
+                    return (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5 shrink-0" />
+                          <span className="font-medium text-foreground">{jBadge.displayText}</span>
+                        </span>
+                        {jBadge.circuit && (
+                          <Link href={`/cases/${caseId}/relief`}>
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-b[...]
+                              {jBadge.circuit}
+                            </span>
+                          </Link>
+                        )}
+                      </span>
+                    );
+                  })()}
                 </div>
-                <h1 className="text-3xl font-serif font-medium tracking-tight">{doc.title}</h1>
-                {isAnalyzing && statusMessage && (
-                  <p className="mt-1 text-xs text-muted-foreground font-mono">{statusMessage}</p>
-                )}
+                <div className="mt-3">
+                  <Select value={mode} onValueChange={(v) => setMode(v as UserMode)}>
+                    <SelectTrigger className="h-7 text-xs border-border/50 bg-muted/30 hover:bg-muted/60 w-auto gap-1.5 px-2 focus:ring-0 focus:ring-offset-0 text-muted-foreground">
+                      {MODE_ICONS[mode]}
+                      <span>Viewing as: <span className="font-medium text-foreground">{MODE_LABELS[mode]}</span></span>
+                    </SelectTrigger>
+                    <SelectContent align="start">
+                      <SelectItem value="inmate">
+                        <div className="flex items-center gap-2">
+                          <User className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span>Inmate</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="advocate">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span>Advocate</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="attorney">
+                        <div className="flex items-center gap-2">
+                          <Scale className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span>Attorney</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="appellate">
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span>Appellate</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-
-              <div className="flex flex-wrap gap-2">
-                {doc.documentType === "no_merit_report" && (
-                  nomeritComplete ? (
-                    <Link href={`/cases/${caseId}/documents/${documentId}/nomerit`}>
-                      <Button size="lg" className="shadow-sm bg-violet-700 hover:bg-violet-800 text-white">
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        View No-Merit Analysis
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Button
-                      size="lg"
-                      className={`shadow-sm text-white ${nomeritPriorStatus === "error" ? "bg-destructive hover:bg-destructive/90" : "bg-violet-700 hover:bg-violet-800"}`}
-                      onClick={handleRunNomeritAnalysis}
-                      disabled={isRunningNomerit}
-                      title={nomeritPriorStatus === "error" ? "Previous analysis failed — click to retry" : undefined}
-                    >
-                      {isRunningNomerit ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          {nomeritStatus || "Analyzing..."}
-                        </>
-                      ) : nomeritPriorStatus === "error" ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Retry No-Merit Analysis
-                        </>
-                      ) : (
-                        <>
-                          <Scale className="w-4 h-4 mr-2" />
-                          Run No-Merit Analysis
-                        </>
-                      )}
+              <div className="flex gap-2 shrink-0 flex-wrap">
+                <Button variant="outline" size="sm" onClick={() => window.print()}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </Button>
+                <Link href={`/cases/${caseId}/pattern`}>
+                  <Button variant="outline" size="sm" className="border-violet-300 text-violet-700 hover:bg-violet-50 dark:border-violet-700 dark:text-violet-300 dark:hover:bg-violet-900/20">
+                    <GitBranch className="w-4 h-4 mr-2" />
+                    Pattern Analysis
+                  </Button>
+                </Link>
+                <Link href={`/cases/${caseId}/relief`}>
+                  <Button variant="outline" size="sm" className="border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-900/20">
+                    <Milestone className="w-4 h-4 mr-2" />
+                    Relief Pathway
+                  </Button>
+                </Link>
+                {hasAnyFindings ? (
+                  <Link href={`/cases/${caseId}/court/new`}>
+                    <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                      <Scale className="w-4 h-4 mr-2" />
+                      Run Court Simulator
                     </Button>
-                  )
-                )}
-                {(doc.status === "pending" || doc.status === "error") && !isAnalyzing && (
-                  <Button onClick={handleRunAnalysis} size="lg" className="shadow-sm">
-                    <Play className="w-4 h-4 mr-2 fill-current" />
-                    Run Analysis
+                  </Link>
+                ) : (
+                  <Button size="sm" disabled title="Analyze at least one document first">
+                    <Scale className="w-4 h-4 mr-2" />
+                    Run Court Simulator
                   </Button>
                 )}
-                {doc.status === "analyzed" && !isAnalyzing && (
-                  <Button onClick={handleRunAnalysis} variant="outline" size="sm">
-                    <Play className="w-3 h-3 mr-1.5 fill-current" />
-                    Re-run
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCleanTranscript}
-                  disabled={isRedacting}
-                  title="Auto-redact SSN, DOB, phone numbers, and emails from the document view"
-                >
-                  {isRedacting ? (
-                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                  ) : (
-                    <ShieldOff className="w-3.5 h-3.5 mr-1.5" />
-                  )}
-                  Clean Transcript
-                </Button>
-                {liveFindings.length > 0 && (
-                  <Button variant="outline" size="sm" onClick={handleExport} title="Export all findings to a print-ready report">
-                    <FileDown className="w-3.5 h-3.5 mr-1.5" />
-                    Export PDF
-                  </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleClearAll}
-                  className="text-destructive/70 hover:text-destructive hover:bg-destructive/5"
-                  title="Clear all findings from this view"
-                >
-                  <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                  Clear All
-                </Button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-5 h-[600px] lg:h-[calc(100vh-250px)] overflow-hidden rounded-xl border border-border bg-card flex flex-col">
-                <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
-                  <span className="text-xs font-mono font-medium text-muted-foreground uppercase tracking-wider">
-                    Source Document
-                  </span>
-                  {redactedContent && (
-                    <button className="text-[10px] text-muted-foreground underline hover:text-foreground" onClick={() => setRedactedContent(null)}>
-                      Show Original
-                    </button>
-                  )}
+            {currentCase.notes && (
+              <div className="bg-muted/50 p-4 rounded-lg text-sm text-foreground/80 border border-border/50">
+                {currentCase.notes}
+              </div>
+            )}
+
+            {hasAnalysis && (
+              <div className="border border-amber-200 dark:border-amber-800/60 rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-4 bg-amber-50/60 dark:bg-amber-900/10 border-b border-amber-200 dark:border-amber-800/60">
+                  <div className="flex items-center gap-2">
+                    <Swords className="w-5 h-5 text-amber-600 dark:text-amber-500" />
+                    <h2 className="text-lg font-serif font-medium text-amber-900 dark:text-amber-200">Case Strategy</h2>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleGenerateStrategy}
+                    disabled={generateStrategy.isPending}
+                    className="border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-900/30"
+                  >
+                    {generateStrategy.isPending ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating...</>
+                    ) : strategy ? (
+                      <><RefreshCw className="w-4 h-4 mr-2" />Regenerate</>
+                    ) : (
+                      <><Swords className="w-4 h-4 mr-2" />Generate Strategy</>
+                    )}
+                  </Button>
                 </div>
-                <div className="p-4 overflow-y-auto flex-1 font-mono text-sm leading-relaxed whitespace-pre-wrap text-foreground/90 selection:bg-primary/20">
-                  {displayContent}
+                {strategyLoading ? (
+                  <div className="p-5 space-y-3">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-5/6" />
+                  </div>
+                ) : strategy ? (
+                  <div className="divide-y divide-amber-100 dark:divide-amber-800/30">
+                    <div className="p-5 space-y-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                        <Swords className="w-4 h-4" /> Cumulative Error Brief
+                      </div>
+                      <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{strategy.cumulativeErrorBrief}</div>
+                    </div>
+                    <div className="p-5 space-y-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                        <MapIcon className="w-4 h-4" /> Strategic Roadmap
+                      </div>
+                      <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{strategy.strategicRoadmap}</div>
+                    </div>
+                    <div className="px-5 py-2 bg-amber-50/30 dark:bg-amber-900/5 text-xs text-muted-foreground">
+                      Last generated: {format(new Date(strategy.updatedAt), "MMM d, yyyy 'at' h:mm a")}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center">
+                    <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                      Generate a cumulative error brief and prioritized strategic roadmap based on all findings in this case.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {courtSessions && courtSessions.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Gavel className="w-5 h-5 text-muted-foreground" />
+                  <h2 className="text-xl font-serif font-medium">Simulation History</h2>
+                </div>
+                <div className="grid gap-2">
+                  {courtSessions.map((s) => (
+                    <Link key={s.id} href={`/cases/${caseId}/court/${s.id}`}>
+                      <div className="group flex items-center p-4 bg-card border border-border rounded-xl hover:bg-accent transition-all cursor-pointer">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 shrink-0 ${s.defenseWon ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"[...]
+                          <Scale className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground truncate">{s.verdictRating ?? "Simulation"}</p>
+                          <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                            <Clock className="w-3 h-3" />
+                            <span>{format(new Date(s.createdAt), "MMM d, yyyy 'at' h:mm a")}</span>
+                            <span>•</span>
+                            <span className="capitalize">{s.simulationMode.replace("_", " ")}</span>
+                            <span>•</span>
+                            <span>{s.totalRounds} rounds</span>
+                          </div>
+                        </div>
+                        <div className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ml-3 ${s.defenseWon ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}>
+                          {s.defenseWon ? "Defense Win" : "State Win"}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               </div>
+            )}
 
-              <div className="lg:col-span-7 flex flex-col h-[600px] lg:h-[calc(100vh-250px)]">
-                <CategoryFilter selectedCategories={selectedCategories} onChange={setSelectedCategories} />
+            {/* Federal Readiness Panel */}
+            <div className="border border-indigo-200 dark:border-indigo-800/60 rounded-xl overflow-hidden">
+              <button
+                className="w-full flex items-center justify-between px-5 py-4 bg-indigo-50/60 dark:bg-indigo-900/10 border-b border-indigo-200 dark:border-indigo-800/60 hover:bg-indigo-100/60 dar[...]
+                onClick={() => setFederalExpanded((v) => !v)}
+                aria-expanded={federalExpanded}
+              >
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  <h2 className="text-lg font-serif font-medium text-indigo-900 dark:text-indigo-200">Federal Readiness</h2>
+                </div>
+                <div className="flex items-center gap-2">
+                  {reliefPathway && (
+                    <Link href={`/cases/${caseId}/relief`} onClick={(e) => e.stopPropagation()}>
+                      <span className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline px-1">Full Pathway →</span>
+                    </Link>
+                  )}
+                  <ChevronDown className={`w-4 h-4 text-indigo-500 transition-transform duration-200 ${federalExpanded ? "" : "-rotate-90"}`} />
+                </div>
+              </button>
+              {!federalExpanded ? null : reliefLoading ? (
+                <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24 w-full" />)}
+                </div>
+              ) : pathwayResult?.status === "unsupported_jurisdiction" ? (
+                <div className="p-8 text-center space-y-3">
+                  <div className="mx-auto w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Jurisdiction not yet configured</p>
+                    <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
+                      The Federal Readiness engine supports Wisconsin, Illinois, and Minnesota cases. This case's jurisdiction was not recognized — please verify the case jurisdiction field.
+                    </p>
+                  </div>
+                </div>
+              ) : pathwayResult?.status === "not_found" || !pathwayResult ? (
+                <div className="p-8 text-center space-y-4">
+                  <div className="mx-auto w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-indigo-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Federal Readiness not yet assessed</p>
+                    <p className="text-xs text-muted-foreground mt-1">Generate a relief pathway to see exhaustion status, AEDPA countdown, and federal-ready claims.</p>
+                  </div>
+                  <Link href={`/cases/${caseId}/relief`}>
+                    <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                      <Milestone className="w-4 h-4 mr-2" />
+                      Generate Relief Pathway
+                    </Button>
+                  </Link>
+                </div>
+              ) : pathwayResult?.status === "error" ? (
+                <div className="p-6 flex items-center gap-3 text-sm text-muted-foreground">
+                  <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
+                  <span>Could not load federal readiness data. <Link href={`/cases/${caseId}/relief`}><span className="text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">Try the[...]
+                </div>
+              ) : pathwayResult?.status === "ok" ? (
+                <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Block 1: Exhaustion Ladder */}
+                  <div className="space-y-2 md:col-span-2">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Milestone className="w-3.5 h-3.5" /> Exhaustion Ladder
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(reliefPathway.ladderStatus ?? []).sort((a, b) => a.step - b.step).map((step) => {
+                        const label = LADDER_SHORT[step.step] ?? step.court;
+                        const pillClass =
+                          step.status === "Completed"
+                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700"
+                            : step.status === "Available"
+                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-700 ring-1 ring-blue-400 dark:ring-blue-600"
+                            : step.status === "Blocked"
+                            ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 border-red-200 dark:border-red-700"
+                            : "bg-muted text-muted-foreground border-border";
+                        return (
+                          <span key={step.step} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${pillClass}`}>
+                            {step.status === "Completed" && <CheckCircle2 className="w-3 h-3" />}
+                            {step.status === "Available" && <ChevronRight className="w-3 h-3" />}
+                            {label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-                <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-2">
-                  {findingsLoading && !isAnalyzing ? (
-                    <div className="space-y-4">
-                      {[1, 2, 3].map((i) => (
-                        <Skeleton key={i} className="h-48 w-full rounded-xl" />
-                      ))}
+                  {/* Block 2: Federal-Ready Claims */}
+                  <div className="space-y-2 bg-muted/30 border border-border rounded-lg p-4">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Star className="w-3.5 h-3.5" /> Federal-Ready Claims
                     </div>
-                  ) : filteredFindings.length > 0 ? (
-                    filteredFindings.map((finding) => (
-                      <FindingCard
-                        key={finding.id || Math.random()}
-                        finding={finding}
-                        caseId={caseId}
-                        documentId={documentId}
-                        onDeleted={(id) => setLiveFindings((prev) => prev.filter((f) => f.id !== id))}
-                        onUpdated={(updated) => setLiveFindings((prev) => prev.map((f) => (f.id === updated.id ? updated : f)))}
-                      />
-                    ))
-                  ) : isAnalyzing ? (
-                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground space-y-4">
-                      <Loader2 className="w-8 h-8 animate-spin opacity-50" />
-                      <p className="font-serif text-lg">Reading the record...</p>
-                      {statusMessage && <p className="text-xs font-mono text-center max-w-xs">{statusMessage}</p>}
+                    {reliefPathway.federalReadyClaims && reliefPathway.federalReadyClaims.length > 0 ? (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-300 text-sm font-bold"[...]
+                            {reliefPathway.federalReadyClaims.length}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            claim{reliefPathway.federalReadyClaims.length === 1 ? "" : "s"} ready for federal review
+                          </span>
+                        </div>
+                        <ul className="space-y-1 mt-1">
+                          {reliefPathway.federalReadyClaims.slice(0, 3).map((claim, i) => (
+                            <li key={i} className="text-xs text-foreground/80 flex items-start gap-1.5">
+                              <span className="text-indigo-500 mt-0.5 shrink-0">•</span>
+                              <span className="truncate">{claim.issueTitle} <span className="text-muted-foreground">({claim.amendment} Amend.)</span></span>
+                            </li>
+                          ))}
+                          {reliefPathway.federalReadyClaims.length > 3 && (
+                            <li className="text-xs text-muted-foreground pl-3.5">…and {reliefPathway.federalReadyClaims.length - 3} more</li>
+                          )}
+                        </ul>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">No federally-preserved claims identified yet.</p>
+                    )}
+                  </div>
+
+                  {/* Block 3: AEDPA Countdown */}
+                  <div className="space-y-2 bg-muted/30 border border-border rounded-lg p-4">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5" /> AEDPA Countdown
                     </div>
-                  ) : doc.status === "analyzed" ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed border-border rounded-xl bg-muted/10">
-                      <p className="font-serif text-xl text-foreground mb-2">Nothing was skipped. Every word was read.</p>
-                      <p className="text-muted-foreground">No actionable findings in this selection.</p>
+                    {reliefPathway.aedpaTolled ? (
+                      <div className="flex items-start gap-2 p-2 bg-emerald-50 dark:bg-emerald-900/10 rounded-lg">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Clock paused</p>
+                          <p className="text-xs text-emerald-700 dark:text-emerald-400">State proceedings active (§ 2244(d)(2))</p>
+                        </div>
+                      </div>
+                    ) : reliefPathway.aedpaDeadline ? (() => {
+                      const today = new Date(); today.setHours(0, 0, 0, 0);
+                      const deadlineDate = new Date(reliefPathway.aedpaDeadline);
+                      const diffDays = Math.ceil((deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                      const isExpired = diffDays < 0;
+                      const colorClass = isExpired
+                        ? "text-red-900 dark:text-red-200"
+                        : diffDays < 60
+                        ? "text-red-700 dark:text-red-400"
+                        : diffDays < 180
+                        ? "text-amber-700 dark:text-amber-400"
+                        : "text-emerald-700 dark:text-emerald-400";
+                      const bgClass = isExpired
+                        ? "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800"
+                        : diffDays < 60
+                        ? "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800"
+                        : diffDays < 180
+                        ? "bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800"
+                        : "bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800";
+                      return (
+                        <div className={`rounded-lg border p-3 ${bgClass}`}>
+                          <div className={`text-xl font-bold font-mono ${colorClass}`}>
+                            {isExpired ? "Expired" : `${diffDays}d`}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            {isExpired ? "Deadline passed" : "remaining"} — {deadlineDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          </div>
+                          {reliefPathway.aedpaIsEstimate && (
+                            <div className="text-xs text-muted-foreground/70 mt-1 italic">Estimated deadline</div>
+                          )}
+                        </div>
+                      );
+                    })() : (
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                        <Link href={`/cases/${caseId}/relief`}>
+                          <span className="text-xs text-amber-700 dark:text-amber-400 hover:underline cursor-pointer">Calculate deadline →</span>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Block 4: Strongest Federal Argument */}
+                  {(() => {
+                    const rawText =
+                      reliefPathway.federalReadyClaims?.[0]?.readyReason ??
+                      reliefPathway.martinezReason ??
+                      "";
+                    if (!rawText) return null;
+                    const narrativeSummary = truncateSentences(rawText, 3);
+                    return (
+                      <div className="md:col-span-2 space-y-2 bg-muted/30 border border-border rounded-lg p-4">
+                        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                          <Star className="w-3.5 h-3.5" /> Strongest Federal Argument
+                        </div>
+                        <p className="text-sm text-foreground/80 leading-relaxed">{narrativeSummary}</p>
+                        <Link href={`/cases/${caseId}/relief`}>
+                          <span className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">Read full analysis →</span>
+                        </Link>
+                      </div>
+                    );
+                  })()}
+                </div>
+              ) : null}
+            </div>
+
+            {/* Findings Summary Panel */}
+            {(hasAnyFindings || findingsLoading) && (
+              <div className="border border-border rounded-xl overflow-hidden">
+                <button
+                  className="w-full flex items-center justify-between px-5 py-4 bg-muted/30 border-b border-border hover:bg-muted/50 transition-colors text-left"
+                  onClick={() => setFindingsExpanded((v) => !v)}
+                  aria-expanded={findingsExpanded}
+                >
+                  <div className="flex items-center gap-2">
+                    <Scale className="w-5 h-5 text-muted-foreground" />
+                    <h2 className="text-lg font-serif font-medium">Findings</h2>
+                    {caseFindings.length > 0 && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-muted text-muted-foreground border border-border">
+                        {caseFindings.length}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {caseFindings.length > 0 && (
+                      <div className="flex items-center gap-1.5 mr-1">
+                        {(["Critical", "High", "Medium", "Low"] as FindingSeverity[]).map((sev) => {
+                          const count = caseFindings.filter((f) => deriveSeverity(f.survivability, f.proceduralStatus) === sev).length;
+                          if (count === 0) return null;
+                          return (
+                            <span key={sev} className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold border ${SEVERITY_STYLES[sev]}`}>
+                              {count} {sev}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${findingsExpanded ? "" : "-rotate-90"}`} />
+                  </div>
+                </button>
+                {findingsExpanded && (
+                  findingsLoading ? (
+                    <div className="p-4 space-y-2">
+                      {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
+                    </div>
+                  ) : caseFindings.length === 0 ? (
+                    <div className="p-6 text-center text-sm text-muted-foreground">
+                      No findings extracted yet. Analyze a document to see findings here.
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground p-8 border border-border border-dashed rounded-xl">
-                      Run analysis to extract findings.
+                    <div className="divide-y divide-border">
+                      {(showAllFindings ? caseFindings : caseFindings.slice(0, 5)).map((finding) => {
+                        const severity = deriveSeverity(finding.survivability, finding.proceduralStatus);
+                        const procStyle = finding.proceduralStatus ? PROCEDURAL_STYLES[finding.proceduralStatus] : null;
+                        return (
+                          <Link key={finding.id} href={`/cases/${caseId}/documents/${finding.documentId}`}>
+                            <div className="flex items-start gap-3 px-5 py-3 hover:bg-accent transition-colors cursor-pointer">
+                              <div className="flex-1 min-w-0 space-y-1">
+                                <p className="text-sm font-medium text-foreground leading-snug truncate">{finding.issueTitle}</p>
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <span className={`inline-flex items-center px-1.5 py-0 rounded text-[10px] font-semibold border ${SEVERITY_STYLES[severity]}`}>
+                                    {severity}
+                                  </span>
+                                  {procStyle && finding.proceduralStatus && (
+                                    <span className={`inline-flex items-center px-1.5 py-0 rounded text-[10px] font-medium border ${procStyle}`}>
+                                      {finding.proceduralStatus}
+                                    </span>
+                                  )}
+                                  <span className="text-[10px] text-muted-foreground truncate max-w-[200px]">
+                                    {finding.documentTitle}
+                                  </span>
+                                </div>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
+                            </div>
+                          </Link>
+                        );
+                      })}
+                      {caseFindings.length > 5 && (
+                        <button
+                          className="w-full px-5 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors text-center"
+                          onClick={() => setShowAllFindings((v) => !v)}
+                        >
+                          {showAllFindings
+                            ? "Show fewer findings"
+                            : `Show ${caseFindings.length - 5} more finding${caseFindings.length - 5 === 1 ? "" : "s"}`}
+                        </button>
+                      )}
+                    </div>
+                  )
+                )}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-serif font-medium">Record Documents</h2>
+                <Dialog open={open} onOpenChange={setOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="secondary" size="sm">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Document
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                      <DialogTitle>Add Document to Record</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Title</label>
+                        <Input value={docTitle} onChange={(e) => setDocTitle(e.target.value)} placeholder="e.g. Day 1 Trial Transcript" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Type</label>
+                        <Select value={docType} onValueChange={(val) => setDocType(val as CreateDocumentBodyDocumentType)}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="transcript">Transcript</SelectItem>
+                            <SelectItem value="police_report">Police Report</SelectItem>
+                            <SelectItem value="appeal">Appeal</SelectItem>
+                            <SelectItem value="motion">Motion</SelectItem>
+                            <SelectItem value="order">Order</SelectItem>
+                            <SelectItem value="affidavit">Affidavit</SelectItem>
+                            <SelectItem value="exhibit">Exhibit</SelectItem>
+                            <SelectItem value="policy">Policy</SelectItem>
+                            <SelectItem value="executive_order">Executive Order</SelectItem>
+                            <SelectItem value="no_merit_report">No-Merit Report</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex rounded-lg border border-border overflow-hidden">
+                        <button
+                          className={`flex-1 py-2 text-sm font-medium transition-colors ${inputMode === "paste" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover[...]`}
+                          onClick={() => setInputMode("paste")} type="button"
+                        >Paste Text</button>
+                        <button
+                          className={`flex-1 py-2 text-sm font-medium transition-colors ${inputMode === "upload" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hove[...]`}
+                          onClick={() => setInputMode("upload")} type="button"
+                        >Upload File</button>
+                      </div>
+                      {inputMode === "paste" ? (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Paste Text Content</label>
+                          <Textarea value={docContent} onChange={(e) => setDocContent(e.target.value)} className="min-h-[200px] font-mono text-sm" placeholder="Paste document text here..." />
+                          <Button className="w-full" onClick={handleCreateDocument} disabled={createDocument.isPending}>
+                            {createDocument.isPending ? "Adding..." : "Add Document"}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Files (PDF, DOCX, TXT, or image — multiple allowed)</label>
+                          <Input type="file" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp" multiple onChange={(e) => setUploadFiles(Array.from(e.target.files ?? []))} className="cursor-pointer" />
+                          {uploadFiles.length > 0 && (
+                            <div className="text-xs text-muted-foreground space-y-0.5">
+                              {uploadFiles.map((f, i) => <p key={i}>{f.name} ({(f.size / 1024).toFixed(0)} KB)</p>)}
+                            </div>
+                          )}
+                          <Button className="w-full" onClick={handleUploadDocument} disabled={isUploading || uploadFiles.length === 0}>
+                            {isUploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Extracting text...</> : `Upload & Extract${uploadFiles.length > 1 ? ` (${uploadFiles.length} files)` : ""}`}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              {!docsLoading && !hasAnyFindings && documents && documents.length > 0 && (
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/40 border border-border text-sm">
+                  <span className="font-semibold text-foreground whitespace-nowrap">Step 1</span>
+                  <span className="text-muted-foreground">Analyze documents to extract findings</span>
+                  <span className="text-muted-foreground mx-1">→</span>
+                  <span className="font-semibold text-muted-foreground whitespace-nowrap">Step 2</span>
+                  <span className="text-muted-foreground">Run the court simulator</span>
+                </div>
+              )}
+
+              {!docsLoading && hasPendingDocs && (
+                <div className="rounded-xl border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/10 overflow-hidden">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4">
+                    <div className="flex items-start gap-3">
+                      <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
+                          {pendingDocs.length} document{pendingDocs.length === 1 ? "" : "s"} need analysis
+                        </p>
+                        <p className="text-xs text-blue-700 dark:text-blue-400 mt-0.5">
+                          Analyze all at once, or click any document to analyze it individually.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {isRunningAll && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => { abortRef.current = true; }}
+                          className="border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-600 dark:text-blue-300"
+                        >
+                          Stop
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        onClick={handleAnalyzeAll}
+                        disabled={isRunningAll}
+                        className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-500"
+                      >
+                        {isRunningAll ? (
+                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Analyzing…</>
+                        ) : (
+                          <><Zap className="w-4 h-4 mr-2" />Analyze All</>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  {isRunningAll && batchProgress && (
+                    <div className="px-4 pb-4 space-y-1.5">
+                      <div className="h-1.5 w-full rounded-full bg-blue-200 dark:bg-blue-800 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-blue-500 dark:bg-blue-400 transition-all duration-500"
+                          style={{ width: `${(batchProgress.done / batchProgress.total) * 100}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-blue-700 dark:text-blue-400">
+                        {batchProgress.done} of {batchProgress.total} complete
+                      </p>
                     </div>
                   )}
                 </div>
-              </div>
+              )}
+
+              {docsLoading ? (
+                <div className="space-y-3">
+                  {[1, 2].map((i) => <Skeleton key={i} className="h-20 w-full" />)}
+                </div>
+              ) : documents && documents.length > 0 ? (
+                <div className="grid gap-3">
+                  {documents.map((doc) => {
+                    const live = liveStatuses.get(doc.id);
+                    const isThisRunning = live?.phase === "running";
+                    const thisIsDone = live?.phase === "done";
+                    const needsAnalysis = !live && (doc.status === "pending" || doc.status === "error");
+                    const displayFindingCount = thisIsDone ? live.findingCount : doc.findingCount;
+
+                    const isConfirming = confirmDeleteId === doc.id;
+
+                    return (
+                      <div key={doc.id} className="relative group/card">
+                        <Link href={`/cases/${caseId}/documents/${doc.id}`}>
+                          <div className={`group flex items-center p-4 bg-card border rounded-xl transition-all cursor-pointer ${isThisRunning ? "border-blue-300 dark:border-blue-600 bg-blue-50/[...]`}>
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 transition-colors ${isThisRunning ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600" : "b[...]`}>
+                              {isThisRunning ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5" />}
+                            </div>
+                            <div className="flex-1 min-w-0 pr-8">
+                              <h3 className="font-medium text-foreground truncate">{doc.title}</h3>
+                              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                                <span className="capitalize">{doc.documentType.replace("_", " ")}</span>
+                                <span>•</span>
+                                <span>{format(new Date(doc.createdAt), "MMM d, yyyy")}</span>
+                              </div>
+                              {isThisRunning && live.message && (
+                                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{live.message}</p>
+                              )}
+                            </div>
+                            <div className="flex flex-col items-end gap-2 ml-4 shrink-0 pr-8">
+                              {getStatusBadge(doc.id, doc.status)}
+                              {(doc.status === "analyzed" || thisIsDone) && displayFindingCount != null && (
+                                <span className="text-xs font-medium bg-muted px-2 py-0.5 rounded-full">
+                                  {displayFindingCount} findings
+                                </span>
+                              )}
+                              {needsAnalysis && !isRunningAll && (
+                                <span className="text-xs font-medium text-primary flex items-center gap-1 group-hover:underline">
+                                  <Play className="w-3 h-3 fill-current" />
+                                  Run Analysis
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </Link>
+                        {/* Delete button — visible on hover (desktop) / always (mobile) */}
+                        <div className="absolute top-3 right-3">
+                          {isConfirming ? (
+                            <div
+                              className="flex items-center gap-1"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                className="text-xs text-red-600 dark:text-red-400 font-medium hover:underline"
+                                onClick={() => handleDeleteDocument(doc.id)}
+                                disabled={deleteDocument.isPending}
+                              >
+                                {deleteDocument.isPending ? "Deleting…" : "Delete"}
+                              </button>
+                              <span className="text-xs text-muted-foreground">/</span>
+                              <button
+                                className="text-xs text-muted-foreground hover:underline"
+                                onClick={() => setConfirmDeleteId(null)}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              className="opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition[...]"
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(doc.id); }}
+                              title="Delete document"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-16 border-2 border-dashed border-border rounded-xl bg-muted/20">
+                  <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <Upload className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium text-foreground mb-1">No documents yet</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                    Add transcripts, reports, and motions to the record. We'll analyze them line by line.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         ) : (
-          <div className="py-12 text-center text-muted-foreground">Document not found</div>
+          <div className="text-center py-12">Case not found</div>
         )}
       </main>
       <Disclaimer />
