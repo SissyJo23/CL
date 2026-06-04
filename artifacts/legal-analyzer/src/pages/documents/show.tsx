@@ -19,10 +19,10 @@ export default function DocumentShow() {
   const documentId = parseInt(params.id || "0", 10);
   const [, navigate] = useLocation();
 
-  const { data: doc, isLoading: docLoading } = useGetDocument(caseId, documentId, {
+  const {  doc, isLoading: docLoading } = useGetDocument(caseId, documentId, {
     query: { enabled: !!documentId, queryKey: getGetDocumentQueryKey(caseId, documentId) },
   });
-  const { data: initialFindings, isLoading: findingsLoading } = useListFindings(caseId, documentId, {
+  const {  initialFindings, isLoading: findingsLoading } = useListFindings(caseId, documentId, {
     query: { enabled: !!documentId, queryKey: getListFindingsQueryKey(caseId, documentId) },
   });
 
@@ -82,7 +82,7 @@ export default function DocumentShow() {
         const lines = buffer.split("\n");
         buffer = lines.pop() ?? "";
         for (const line of lines) {
-          if (!line.startsWith("data:")) continue;
+          if (!line.startsWith("")) continue;
           const jsonStr = line.slice(5).trim();
           if (!jsonStr) continue;
           try {
@@ -138,7 +138,7 @@ export default function DocumentShow() {
         buffer = lines.pop() ?? "";
 
         for (const line of lines) {
-          if (!line.startsWith("data:")) continue;
+          if (!line.startsWith("")) continue;
           const jsonStr = line.slice(5).trim();
           if (!jsonStr) continue;
           try {
@@ -245,7 +245,7 @@ export default function DocumentShow() {
   <div class="finding">
     <div class="finding-num">Finding #${i + 1}</div>
     <div class="finding-title">${f.issueTitle}</div>
-    ${f.pageNumber != null || f.lineNumber != null ? `<div class="citation">📄 ${f.pageNumber != null ? `Page ${f.pageNumber}` : ""}${f.lineNumber != null ? ` · Line ${f.lineNumber}` : ""}</div>` : ""}
+    ${f.pageNumber != null || f.lineNumber != null ? `<div class="citation">📄 ${f.pageNumber != null ? \`Page ${f.pageNumber}\` : ""}${f.lineNumber != null ? \` · Line ${f.lineNumber}\` : ""}</div>` : ""}
     <div class="excerpt">"${f.transcriptExcerpt}"</div>
     <div class="section-label">Legal Analysis</div>
     <div class="analysis">${f.legalAnalysis}</div>
@@ -282,6 +282,98 @@ export default function DocumentShow() {
   });
 
   const displayContent = redactedContent ?? doc?.content ?? "";
+
+  const handleUploadDocument = async () => {
+    if (uploadFiles.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please select at least one file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      for (const file of uploadFiles) {
+        formData.append("files", file);
+      }
+      formData.append("documentType", docType);
+
+      const res = await fetch(`/api/cases/${caseId}/documents/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      let  any = null;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
+      if (!res.ok) {
+        throw new Error(data?.error ?? "Upload failed");
+      }
+
+      queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
+      setOpen(false);
+      setDocTitle("");
+      setDocContent("");
+      setUploadFiles([]);
+
+      toast({
+        title: "Upload complete",
+        description: `${Array.isArray(data) ? data.length : 1} file(s) processed.`,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to upload file";
+      toast({
+        title: "Upload Error",
+        description: msg,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const getStatusBadge = (docId: number, dbStatus: string) => {
+    const live = liveFindings.find((f) => f.id === docId);
+    if (live) {
+      if (live.phase === "running") return (
+        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+          <Loader2 className="w-3 h-3 mr-1 animate-spin" /> Analyzing
+        </Badge>
+      );
+      if (live.phase === "done") return (
+        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
+          <CheckCircle2 className="w-3 h-3 mr-1" /> Analyzed
+        </Badge>
+      );
+      if (live.phase === "error") return (
+        <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" /> Error</Badge>
+      );
+    }
+    switch (dbStatus) {
+      case "analyzed": return (
+        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
+          <CheckCircle2 className="w-3 h-3 mr-1" /> Analyzed
+        </Badge>
+      );
+      case "analyzing": return (
+        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+          <Loader2 className="w-3 h-3 mr-1 animate-spin" /> Analyzing
+        </Badge>
+      );
+      case "error": return (
+        <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" /> Error</Badge>
+      );
+      default: return <Badge variant="outline" className="text-muted-foreground">Pending</Badge>;
+    }
+  };
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
