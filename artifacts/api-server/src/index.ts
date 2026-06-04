@@ -12,17 +12,19 @@ import nomeritRouter from "./routes/nomerit";
 import reliefRouter from "./routes/relief";
 import courtRouter from "./routes/court";
 import exportRouter from "./routes/export";
+import { seedCategories, seedDemoCase, seedIllinoisDemoCase, seedMinnesotaDemoCase, seedMichiganDemoCase, seedOhioDemoCase, seedIndianaDemoCase, seedIowaDemoCase } from "./lib/seed";
 
 const app = express();
 
-// Express must explicitly trust the Render/Cloudflare proxy to parse headers properly
 app.set("trust proxy", true);
 
 app.use(pinoHttp({ logger }));
 
-// Configured strict CORS handling for cross-domain requests
-
-const allowedOrigins = [ "https://caselightai.com", "https://www.caselightai.com", "https://onrender.com",...(process.env.CORS_ORIGIN? process.env.CORS_ORIGIN.split(","): []), ].map((origin) => origin.trim()).filter(Boolean);
+const allowedOrigins = [
+  "https://caselightai.com",
+  "https://www.caselightai.com",
+  ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : []),
+].map((o) => o.trim()).filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -32,35 +34,24 @@ app.use(cors({
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true
+  credentials: true,
 }));
 
-// Raised the default 100kb payload body limit to 50 Megabytes to accept large files and text streams
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-// Clean, hardened auth middleware — reads Bearer token, sets req.userId safely
+// Auth middleware — sets req.userId to 1 (single-user mode)
 app.use((req: any, _res, next) => {
-  req.userId = 1; // Explicit global default fallback to keep your dashboard alive
-  
+  req.userId = 1;
   const header = req.headers["authorization"] ?? "";
   if (header.startsWith("Bearer ")) {
     const token = header.slice(7);
-    if (token === "dev-token" || token === "user-1") {
-      req.userId = 1;
-    } else {
-      const match = token.match(/^user-(\d+)$/);
-      if (match && match[1]) {
-        req.userId = parseInt(match[1], 10);
-      }
+    const match = token.match(/^user-(\d+)$/);
+    if (match && match[1]) {
+      req.userId = parseInt(match[1], 10);
     }
   }
-  
-  // Hard constraint fallback to block any route params from receiving NaN
-  if (!req.userId || Number.isNaN(req.userId)) {
-    req.userId = 1;
-  }
-  
+  if (!req.userId || Number.isNaN(req.userId)) req.userId = 1;
   next();
 });
 
@@ -73,7 +64,7 @@ app.post("/auth/login", (req, res) => {
   res.json({
     success: true,
     token: "user-1",
-    user: { email: email || "christymeade98@gmail.com", id: 1, name: "CaseLight User" },
+    user: { email: email || "user@caselight.com", id: 1, name: "CaseLight User" },
   });
 });
 
@@ -89,6 +80,20 @@ app.use("/api", courtRouter);
 app.use("/api", exportRouter);
 
 const port = process.env.PORT || 10000;
-app.listen(port, "0.0.0.0", () => {
+app.listen(port, "0.0.0.0", async () => {
   logger.info({ port }, "Server listening");
+  // Seed database on startup
+  try {
+    await seedCategories();
+    await seedDemoCase();
+    await seedIllinoisDemoCase();
+    await seedMinnesotaDemoCase();
+    await seedMichiganDemoCase();
+    await seedOhioDemoCase();
+    await seedIndianaDemoCase();
+    await seedIowaDemoCase();
+    logger.info("Database seeding complete");
+  } catch (err) {
+    logger.error({ err }, "Seeding failed (non-fatal)");
+  }
 });
