@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Play, Loader2, ShieldOff, Trash2, FileDown, Scale, ExternalLink } from "lucide-react";
+import { ArrowLeft, Play, Loader2, ShieldOff, Trash2, FileDown, Scale, ExternalLink, CheckCircle2, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import FindingCard from "@/components/findings/FindingCard";
 import CategoryFilter from "@/components/categories/CategoryFilter";
@@ -49,16 +49,13 @@ export default function DocumentShow() {
     if (doc?.documentType === "no_merit_report") {
       fetch(`/api/cases/${caseId}/documents/${documentId}/nomerit-analysis`)
         .then((r) => {
-          if (!r.ok) return;
+          if (!r.ok) return null;
           return r.json();
         })
         .then((data) => {
           if (!data) return;
-          if (data.status === "complete") {
-            setNomeritComplete(true);
-          } else if (data.status === "error") {
-            setNomeritPriorStatus("error");
-          }
+          if (data.status === "complete") setNomeritComplete(true);
+          if (data.status === "error") setNomeritPriorStatus("error");
         })
         .catch(() => {});
     }
@@ -73,19 +70,24 @@ export default function DocumentShow() {
         method: "POST",
       });
       if (!response.body) throw new Error("No response body");
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
+
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
         buffer = lines.pop() ?? "";
+
         for (const line of lines) {
           if (!line.startsWith("")) continue;
           const jsonStr = line.slice(5).trim();
           if (!jsonStr) continue;
+
           try {
             const event = JSON.parse(jsonStr);
             if (event.type === "status") {
@@ -94,10 +96,7 @@ export default function DocumentShow() {
               setIsRunningNomerit(false);
               setNomeritStatus("");
               setNomeritComplete(true);
-              toast({
-                title: "No-Merit Analysis Complete",
-                description: "IAAC arguments and draft motion are ready.",
-              });
+              toast({ title: "No-Merit Analysis Complete", description: "IAAC arguments and draft motion are ready." });
               navigate(`/cases/${caseId}/documents/${documentId}/nomerit`);
             } else if (event.type === "error") {
               setIsRunningNomerit(false);
@@ -149,6 +148,7 @@ export default function DocumentShow() {
           if (!line.startsWith("")) continue;
           const jsonStr = line.slice(5).trim();
           if (!jsonStr) continue;
+
           try {
             const event = JSON.parse(jsonStr);
             if (event.type === "finding") {
@@ -162,10 +162,7 @@ export default function DocumentShow() {
               setStatusMessage("");
               queryClient.invalidateQueries({ queryKey: getGetDocumentQueryKey(caseId, documentId) });
               queryClient.invalidateQueries({ queryKey: getListFindingsQueryKey(caseId, documentId) });
-              toast({
-                title: "Analysis Complete",
-                description: "We went through every line. Here's everything we found.",
-              });
+              toast({ title: "Analysis Complete", description: "We went through every line. Here's everything we found." });
             } else if (event.type === "error") {
               setIsAnalyzing(false);
               setStatusMessage("");
@@ -180,11 +177,7 @@ export default function DocumentShow() {
       console.error(error);
       setIsAnalyzing(false);
       setStatusMessage("");
-      toast({
-        title: "Connection Error",
-        description: "Failed to connect to analysis stream.",
-        variant: "destructive",
-      });
+      toast({ title: "Connection Error", description: "Failed to connect to analysis stream.", variant: "destructive" });
     }
   };
 
@@ -254,36 +247,20 @@ export default function DocumentShow() {
     <h1>${doc.title}</h1>
     <p>Document Type: ${doc.documentType.replace(/_/g, " ")} &nbsp;|&nbsp; Generated: ${new Date().toLocaleString()} &nbsp;|&nbsp; Findings: ${liveFindings.length}</p>
   </div>
-
   ${liveFindings
     .map(
       (f, i) => `
   <div class="finding">
     <div class="finding-num">Finding #${i + 1}</div>
     <div class="finding-title">${f.issueTitle}</div>
-    ${
-      f.pageNumber != null || f.lineNumber != null
-        ? `<div class="citation">📄 ${f.pageNumber != null ? `Page ${f.pageNumber}` : ""}${
-            f.lineNumber != null ? ` · Line ${f.lineNumber}` : ""
-          }</div>`
-        : ""
-    }
+    ${f.pageNumber != null || f.lineNumber != null ? `<div class="citation">📄 ${f.pageNumber != null ? `Page ${f.pageNumber}` : ""}${f.lineNumber != null ? ` · Line ${f.lineNumber}` : ""}</div>` : ""}
     <div class="excerpt">"${f.transcriptExcerpt}"</div>
     <div class="section-label">Legal Analysis</div>
     <div class="analysis">${f.legalAnalysis}</div>
-    ${
-      f.precedentName
-        ? `<div class="precedent">
-        <strong>${f.precedentName}</strong>${f.precedentCitation ? ` — ${f.precedentCitation}` : ""}${f.precedentType ? ` [${f.precedentType}]` : ""}<br/>
-        ${f.courtRuling ? `<em>Ruling:</em> ${f.courtRuling}<br/>` : ""}
-        ${f.materialSimilarity ? `<em>Similarity:</em> ${f.materialSimilarity}` : ""}
-      </div>`
-        : ""
-    }
+    ${f.precedentName ? `<div class="precedent"><strong>${f.precedentName}</strong>${f.precedentCitation ? ` — ${f.precedentCitation}` : ""}${f.precedentType ? ` [${f.precedentType}]` : ""}<br/>${f.courtRuling ? `<em>Ruling:</em> ${f.courtRuling}<br/>` : ""}${f.materialSimilarity ? `<em>Similarity:</em> ${f.materialSimilarity}` : ""}</div>` : ""}
   </div>`,
     )
     .join("\n")}
-
   <div class="footer">Generated by CaseLight &mdash; For attorney use only &mdash; Not for public disclosure</div>
 </body>
 </html>`;
@@ -358,11 +335,7 @@ export default function DocumentShow() {
                   ) : (
                     <Button
                       size="lg"
-                      className={`shadow-sm text-white ${
-                        nomeritPriorStatus === "error"
-                          ? "bg-destructive hover:bg-destructive/90"
-                          : "bg-violet-700 hover:bg-violet-800"
-                      }`}
+                      className={`shadow-sm text-white ${nomeritPriorStatus === "error" ? "bg-destructive hover:bg-destructive/90" : "bg-violet-700 hover:bg-violet-800"}`}
                       onClick={handleRunNomeritAnalysis}
                       disabled={isRunningNomerit}
                       title={nomeritPriorStatus === "error" ? "Previous analysis failed — click to retry" : undefined}
@@ -374,7 +347,7 @@ export default function DocumentShow() {
                         </>
                       ) : nomeritPriorStatus === "error" ? (
                         <>
-                          <Scale className="w-4 h-4 mr-2" />
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           Retry No-Merit Analysis
                         </>
                       ) : (
@@ -438,10 +411,7 @@ export default function DocumentShow() {
                     Source Document
                   </span>
                   {redactedContent && (
-                    <button
-                      className="text-[10px] text-muted-foreground underline hover:text-foreground"
-                      onClick={() => setRedactedContent(null)}
-                    >
+                    <button className="text-[10px] text-muted-foreground underline hover:text-foreground" onClick={() => setRedactedContent(null)}>
                       Show Original
                     </button>
                   )}
@@ -469,9 +439,7 @@ export default function DocumentShow() {
                         caseId={caseId}
                         documentId={documentId}
                         onDeleted={(id) => setLiveFindings((prev) => prev.filter((f) => f.id !== id))}
-                        onUpdated={(updated) =>
-                          setLiveFindings((prev) => prev.map((f) => (f.id === updated.id ? updated : f)))
-                        }
+                        onUpdated={(updated) => setLiveFindings((prev) => prev.map((f) => (f.id === updated.id ? updated : f)))}
                       />
                     ))
                   ) : isAnalyzing ? (
