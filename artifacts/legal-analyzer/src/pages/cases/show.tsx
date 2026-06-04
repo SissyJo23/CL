@@ -338,74 +338,55 @@ export default function CaseShow() {
       reader.readAsText(file);
     });
   };
-
-  const handleUploadDocument = async () => {
-    if (uploadFiles.length === 0) {
-      toast({ title: "Validation Error", description: "Please select at least one file.", variant: "destructive" });
-      return;
-    }
-    setIsUploading(true);
-    try {
-      // Try FormData first (works on desktop and modern iOS)
-      const formData = new FormData();
-      for (const file of uploadFiles) formData.append("files", file);
-      formData.append("documentType", docType);
-
-      let res = await fetch(`/api/cases/${caseId}/documents/upload`, { method: "POST", body: formData });
-      
-      // If upload fails and we're on a device that might not support FormData well, fall back to text extraction
-      if (!res.ok && uploadFiles.length > 0) {
-        toast({ title: "Upload Note", description: "Using fallback method for file conversion…", variant: "default" });
-        
-        // Read files as text and create documents via paste endpoint
-        for (const file of uploadFiles) {
-          try {
-            const content = await readFileAsText(file);
-            if (!content.trim()) {
-              toast({ title: "Warning", description: `${file.name} appears to be empty or binary.`, variant: "destructive" });
-              continue;
-            }
-            const title = file.name.replace(/\.[^.]+$/, "");
-            
-            // Use the paste endpoint instead
-            const pasteRes = await fetch(`/api/cases/${caseId}/documents`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ title, documentType: docType, content }),
-            });
-            
-            if (!pasteRes.ok) {
-              throw new Error(`Failed to create document: ${pasteRes.statusText}`);
-            }
-          } catch (err) {
-            const errMsg = err instanceof Error ? err.message : "Failed to process file";
-            toast({ title: "File Error", description: `${file.name}: ${errMsg}`, variant: "destructive" });
-          }
-        }
-        queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
-        setOpen(false);
-        setUploadFiles([]);
-        toast({ title: "Documents Added", description: "Files converted and documents are ready for analysis." });
-        return;
-      }
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Upload failed" }));
-        toast({ title: "Upload Error", description: err.error ?? "Upload failed", variant: "destructive" });
-        return;
-      }
+const handleUploadDocument = async () => {
+  if (uploadFiles.length === 0) {
+    toast({ title: "Validation Error", description: "Please select at least one file.", variant: "destructive" });
+    return;
+  }
+  setIsUploading(true);
+  const token = localStorage.getItem("auth_token") ?? "user-1";
+  const headers = { "Authorization": `Bearer ${token}` };
+  try {
+    const formData = new FormData();
+    for (const file of uploadFiles) formData.append("files", file);
+    formData.append("documentType", docType);
+    const res = await fetch(`/api/cases/${caseId}/documents/upload`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+    if (res.ok) {
       const created: { title: string }[] = await res.json().catch(() => []);
       queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
-      setOpen(false); setDocTitle(""); setUploadFiles([]);
-      const count = created.length;
-      toast({ title: count === 1 ? "Document Uploaded" : `${count} Documents Uploaded`, description: "Text extracted and documents are ready for analysis." });
-    } catch (err) {
-      const errMsg = err instanceof Error ? err.message : "Failed to upload file";
-      toast({ title: "Upload Error", description: errMsg, variant: "destructive" });
-    } finally {
-      setIsUploading(false);
+      setOpen(false); setUploadFiles([]);
+      toast({ title: created.length === 1 ? "Document Uploaded" : `${created.length} Documents Uploaded`, description: "Ready for analysis." });
+      return;
     }
-  };
+    // Fallback: read as text
+    toast({ title: "Trying fallback method…", variant: "default" });
+    for (const file of uploadFiles) {
+      try {
+        const content = await readFileAsText(file);
+        if (!content.trim()) { toast({ title: "Warning", description: `${file.name} appears empty.`, variant: "destructive" }); continue; }
+        const pasteRes = await fetch(`/api/cases/${caseId}/documents`, {
+          method: "POST",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({ title: file.name.replace(/\.[^.]+$/, ""), documentType: docType, content }),
+        });
+        if (!pasteRes.ok) throw new Error(pasteRes.statusText);
+      } catch (err) {
+        toast({ title: "File Error", description: `${file.name}: ${err instanceof Error ? err.message : "Failed"}`, variant: "destructive" });
+      }
+    }
+    queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
+    setOpen(false); setUploadFiles([]);
+    toast({ title: "Documents Added", description: "Files converted and ready for analysis." });
+  } catch (err) {
+    toast({ title: "Upload Error", description: err instanceof Error ? err.message : "Failed to upload", variant: "destructive" });
+  } finally {
+    setIsUploading(false);
+  }
+};
 
   const getStatusBadge = (docId: number, dbStatus: string) => {
     const live = liveStatuses.get(docId);
