@@ -1,12 +1,12 @@
 import { useParams, Link } from "wouter";
-import { useGetCase, getGetCaseQueryKey, useListDocuments, getListDocumentsQueryKey, useCreateDocument, useDeleteDocument, useListCourtSessions, getListCourtSessionsQueryKey, useGenerateCaseStrateg[...] } from "@workspace/api-client-react";
+import { useGetCase, getGetCaseQueryKey, useListDocuments, getListDocumentsQueryKey, useCreateDocument, useDeleteDocument, useListCourtSessions, getListCourtSessionsQueryKey, useGenerateCaseStrategy, getGetCaseStrategyQueryKey } from "@workspace/api-client-react";
 import type { CreateDocumentBodyDocumentType } from "@workspace/api-client-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch, Milestone, User, User[...] } from "lucide-react";
+import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch, Milestone, User, Users, BookOpen, MapPin, ChevronDown, ChevronRight, Star, Shield, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -339,69 +339,41 @@ export default function CaseShow() {
     });
   };
 
-  const handleUploadDocument = async () => {
+  const handleUploadDocument = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    
     if (uploadFiles.length === 0) {
       toast({ title: "Validation Error", description: "Please select at least one file.", variant: "destructive" });
       return;
     }
     setIsUploading(true);
+    let successCount = 0;
     try {
-      // Try FormData first (works on desktop and modern iOS)
-      const formData = new FormData();
-      for (const file of uploadFiles) formData.append("files", file);
-      formData.append("documentType", docType);
-
-      let res = await fetch(`/api/cases/${caseId}/documents/upload`, { method: "POST", body: formData });
-      
-      // If upload fails and we're on a device that might not support FormData well, fall back to text extraction
-      if (!res.ok && uploadFiles.length > 0) {
-        toast({ title: "Upload Note", description: "Using fallback method for file conversion…", variant: "default" });
-        
-        // Read files as text and create documents via paste endpoint
-        for (const file of uploadFiles) {
-          try {
-            const content = await readFileAsText(file);
-            if (!content.trim()) {
-              toast({ title: "Warning", description: `${file.name} appears to be empty or binary.`, variant: "destructive" });
-              continue;
-            }
-            const title = file.name.replace(/\.[^.]+$/, "");
-            
-            // Use the paste endpoint instead
-            const pasteRes = await fetch(`/api/cases/${caseId}/documents`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ title, documentType: docType, content }),
-            });
-            
-            if (!pasteRes.ok) {
-              throw new Error(`Failed to create document: ${pasteRes.statusText}`);
-            }
-          } catch (err) {
-            const errMsg = err instanceof Error ? err.message : "Failed to process file";
-            toast({ title: "File Error", description: `${file.name}: ${errMsg}`, variant: "destructive" });
+      for (const file of uploadFiles) {
+        try {
+          const content = await readFileAsText(file);
+          if (!content.trim()) {
+            toast({ title: "Warning", description: `${file.name} appears empty or is a binary PDF. Try pasting the text instead.`, variant: "destructive" });
+            continue;
           }
+          const title = file.name.replace(/\.[^.]+$/, "");
+          const res = await fetch(`/api/cases/${caseId}/documents`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, documentType: docType, content }),
+          });
+          if (!res.ok) throw new Error(await res.text());
+          successCount++;
+        } catch (err) {
+          toast({ title: "File Error", description: `${file.name}: ${err instanceof Error ? err.message : "Failed"}`, variant: "destructive" });
         }
+      }
+      if (successCount > 0) {
         queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
         setOpen(false);
         setUploadFiles([]);
-        toast({ title: "Documents Added", description: "Files converted and documents are ready for analysis." });
-        return;
+        toast({ title: successCount === 1 ? "Document Added" : `${successCount} Documents Added`, description: "Ready for analysis." });
       }
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Upload failed" }));
-        toast({ title: "Upload Error", description: err.error ?? "Upload failed", variant: "destructive" });
-        return;
-      }
-      const created: { title: string }[] = await res.json().catch(() => []);
-      queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
-      setOpen(false); setDocTitle(""); setUploadFiles([]);
-      const count = created.length;
-      toast({ title: count === 1 ? "Document Uploaded" : `${count} Documents Uploaded`, description: "Text extracted and documents are ready for analysis." });
-    } catch (err) {
-      const errMsg = err instanceof Error ? err.message : "Failed to upload file";
-      toast({ title: "Upload Error", description: errMsg, variant: "destructive" });
     } finally {
       setIsUploading(false);
     }
@@ -475,7 +447,7 @@ export default function CaseShow() {
                         </span>
                         {jBadge.circuit && (
                           <Link href={`/cases/${caseId}/relief`}>
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-b[...]
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-200">
                               {jBadge.circuit}
                             </span>
                           </Link>
@@ -625,7 +597,7 @@ export default function CaseShow() {
                   {courtSessions.map((s) => (
                     <Link key={s.id} href={`/cases/${caseId}/court/${s.id}`}>
                       <div className="group flex items-center p-4 bg-card border border-border rounded-xl hover:bg-accent transition-all cursor-pointer">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 shrink-0 ${s.defenseWon ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"[...]
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 shrink-0 ${s.defenseWon ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}>
                           <Scale className="w-5 h-5" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -652,7 +624,7 @@ export default function CaseShow() {
             {/* Federal Readiness Panel */}
             <div className="border border-indigo-200 dark:border-indigo-800/60 rounded-xl overflow-hidden">
               <button
-                className="w-full flex items-center justify-between px-5 py-4 bg-indigo-50/60 dark:bg-indigo-900/10 border-b border-indigo-200 dark:border-indigo-800/60 hover:bg-indigo-100/60 dar[...]
+                className="w-full flex items-center justify-between px-5 py-4 bg-indigo-50/60 dark:bg-indigo-900/10 border-b border-indigo-200 dark:border-indigo-800/60 hover:bg-indigo-100/60"
                 onClick={() => setFederalExpanded((v) => !v)}
                 aria-expanded={federalExpanded}
               >
@@ -704,7 +676,7 @@ export default function CaseShow() {
               ) : pathwayResult?.status === "error" ? (
                 <div className="p-6 flex items-center gap-3 text-sm text-muted-foreground">
                   <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
-                  <span>Could not load federal readiness data. <Link href={`/cases/${caseId}/relief`}><span className="text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">Try the[...]
+                  <span>Could not load federal readiness data. <Link href={`/cases/${caseId}/relief`}><span className="text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">Try the relief explorer</span></Link></span>
                 </div>
               ) : pathwayResult?.status === "ok" ? (
                 <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -743,7 +715,7 @@ export default function CaseShow() {
                     {reliefPathway.federalReadyClaims && reliefPathway.federalReadyClaims.length > 0 ? (
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-300 text-sm font-bold"[...]
+                          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-300 text-sm font-bold">
                             {reliefPathway.federalReadyClaims.length}
                           </span>
                           <span className="text-sm text-muted-foreground">
@@ -974,11 +946,11 @@ export default function CaseShow() {
                       </div>
                       <div className="flex rounded-lg border border-border overflow-hidden">
                         <button
-                          className={`flex-1 py-2 text-sm font-medium transition-colors ${inputMode === "paste" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover[...]`}
+                          className={`flex-1 py-2 text-sm font-medium transition-colors ${inputMode === "paste" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover"}`}
                           onClick={() => setInputMode("paste")} type="button"
                         >Paste Text</button>
                         <button
-                          className={`flex-1 py-2 text-sm font-medium transition-colors ${inputMode === "upload" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hove[...]`}
+                          className={`flex-1 py-2 text-sm font-medium transition-colors ${inputMode === "upload" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hove"}`}
                           onClick={() => setInputMode("upload")} type="button"
                         >Upload File</button>
                       </div>
@@ -1092,8 +1064,8 @@ export default function CaseShow() {
                     return (
                       <div key={doc.id} className="relative group/card">
                         <Link href={`/cases/${caseId}/documents/${doc.id}`}>
-                          <div className={`group flex items-center p-4 bg-card border rounded-xl transition-all cursor-pointer ${isThisRunning ? "border-blue-300 dark:border-blue-600 bg-blue-50/[...]`}>
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 transition-colors ${isThisRunning ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600" : "b[...]`}>
+                          <div className={`group flex items-center p-4 bg-card border rounded-xl transition-all cursor-pointer ${isThisRunning ? "border-blue-300 dark:border-blue-600 bg-blue-50" : ""}`}>
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 transition-colors ${isThisRunning ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600" : ""}`}>
                               {isThisRunning ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5" />}
                             </div>
                             <div className="flex-1 min-w-0 pr-8">
@@ -1147,7 +1119,7 @@ export default function CaseShow() {
                             </div>
                           ) : (
                             <button
-                              className="opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition[...]"
+                              className="opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition"
                               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(doc.id); }}
                               title="Delete document"
                             >
