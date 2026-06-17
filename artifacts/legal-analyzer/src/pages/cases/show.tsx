@@ -118,6 +118,13 @@ function truncateSentences(text: string, n: number): string {
   return sentences.slice(0, n).join(" ").trim();
 }
 
+function safeFormatDate(date: string | null | undefined, formatStr: string): string {
+  if (!date) return "Unknown date";
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "Invalid date";
+  return format(d, formatStr);
+}
+
 type LiveStatus = {
   phase: "running" | "done" | "error";
   message: string;
@@ -127,7 +134,8 @@ type LiveStatus = {
 export default function CaseShow() {
   const params = useParams();
   const caseId = parseInt(params.id || "0", 10);
-  const { mode, setMode } = useUserMode();
+  const { mode: rawMode, setMode } = useUserMode();
+  const mode: UserMode = rawMode ?? "attorney";
   const { data: currentCase, isLoading: caseLoading } = useGetCase(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseQueryKey(caseId) } });
   const { data: documents, isLoading: docsLoading } = useListDocuments(caseId, { query: { enabled: !!caseId, queryKey: getListDocumentsQueryKey(caseId) } });
   const { data: strategyData, isLoading: strategyLoading } = useGetCaseStrategy(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseStrategyQueryKey(caseId) } });
@@ -574,7 +582,7 @@ export default function CaseShow() {
                       <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{strategy.strategicRoadmap}</div>
                     </div>
                     <div className="px-5 py-2 bg-amber-50/30 dark:bg-amber-900/5 text-xs text-muted-foreground">
-                      Last generated: {format(new Date(strategy.updatedAt), "MMM d, yyyy 'at' h:mm a")}
+                      Last generated: {safeFormatDate(strategy.updatedAt, "MMM d, yyyy 'at' h:mm a")}
                     </div>
                   </div>
                 ) : (
@@ -604,7 +612,7 @@ export default function CaseShow() {
                           <p className="font-medium text-foreground truncate">{s.verdictRating ?? "Simulation"}</p>
                           <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
                             <Clock className="w-3 h-3" />
-                            <span>{format(new Date(s.createdAt), "MMM d, yyyy 'at' h:mm a")}</span>
+                            <span>{safeFormatDate(s.createdAt, "MMM d, yyyy 'at' h:mm a")}</span>
                             <span>•</span>
                             <span className="capitalize">{s.simulationMode.replace("_", " ")}</span>
                             <span>•</span>
@@ -1073,7 +1081,7 @@ export default function CaseShow() {
                               <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                                 <span className="capitalize">{doc.documentType.replace("_", " ")}</span>
                                 <span>•</span>
-                                <span>{format(new Date(doc.createdAt), "MMM d, yyyy")}</span>
+                                <span>{safeFormatDate(doc.createdAt, "MMM d, yyyy")}</span>
                               </div>
                               {isThisRunning && live.message && (
                                 <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{live.message}</p>
