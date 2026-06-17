@@ -190,7 +190,7 @@ Write a concise 3-5 sentence summary of: the key witnesses/parties mentioned, ke
 Return only the summary text, no headings.`;
 
   const msg = await anthropic.messages.create({
-    model: "claude-haiku-4-5",
+    model: "claude-3-haiku-20240307",
     max_tokens: 500,
     messages: [{ role: "user", content: prompt }],
   });
@@ -511,7 +511,7 @@ Only include matches with relevanceScore >= 0.6. Return [] if no strong matches.
 
   try {
     const msg = await anthropic.messages.create({
-      model: "claude-opus-4-5",
+      model: "claude-3-opus-20240229",
       max_tokens: 4096,
       messages: [{ role: "user", content: prompt }],
     });
