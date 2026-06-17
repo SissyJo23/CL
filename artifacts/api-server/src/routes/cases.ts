@@ -5,17 +5,16 @@ import {
   insertCaseSchema,
   caseStrategiesTable,
   findingsTable,
+  documentsTable,
+  motionsTable,
 } from "@workspace/db";
-import { documentsTable } from "@workspace/db";
-import { motionsTable } from "@workspace/db";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { anthropic, buildCaseStrategyPrompt } from "../lib/anthropic";
 import { type AuthRequest } from "../lib/auth";
 
 const router = Router();
 
-router.get("/cases", async (req: AuthRequest, res) => {
-  const userId = req.userId!;
+router.get("/cases", async (_req: AuthRequest, res) => {
   const rows = await db
     .select({
       id: casesTable.id,
@@ -34,15 +33,13 @@ router.get("/cases", async (req: AuthRequest, res) => {
     .from(casesTable)
     .leftJoin(documentsTable, eq(documentsTable.caseId, casesTable.id))
     .leftJoin(findingsTable, eq(findingsTable.caseId, casesTable.id))
-    .where(eq(casesTable.userId, userId))
     .groupBy(casesTable.id)
     .orderBy(desc(casesTable.updatedAt));
   res.json(rows);
 });
 
 router.post("/cases", async (req: AuthRequest, res) => {
-  const userId = req.userId!;
-  const parsed = insertCaseSchema.safeParse({ ...req.body, userId });
+  const parsed = insertCaseSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.issues });
     return;
@@ -54,24 +51,21 @@ router.post("/cases", async (req: AuthRequest, res) => {
   res.status(201).json(row);
 });
 
-router.get("/cases/recent", async (req: AuthRequest, res) => {
-  const userId = req.userId!;
+router.get("/cases/recent", async (_req: AuthRequest, res) => {
   const [row] = await db
     .select()
     .from(casesTable)
-    .where(eq(casesTable.userId, userId))
     .orderBy(desc(casesTable.updatedAt))
     .limit(1);
   res.json({ case: row ?? null });
 });
 
 router.get("/cases/:id", async (req: AuthRequest, res) => {
-  const userId = req.userId!;
   const id = Number(req.params.id);
   const [row] = await db
     .select()
     .from(casesTable)
-    .where(and(eq(casesTable.id, id), eq(casesTable.userId, userId)));
+    .where(eq(casesTable.id, id));
   if (!row) {
     res.status(404).json({ error: "Not found" });
     return;
@@ -80,7 +74,6 @@ router.get("/cases/:id", async (req: AuthRequest, res) => {
 });
 
 router.patch("/cases/:id", async (req: AuthRequest, res) => {
-  const userId = req.userId!;
   const id = Number(req.params.id);
   const { title, defendantName, caseNumber, jurisdiction, notes } = req.body as {
     title?: string;
@@ -101,7 +94,7 @@ router.patch("/cases/:id", async (req: AuthRequest, res) => {
   const [row] = await db
     .update(casesTable)
     .set(updates)
-    .where(and(eq(casesTable.id, id), eq(casesTable.userId, userId)))
+    .where(eq(casesTable.id, id))
     .returning();
   if (!row) {
     res.status(404).json({ error: "Not found" });
@@ -111,16 +104,14 @@ router.patch("/cases/:id", async (req: AuthRequest, res) => {
 });
 
 router.delete("/cases/:id", async (req: AuthRequest, res) => {
-  const userId = req.userId!;
   const id = Number(req.params.id);
-  await db.delete(casesTable).where(and(eq(casesTable.id, id), eq(casesTable.userId, userId)));
+  await db.delete(casesTable).where(eq(casesTable.id, id));
   res.status(204).send();
 });
 
 router.get("/cases/:id/strategy", async (req: AuthRequest, res) => {
-  const userId = req.userId!;
   const id = Number(req.params.id);
-  const [caseRow] = await db.select().from(casesTable).where(and(eq(casesTable.id, id), eq(casesTable.userId, userId)));
+  const [caseRow] = await db.select().from(casesTable).where(eq(casesTable.id, id));
   if (!caseRow) {
     res.status(404).json({ error: "Case not found" });
     return;
@@ -133,9 +124,8 @@ router.get("/cases/:id/strategy", async (req: AuthRequest, res) => {
 });
 
 router.post("/cases/:id/strategy", async (req: AuthRequest, res) => {
-  const userId = req.userId!;
   const id = Number(req.params.id);
-  const [caseRow] = await db.select().from(casesTable).where(and(eq(casesTable.id, id), eq(casesTable.userId, userId)));
+  const [caseRow] = await db.select().from(casesTable).where(eq(casesTable.id, id));
   if (!caseRow) {
     res.status(404).json({ error: "Case not found" });
     return;
@@ -167,7 +157,7 @@ router.post("/cases/:id/strategy", async (req: AuthRequest, res) => {
   });
 
   const message = await anthropic.messages.create({
-    model: "claude-opus-4-5",
+    model: "claude-3-sonnet-20240229",
     max_tokens: 8192,
     messages: [{ role: "user", content: prompt }],
   });
