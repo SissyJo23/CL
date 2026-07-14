@@ -60,7 +60,14 @@ app.get("/", (_req, res) => {
 });
 
 app.post("/auth/login", (req, res) => {
-  const { email } = req.body || {};
+  const { email, password } = req.body || {};
+  const appPassword = process.env.APP_PASSWORD;
+
+  if (!appPassword || password !== appPassword) {
+    res.status(401).json({ success: false, message: "Invalid credentials" });
+    return;
+  }
+
   res.json({
     success: true,
     token: "user-1",

@@ -41,6 +41,7 @@ artifacts/
 ## Environment Variables Required
 - `DATABASE_URL` — provisioned automatically by Replit
 - `ANTHROPIC_API_KEY` — **user must supply this** (their Claude console key, starts with sk-ant-)
+- `APP_PASSWORD` — shared secret required to sign in via `/auth/login`
 - `PORT` — set automatically per artifact
 
 ## API Regeneration
