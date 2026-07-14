@@ -1,12 +1,12 @@
 import { useParams, Link } from "wouter";
-import { useGetCase, getGetCaseQueryKey, useListDocuments, getListDocumentsQueryKey, useCreateDocument, useDeleteDocument, useListCourtSessions, getListCourtSessionsQueryKey, useGenerateCaseStrategy, getGetCaseStrategyQueryKey } from "@workspace/api-client-react";
+import { useGetCase, getGetCaseQueryKey, useListDocuments, getListDocumentsQueryKey, useCreateDocument, useDeleteDocument, useListCourtSessions, getListCourtSessionsQueryKey, useGenerateCaseStrategy } from "@workspace/api-client-react";
 import type { CreateDocumentBodyDocumentType } from "@workspace/api-client-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch, Milestone, User, Users, BookOpen, MapPin, ChevronDown, ChevronRight, Star, Shield, AlertTriangle } from "lucide-react";
+import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch, Milestone, User, Users, BookOpen, Shield, ChevronDown, ChevronRight, AlertTriangle, Star, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -180,7 +180,7 @@ export default function CaseShow() {
   const { toast } = useToast();
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
-const strategy = null;
+  const strategy = generateStrategy.data;
   const hasAnalysis = currentCase?.hasAnalysis;
 
   const docList = Array.isArray(documents) ? documents : [];
@@ -302,7 +302,6 @@ const strategy = null;
       { id: caseId },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetCaseStrategyQueryKey(caseId) });
           toast({ title: "Case Strategy Generated", description: "Cumulative error brief and strategic roadmap are ready." });
         },
         onError: () => {
@@ -561,7 +560,7 @@ const strategy = null;
                     )}
                   </Button>
                 </div>
-                {strategyLoading ? (
+                {generateStrategy.isPending ? (
                   <div className="p-5 space-y-3">
                     <Skeleton className="h-4 w-full" />
                     <Skeleton className="h-4 w-3/4" />
@@ -684,7 +683,7 @@ const strategy = null;
               ) : pathwayResult?.status === "error" ? (
                 <div className="p-6 flex items-center gap-3 text-sm text-muted-foreground">
                   <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
-                  <span>Could not load federal readiness data. <Link href={`/cases/${caseId}/relief`}><span className="text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">Try the relief explorer</span></Link></span>
+                  <span>Could not load federal readiness data. <Link href={`/cases/${caseId}/relief`}><span className="text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">Try the relief pathway.</span></Link></span>
                 </div>
               ) : pathwayResult?.status === "ok" ? (
                 <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -954,11 +953,11 @@ const strategy = null;
                       </div>
                       <div className="flex rounded-lg border border-border overflow-hidden">
                         <button
-                          className={`flex-1 py-2 text-sm font-medium transition-colors ${inputMode === "paste" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover"}`}
+                          className={`flex-1 py-2 text-sm font-medium transition-colors ${inputMode === "paste" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted/50"}`}
                           onClick={() => setInputMode("paste")} type="button"
                         >Paste Text</button>
                         <button
-                          className={`flex-1 py-2 text-sm font-medium transition-colors ${inputMode === "upload" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hove"}`}
+                          className={`flex-1 py-2 text-sm font-medium transition-colors ${inputMode === "upload" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted/50"}`}
                           onClick={() => setInputMode("upload")} type="button"
                         >Upload File</button>
                       </div>
@@ -1072,7 +1071,7 @@ const strategy = null;
                     return (
                       <div key={doc.id} className="relative group/card">
                         <Link href={`/cases/${caseId}/documents/${doc.id}`}>
-                          <div className={`group flex items-center p-4 bg-card border rounded-xl transition-all cursor-pointer ${isThisRunning ? "border-blue-300 dark:border-blue-600 bg-blue-50" : ""}`}>
+                          <div className={`group flex items-center p-4 bg-card border rounded-xl transition-all cursor-pointer ${isThisRunning ? "border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/10" : "border-border"}`}>
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 transition-colors ${isThisRunning ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600" : ""}`}>
                               {isThisRunning ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5" />}
                             </div>
@@ -1127,7 +1126,7 @@ const strategy = null;
                             </div>
                           ) : (
                             <button
-                              className="opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition"
+                              className="opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(doc.id); }}
                               title="Delete document"
                             >
