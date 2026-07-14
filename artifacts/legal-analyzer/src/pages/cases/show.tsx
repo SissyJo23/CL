@@ -184,9 +184,10 @@ export default function CaseShow() {
   const strategy = strategyData?.strategy;
   const hasAnalysis = currentCase?.hasAnalysis;
 
-  const pendingDocs = (documents ?? []).filter((d) => d.status === "pending" || d.status === "error");
+  const docList = Array.isArray(documents) ? documents : [];
+  const pendingDocs = docList.filter((d) => d.status === "pending" || d.status === "error");
   const hasPendingDocs = pendingDocs.length > 0;
-  const hasAnyFindings = (documents ?? []).some((d) => (d.findingCount ?? 0) > 0);
+  const hasAnyFindings = docList.some((d) => (d.findingCount ?? 0) > 0);
 
   // Analyze All state
   const [isRunningAll, setIsRunningAll] = useState(false);
@@ -253,7 +254,7 @@ export default function CaseShow() {
   };
 
   const handleAnalyzeAll = async () => {
-    const queue = (documents ?? []).filter((d) => d.status === "pending" || d.status === "error");
+    const queue = docList.filter((d) => d.status === "pending" || d.status === "error");
     if (queue.length === 0) return;
 
     abortRef.current = false;
@@ -989,7 +990,7 @@ export default function CaseShow() {
                 </Dialog>
               </div>
 
-              {!docsLoading && !hasAnyFindings && documents && documents.length > 0 && (
+              {!docsLoading && !hasAnyFindings && docList.length > 0 && (
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/40 border border-border text-sm">
                   <span className="font-semibold text-foreground whitespace-nowrap">Step 1</span>
                   <span className="text-muted-foreground">Analyze documents to extract findings</span>
@@ -1058,9 +1059,9 @@ export default function CaseShow() {
                 <div className="space-y-3">
                   {[1, 2].map((i) => <Skeleton key={i} className="h-20 w-full" />)}
                 </div>
-              ) : documents && documents.length > 0 ? (
+              ) : docList.length > 0 ? (
                 <div className="grid gap-3">
-                  {documents.map((doc) => {
+                  {docList.map((doc) => {
                     const live = liveStatuses.get(doc.id);
                     const isThisRunning = live?.phase === "running";
                     const thisIsDone = live?.phase === "done";
