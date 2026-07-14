@@ -138,7 +138,6 @@ export default function CaseShow() {
   const mode: UserMode = rawMode ?? "attorney";
   const { data: currentCase, isLoading: caseLoading } = useGetCase(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseQueryKey(caseId) } });
   const { data: documents, isLoading: docsLoading } = useListDocuments(caseId, { query: { enabled: !!caseId, queryKey: getListDocumentsQueryKey(caseId) } });
-  const { data: strategyData, isLoading: strategyLoading } = useGetCaseStrategy(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseStrategyQueryKey(caseId) } });
   const { data: courtSessions } = useListCourtSessions(caseId, { query: { enabled: !!caseId, queryKey: getListCourtSessionsQueryKey(caseId) } });
   const { data: pathwayResult, isLoading: reliefLoading } = useQuery<PathwayResult>({
     queryKey: ["relief-pathway", caseId],
@@ -181,7 +180,7 @@ export default function CaseShow() {
   const { toast } = useToast();
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
-  const strategy = strategyData?.strategy;
+const strategy = null;
   const hasAnalysis = currentCase?.hasAnalysis;
 
   const docList = Array.isArray(documents) ? documents : [];
