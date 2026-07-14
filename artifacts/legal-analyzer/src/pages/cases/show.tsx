@@ -132,7 +132,7 @@ type LiveStatus = {
 };
 
 export default function CaseShow() {
-  const params = useParams();
+  const params = useParams() || {};
   const caseId = parseInt(params.id || "0", 10);
   const { mode: rawMode, setMode } = useUserMode();
   const mode: UserMode = rawMode ?? "attorney";
@@ -168,7 +168,7 @@ export default function CaseShow() {
     enabled: !!caseId,
   });
 
-  const caseFindings = (caseFindingsRaw ?? []).slice().sort((a, b) => {
+  const caseFindings = (Array.isArray(caseFindingsRaw) ? caseFindingsRaw : []).slice().sort((a, b) => {
     const aOrder = SEVERITY_ORDER[deriveSeverity(a.survivability, a.proceduralStatus)];
     const bOrder = SEVERITY_ORDER[deriveSeverity(b.survivability, b.proceduralStatus)];
     return aOrder - bOrder;
@@ -184,9 +184,9 @@ export default function CaseShow() {
   const strategy = strategyData?.strategy;
   const hasAnalysis = currentCase?.hasAnalysis;
 
-  const pendingDocs = (documents ?? []).filter((d) => d.status === "pending" || d.status === "error");
+  const pendingDocs = (Array.isArray(documents) ? documents : []).filter((d) => d.status === "pending" || d.status === "error");
   const hasPendingDocs = pendingDocs.length > 0;
-  const hasAnyFindings = (documents ?? []).some((d) => (d.findingCount ?? 0) > 0);
+  const hasAnyFindings = (Array.isArray(documents) ? documents : []).some((d) => (d.findingCount ?? 0) > 0);
 
   // Analyze All state
   const [isRunningAll, setIsRunningAll] = useState(false);
@@ -253,7 +253,7 @@ export default function CaseShow() {
   };
 
   const handleAnalyzeAll = async () => {
-    const queue = (documents ?? []).filter((d) => d.status === "pending" || d.status === "error");
+    const queue = (Array.isArray(documents) ? documents : []).filter((d) => d.status === "pending" || d.status === "error");
     if (queue.length === 0) return;
 
     abortRef.current = false;
