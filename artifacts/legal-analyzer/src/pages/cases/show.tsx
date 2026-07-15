@@ -142,7 +142,7 @@ export default function CaseShow() {
   const { data: pathwayResult, isLoading: reliefLoading } = useQuery<PathwayResult>({
     queryKey: ["relief-pathway", caseId],
     queryFn: async () => {
-      const res = await fetch(`/api/cases/${caseId}/relief-pathway`);
+      const res = await fetch(`https://caselight-api.onrender.com/cases/${caseId}/relief-pathway`);
       if (res.status === 404) return { status: "not_found" } as PathwayResult;
       if (res.status === 422) return { status: "unsupported_jurisdiction" } as PathwayResult;
       if (!res.ok) return { status: "error" } as PathwayResult;
@@ -160,7 +160,7 @@ export default function CaseShow() {
   const { data: caseFindingsRaw, isLoading: findingsLoading } = useQuery<CaseFindingSummary[]>({
     queryKey: ["case-findings-summary", caseId],
     queryFn: async () => {
-      const res = await fetch(`/api/cases/${caseId}/findings`);
+      const res = await fetch(`https://caselight-api.onrender.com/cases/${caseId}/findings`);
       if (!res.ok) return [];
       return res.json();
     },
@@ -209,7 +209,7 @@ export default function CaseShow() {
   const analyzeDocument = async (docId: number): Promise<void> => {
     setLive(docId, { phase: "running", message: "Starting analysis…", findingCount: 0 });
     try {
-      const response = await fetch(`/api/cases/${caseId}/documents/${docId}/analyze?mode=${mode}`, { method: "POST" });
+      const response = await fetch(`https://caselight-api.onrender.com/cases/${caseId}/documents/${docId}/analyze?mode=${mode}`, { method: "POST" });
 
       if (!response.ok) {
         let msg = "Analysis failed.";
@@ -341,15 +341,7 @@ export default function CaseShow() {
     );
   };
 
-  const readFileAsText = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target?.result as string);
-      reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
-      reader.readAsText(file);
-    });
-  };
-
+  // Fixed Native Document Upload Channel using FormData
   const handleUploadDocument = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
@@ -358,33 +350,39 @@ export default function CaseShow() {
       return;
     }
     setIsUploading(true);
-    let successCount = 0;
+    
     try {
-      for (const file of uploadFiles) {
-        try {
-          const content = await readFileAsText(file);
-          if (!content.trim()) {
-            toast({ title: "Warning", description: `${file.name} appears empty or is a binary PDF. Try pasting the text instead.`, variant: "destructive" });
-            continue;
-          }
-          const title = file.name.replace(/\.[^.]+$/, "");
-          const res = await fetch(`/api/cases/${caseId}/documents`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, documentType: docType, content }),
-          });
-          if (!res.ok) throw new Error(await res.text());
-          successCount++;
-        } catch (err) {
-          toast({ title: "File Error", description: `${file.name}: ${err instanceof Error ? err.message : "Failed"}`, variant: "destructive" });
-        }
-      }
-      if (successCount > 0) {
-        queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
-        setOpen(false);
-        setUploadFiles([]);
-        toast({ title: successCount === 1 ? "Document Added" : `${successCount} Documents Added`, description: "Ready for analysis." });
-      }
+      const formData = new FormData();
+      uploadFiles.forEach((file) => {
+        formData.append("files", file);
+      });
+      formData.append("documentType", docType);
+
+      const token = localStorage.getItem("authToken");
+      const res = await fetch(`https://caselight-api.onrender.com/cases/${caseId}/documents/upload`, {
+        method: "POST",
+        headers: {
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error(await res.text());
+
+      const data = await res.json();
+      queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
+      setOpen(false);
+      setUploadFiles([]);
+      toast({ 
+        title: "Success", 
+        description: data.length === 1 ? "Document uploaded and processed successfully." : `${data.length} documents uploaded and processed.` 
+      });
+    } catch (err) {
+      toast({ 
+        title: "Upload Error", 
+        description: err instanceof Error ? err.message : "Failed to extract document contents.", 
+        variant: "destructive" 
+      });
     } finally {
       setIsUploading(false);
     }
@@ -400,7 +398,7 @@ export default function CaseShow() {
       );
       if (live.phase === "done") return (
         <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
-          <CheckCircle2 className="w-3 h-3 mr-1" /> Analyzed
+          <CheckCircle2 className="w-3 h-3 mr-1" /> To File
         </Badge>
       );
       if (live.phase === "error") return (
