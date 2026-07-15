@@ -5,10 +5,12 @@ import Home from "@/pages/home";
 import CasesNew from "@/pages/cases/new";
 import CasesList from "@/pages/cases/list";
 import CaseShow from "@/pages/cases/show";
+import CasesEdit from "@/pages/cases/edit"; // Import the new edit page
 import Legal from "@/pages/legal";
 
 // ✅ POINT FRONTEND TO YOUR RENDER BACKEND
-setBaseUrl("https://caselight-api.onrender.com");
+const API_BASE_URL = "https://caselight-api.onrender.com";
+setBaseUrl(API_BASE_URL);
 
 // ✅ Attach auth token to every request
 setAuthTokenGetter(() => localStorage.getItem("authToken"));
@@ -27,6 +29,8 @@ function App() {
         <Route path="/" component={() => <ProtectedRoute component={Home} />} />
         <Route path="/home" component={() => <ProtectedRoute component={Home} />} />
         <Route path="/cases/new" component={() => <ProtectedRoute component={CasesNew} />} />
+        {/* Guard route placement: :id/edit must come BEFORE :id */}
+        <Route path="/cases/:id/edit" component={() => <ProtectedRoute component={CasesEdit} />} />
         <Route path="/cases/:id" component={() => <ProtectedRoute component={CaseShow} />} />
         <Route path="/cases" component={() => <ProtectedRoute component={CasesList} />} />
         <Route path="/legal" component={Legal} />
