@@ -142,7 +142,7 @@ export default function CaseShow() {
   const { data: pathwayResult, isLoading: reliefLoading } = useQuery<PathwayResult>({
     queryKey: ["relief-pathway", caseId],
     queryFn: async () => {
-      const res = await fetch(`https://caselight-api.onrender.com/cases/${caseId}/relief-pathway`);
+      const res = await fetch(`/api/cases/${caseId}/relief-pathway`);
       if (res.status === 404) return { status: "not_found" } as PathwayResult;
       if (res.status === 422) return { status: "unsupported_jurisdiction" } as PathwayResult;
       if (!res.ok) return { status: "error" } as PathwayResult;
@@ -160,7 +160,7 @@ export default function CaseShow() {
   const { data: caseFindingsRaw, isLoading: findingsLoading } = useQuery<CaseFindingSummary[]>({
     queryKey: ["case-findings-summary", caseId],
     queryFn: async () => {
-      const res = await fetch(`https://caselight-api.onrender.com/cases/${caseId}/findings`);
+      const res = await fetch(`/api/cases/${caseId}/findings`);
       if (!res.ok) return [];
       return res.json();
     },
@@ -209,7 +209,13 @@ export default function CaseShow() {
   const analyzeDocument = async (docId: number): Promise<void> => {
     setLive(docId, { phase: "running", message: "Starting analysis…", findingCount: 0 });
     try {
-      const response = await fetch(`https://caselight-api.onrender.com/cases/${caseId}/documents/${docId}/analyze?mode=${mode}`, { method: "POST" });
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(`/api/cases/${caseId}/documents/${docId}/analyze?mode=${mode}`, { 
+        method: "POST",
+        headers: {
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        }
+      });
 
       if (!response.ok) {
         let msg = "Analysis failed.";
@@ -341,10 +347,9 @@ export default function CaseShow() {
     );
   };
 
-  // Fixed Native Document Upload Channel using FormData
+  // Fixed Cross-Origin Relative File Stream Pipeline
   const handleUploadDocument = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    
     if (uploadFiles.length === 0) {
       toast({ title: "Validation Error", description: "Please select at least one file.", variant: "destructive" });
       return;
@@ -359,7 +364,7 @@ export default function CaseShow() {
       formData.append("documentType", docType);
 
       const token = localStorage.getItem("authToken");
-      const res = await fetch(`https://caselight-api.onrender.com/cases/${caseId}/documents/upload`, {
+      const res = await fetch(`/api/cases/${caseId}/documents/upload`, {
         method: "POST",
         headers: {
           ...(token ? { "Authorization": `Bearer ${token}` } : {}),
@@ -398,7 +403,7 @@ export default function CaseShow() {
       );
       if (live.phase === "done") return (
         <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
-          <CheckCircle2 className="w-3 h-3 mr-1" /> To File
+          <CheckCircle2 className="w-3 h-3 mr-1" /> Analyzed
         </Badge>
       );
       if (live.phase === "error") return (
@@ -439,6 +444,7 @@ export default function CaseShow() {
           </div>
         ) : currentCase ? (
           <div className="space-y-8">
+            {/* Upper Workspace Title Actions */}
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-serif font-medium tracking-tight text-foreground">{currentCase.title}</h1>
@@ -1067,45 +1073,58 @@ export default function CaseShow() {
                     const thisIsDone = live?.phase === "done";
                     const needsAnalysis = !live && (doc.status === "pending" || doc.status === "error");
                     const displayFindingCount = thisIsDone ? live.findingCount : doc.findingCount;
-
                     const isConfirming = confirmDeleteId === doc.id;
+
+                    const cardContent = (
+                      <div className={`group flex items-center p-4 bg-card border rounded-xl transition-all ${isThisRunning ? "border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/5" : "border-border hover:border-border/80 hover:bg-muted/50"}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 transition-colors ${isThisRunning ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600" : ""}`}>
+                          {isThisRunning ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5" />}
+                        </div>
+                        <div className="flex-1 min-w-0 pr-8">
+                          <h3 className="font-medium text-foreground truncate">{doc.title}</h3>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                            <span className="capitalize">{doc.documentType.replace("_", " ")}</span>
+                            <span>•</span>
+                            <span>{safeFormatDate(doc.createdAt, "MMM d, yyyy")}</span>
+                          </div>
+                          {isThisRunning && live.message && (
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{live.message}</p>
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end gap-2 ml-4 shrink-0 pr-8">
+                          {getStatusBadge(doc.id, doc.status)}
+                          {(doc.status === "analyzed" || thisIsDone) && displayFindingCount != null && (
+                            <span className="text-xs font-medium bg-muted px-2 py-0.5 rounded-full">
+                              {displayFindingCount} findings
+                            </span>
+                          )}
+                          {needsAnalysis && !isRunningAll && (
+                            <span className="text-xs font-medium text-primary flex items-center gap-1 group-hover:underline">
+                              <Play className="w-3 h-3 fill-current" />
+                              Run Analysis
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
 
                     return (
                       <div key={doc.id} className="relative group/card">
-                        <Link href={`/cases/${caseId}/documents/${doc.id}`}>
-                          <div className={`group flex items-center p-4 bg-card border rounded-xl transition-all cursor-pointer ${isThisRunning ? "border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/5" : "border-border hover:border-border/80 hover:bg-muted/50"}`}>
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 transition-colors ${isThisRunning ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600" : ""}`}>
-                              {isThisRunning ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5" />}
-                            </div>
-                            <div className="flex-1 min-w-0 pr-8">
-                              <h3 className="font-medium text-foreground truncate">{doc.title}</h3>
-                              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                                <span className="capitalize">{doc.documentType.replace("_", " ")}</span>
-                                <span>•</span>
-                                <span>{safeFormatDate(doc.createdAt, "MMM d, yyyy")}</span>
-                              </div>
-                              {isThisRunning && live.message && (
-                                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{live.message}</p>
-                              )}
-                            </div>
-                            <div className="flex flex-col items-end gap-2 ml-4 shrink-0 pr-8">
-                              {getStatusBadge(doc.id, doc.status)}
-                              {(doc.status === "analyzed" || thisIsDone) && displayFindingCount != null && (
-                                <span className="text-xs font-medium bg-muted px-2 py-0.5 rounded-full">
-                                  {displayFindingCount} findings
-                                </span>
-                              )}
-                              {needsAnalysis && !isRunningAll && (
-                                <span className="text-xs font-medium text-primary flex items-center gap-1 group-hover:underline">
-                                  <Play className="w-3 h-3 fill-current" />
-                                  Run Analysis
-                                </span>
-                              )}
-                            </div>
+                        {needsAnalysis ? (
+                          <div 
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); analyzeDocument(doc.id); }}
+                            className="cursor-pointer"
+                          >
+                            {cardContent}
                           </div>
-                        </Link>
-                        {/* Delete button — visible on hover (desktop) / always (mobile) */}
-                        <div className="absolute top-3 right-3">
+                        ) : (
+                          <Link href={`/cases/${caseId}/documents/${doc.id}`}>
+                            <div className="cursor-pointer">
+                              {cardContent}
+                            </div>
+                          </Link>
+                        )}
+                        <div className="absolute top-3 right-3 z-10">
                           {isConfirming ? (
                             <div
                               className="flex items-center gap-1"
