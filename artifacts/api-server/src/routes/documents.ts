@@ -52,7 +52,7 @@ async function ocrWithVision(buffer: Buffer, mimeType: string): Promise<string> 
   const useMime = allowed.includes(mimeType) ? mimeType : "image/jpeg";
   const base64 = buffer.toString("base64");
   const msg = await anthropic.messages.create({
-    model: "claude-opus-4-5",
+    model: "claude-3-5-sonnet-latest",
     max_tokens: 8192,
     messages: [{
       role: "user",
@@ -68,7 +68,7 @@ async function ocrWithVision(buffer: Buffer, mimeType: string): Promise<string> 
 async function ocrPdfWithAnthropic(buffer: Buffer): Promise<string> {
   const base64 = buffer.toString("base64");
   const msg = await anthropic.messages.create({
-    model: "claude-opus-4-5",
+    model: "claude-3-5-sonnet-latest",
     max_tokens: 8192,
     messages: [{
       role: "user",
@@ -338,7 +338,7 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
           );
 
       const message = await callAnthropicWithRetry(
-        { model: "claude-opus-4-5", max_tokens: 8192, messages: [{ role: "user", content: prompt }] },
+        { model: "claude-3-5-sonnet-latest", max_tokens: 8192, messages: [{ role: "user", content: prompt }] },
         (msg) => sendSse(res, { type: "status", message: msg }),
       );
 
@@ -346,28 +346,22 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
       let chunkFindings: RawFinding[] = [];
 
       try {
-        // Strip markdown code fences first
         let cleaned = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "").trim();
-        // Extract the JSON array even if Claude adds explanatory text before/after
         const arrayStart = cleaned.indexOf("[");
         const arrayEnd = cleaned.lastIndexOf("]");
         if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
           cleaned = cleaned.slice(arrayStart, arrayEnd + 1);
         } else if (arrayStart !== -1) {
-          // No closing bracket — response was truncated; attempt partial recovery below
           cleaned = cleaned.slice(arrayStart);
         }
         chunkFindings = JSON.parse(cleaned);
         if (!Array.isArray(chunkFindings)) chunkFindings = [];
       } catch (parseErr) {
-        // Attempt partial recovery: the response may have been cut off mid-object
-        // due to hitting the model's output token limit. Salvage all complete findings.
         let recovered = false;
         try {
           let partial = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "").trim();
           const arrayStart = partial.indexOf("[");
           if (arrayStart !== -1) partial = partial.slice(arrayStart);
-          // Walk backwards from end to find the last complete finding object
           const lastComplete = partial.lastIndexOf("},");
           if (lastComplete !== -1) {
             const attempt = partial.slice(0, lastComplete + 1) + "]";
@@ -376,7 +370,7 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
               chunkFindings = parsed;
               recovered = true;
               logger.warn({ docId, chunkIndex, recovered: parsed.length }, "AI response truncated — recovered partial findings");
-              sendSse(res, { type: "status", message: `Response was truncated — recovered ${parsed.length} finding${parsed.length === 1 ? "" : "s"}. Analysis complete.` });
+              sendSse(res, { type: "status", message: `Response was truncated — recovered ${parsed.length} findings. Analysis complete.` });
             }
           }
         } catch { /* partial recovery also failed */ }
@@ -389,7 +383,6 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
             res.end();
             return;
           }
-          // For chunked docs: skip the bad chunk and continue
           chunkFindings = [];
         }
       }
