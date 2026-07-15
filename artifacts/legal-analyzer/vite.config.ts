@@ -26,6 +26,9 @@ export default defineConfig({
     },
     dedupe: ["react", "react-dom"],
   },
+  optimizeDeps: {
+    exclude: ["@workspace/api-client-react"],
+  },
   root: path.resolve(import.meta.dirname),
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
@@ -33,7 +36,7 @@ export default defineConfig({
   },
   server: {
     port,
-    host: "0.0.0.0", // Reverted back to 0.0.0.0 so Render's internal router can bind to it
+    host: "0.0.0.0",
     allowedHosts: true,
     fs: {
       strict: true,
