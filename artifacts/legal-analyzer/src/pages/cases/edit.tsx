@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
-import { useParams, useLocation } from "wouter"; // Adjust to "react-router-dom" if your project uses it
-import { useToast } from "@/hooks/use-toast"; // Assuming shadcn/ui toast; remove if not used
+import { useParams, useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/button"; // Replace with your input components
-import { Textarea } from "@/components/ui/textarea";
 
 interface CaseData {
   title: string;
@@ -12,6 +10,8 @@ interface CaseData {
   jurisdiction: string | null;
   notes: string | null;
 }
+
+const API_BASE_URL = "https://caselight-api.onrender.com";
 
 export default function CasesEdit() {
   const { id } = useParams<{ id: string }>();
@@ -28,11 +28,21 @@ export default function CasesEdit() {
     notes: "",
   });
 
+  // Get current auth token helper
+  const getAuthHeader = () => {
+    const token = localStorage.getItem("authToken");
+    return token ? { "Authorization": `Bearer ${token}` } : {};
+  };
+
   // 1. Load the existing case
   useEffect(() => {
     async function fetchCase() {
       try {
-        const res = await fetch(`/api/cases/${id}`);
+        const res = await fetch(`${API_BASE_URL}/cases/${id}`, {
+          headers: {
+            ...getAuthHeader(),
+          },
+        });
         if (!res.ok) throw new Error("Failed to fetch case details");
         const data = await res.json();
         setFormData({
@@ -68,9 +78,12 @@ export default function CasesEdit() {
     setSaving(true);
 
     try {
-      const res = await fetch(`/api/cases/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/cases/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...getAuthHeader(),
+        },
         body: JSON.stringify(formData),
       });
 
