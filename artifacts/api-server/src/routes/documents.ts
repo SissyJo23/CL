@@ -201,10 +201,6 @@ router.delete("/cases/:caseId/documents/:id", async (req, res) => {
   res.status(204).send();
 });
 
-function sendSse(res: Response, event: unknown) {
-  res.write(`data: ${JSON.stringify(event)}\n\n`);
-}
-
 async function callAnthropicWithRetry(
   params: Parameters<typeof anthropic.messages.create>[0],
   onStatus: (msg: string) => void,
@@ -261,265 +257,219 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
     return;
   }
 
+  // 1. Instantly mark as analyzing in DB
+  await db
+    .update(documentsTable)
+    .set({ status: "analyzing" })
+    .where(eq(documentsTable.id, docId));
+
+  // 2. Clear old findings if re-analyzing
   if (doc.status === "analyzed") {
     await db.delete(findingsTable).where(
       and(eq(findingsTable.documentId, docId), eq(findingsTable.caseId, caseId))
     );
   }
 
-  const otherDocs = await db
-    .select()
-    .from(documentsTable)
-    .where(and(eq(documentsTable.caseId, caseId)));
+  // 3. RESPOND IMMEDIATELY TO BYPASS RENDER TIMEOUTS
+  res.status(202).json({ message: "Analysis started in background" });
 
-  const otherDocsForPrompt = otherDocs
-    .filter((d) => d.id !== docId)
-    .map((d) => ({ id: d.id, title: d.title, content: d.content }));
+  // 4. Run the heavy AI processing inside an asynchronous wrapper
+  (async () => {
+    try {
+      logger.info({ docId, caseId, userMode: userMode ?? "attorney" }, "Starting background document analysis");
 
-  const userCategories = await db
-    .select({ id: categoriesTable.id, name: categoriesTable.name, description: categoriesTable.description })
-    .from(categoriesTable);
+      const otherDocs = await db
+        .select()
+        .from(documentsTable)
+        .where(and(eq(documentsTable.caseId, caseId)));
 
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-  res.flushHeaders();
+      const otherDocsForPrompt = otherDocs
+        .filter((d) => d.id !== docId)
+        .map((d) => ({ id: d.id, title: d.title, content: d.content }));
 
-  logger.info({ docId, caseId, userMode: userMode ?? "attorney" }, "Starting document analysis");
+      const userCategories = await db
+        .select({ id: categoriesTable.id, name: categoriesTable.name, description: categoriesTable.description })
+        .from(categoriesTable);
 
-  await db
-    .update(documentsTable)
-    .set({ status: "analyzing" })
-    .where(eq(documentsTable.id, docId));
+      const validCategoryIds = new Set(userCategories.map((c) => c.id));
+      const contentToAnalyze = redactText(doc.content);
+      const chunks = splitIntoChunks(contentToAnalyze);
+      const isChunked = chunks.length > 1;
 
-  try {
-    const validCategoryIds = new Set(userCategories.map((c) => c.id));
-    const contentToAnalyze = redactText(doc.content);
-    const chunks = splitIntoChunks(contentToAnalyze);
-    const isChunked = chunks.length > 1;
+      type RawFinding = {
+        issueTitle: string;
+        transcriptExcerpt: string;
+        legalAnalysis: string;
+        pageNumber?: number | null;
+        lineNumber?: number | null;
+        categoryId?: number | null;
+        precedentName?: string | null;
+        precedentCitation?: string | null;
+        precedentType?: string | null;
+        courtRuling?: string | null;
+        materialSimilarity?: string | null;
+        proceduralStatus?: string | null;
+        anticipatedBlock?: string | null;
+        breakthroughArgument?: string | null;
+        legalVehicle?: string | null;
+        survivability?: string | null;
+      };
 
-    type RawFinding = {
-      issueTitle: string;
-      transcriptExcerpt: string;
-      legalAnalysis: string;
-      pageNumber?: number | null;
-      lineNumber?: number | null;
-      categoryId?: number | null;
-      precedentName?: string | null;
-      precedentCitation?: string | null;
-      precedentType?: string | null;
-      courtRuling?: string | null;
-      materialSimilarity?: string | null;
-      proceduralStatus?: string | null;
-      anticipatedBlock?: string | null;
-      breakthroughArgument?: string | null;
-      legalVehicle?: string | null;
-      survivability?: string | null;
-    };
+      const allFindings: RawFinding[] = [];
+      let chunkSummary = "";
 
-    const allFindings: RawFinding[] = [];
-    let chunkSummary = "";
+      for (const { chunk, chunkIndex, totalChunks } of chunks) {
+        const prompt = isChunked
+          ? buildChunkAnalysisPrompt(
+              doc.documentType, doc.title, chunk, chunkIndex, totalChunks,
+              chunkSummary, otherDocsForPrompt, userCategories,
+            )
+          : buildAnalysisPrompt(
+              doc.documentType, doc.title, chunk, otherDocsForPrompt, userCategories,
+            );
 
-    for (const { chunk, chunkIndex, totalChunks } of chunks) {
-      if (isChunked) {
-        sendSse(res, {
-          type: "status",
-          message: `Analyzing section ${chunkIndex + 1} of ${totalChunks} (pages ~${chunkIndex * 10 + 1}–${(chunkIndex + 1) * 10})...`,
-        });
+        const message = await callAnthropicWithRetry(
+          { model: "claude-3-5-sonnet-latest", max_tokens: 8192, messages: [{ role: "user", content: prompt }] },
+          (msg) => logger.info({ docId, chunkIndex }, msg)
+        );
+
+        const rawText = message.content[0]?.type === "text" ? message.content[0].text : "[]";
+        let chunkFindings: RawFinding[] = [];
+
+        try {
+          let cleaned = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "").trim();
+          const arrayStart = cleaned.indexOf("[");
+          const arrayEnd = cleaned.lastIndexOf("]");
+          if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
+            cleaned = cleaned.slice(arrayStart, arrayEnd + 1);
+          } else if (arrayStart !== -1) {
+            cleaned = cleaned.slice(arrayStart);
+          }
+          chunkFindings = JSON.parse(cleaned);
+          if (!Array.isArray(chunkFindings)) chunkFindings = [];
+        } catch (parseErr) {
+          let recovered = false;
+          try {
+            let partial = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "").trim();
+            const arrayStart = partial.indexOf("[");
+            if (arrayStart !== -1) partial = partial.slice(arrayStart);
+            const lastComplete = partial.lastIndexOf("},");
+            if (lastComplete !== -1) {
+              const attempt = partial.slice(0, lastComplete + 1) + "]";
+              const parsed = JSON.parse(attempt);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                chunkFindings = parsed;
+                recovered = true;
+                logger.warn({ docId, chunkIndex, recovered: parsed.length }, "AI response truncated — recovered partial findings");
+              }
+            }
+          } catch { /* partial recovery also failed */ }
+
+          if (!recovered) {
+            logger.error({ err: parseErr, docId, chunkIndex }, "Failed to parse AI findings response");
+            if (!isChunked) {
+              await db.update(documentsTable).set({ status: "error" }).where(eq(documentsTable.id, docId));
+              return;
+            }
+            chunkFindings = [];
+          }
+        }
+
+        allFindings.push(...chunkFindings);
+
+        if (isChunked && chunkIndex < totalChunks - 1) {
+          chunkSummary = await buildChunkSummary(chunk, chunkSummary);
+        }
       }
 
-      const prompt = isChunked
-        ? buildChunkAnalysisPrompt(
-            doc.documentType, doc.title, chunk, chunkIndex, totalChunks,
-            chunkSummary, otherDocsForPrompt, userCategories,
-          )
-        : buildAnalysisPrompt(
-            doc.documentType, doc.title, chunk, otherDocsForPrompt, userCategories,
-          );
+      const insertedFindings = [];
+      for (const f of allFindings) {
+        const resolvedCategoryId =
+          f.categoryId != null && validCategoryIds.has(f.categoryId) ? f.categoryId : null;
 
-      const message = await callAnthropicWithRetry(
-        { model: "claude-3-5-sonnet-latest", max_tokens: 8192, messages: [{ role: "user", content: prompt }] },
-        (msg) => sendSse(res, { type: "status", message: msg }),
-      );
+        const [inserted] = await db
+          .insert(findingsTable)
+          .values({
+            documentId: docId,
+            caseId,
+            issueTitle: f.issueTitle,
+            transcriptExcerpt: f.transcriptExcerpt,
+            legalAnalysis: f.legalAnalysis,
+            categoryId: resolvedCategoryId,
+            pageNumber: typeof f.pageNumber === "number" ? f.pageNumber : null,
+            lineNumber: typeof f.lineNumber === "number" ? f.lineNumber : null,
+            precedentName: f.precedentName ?? null,
+            precedentCitation: f.precedentCitation ?? null,
+            precedentType: f.precedentType ?? null,
+            courtRuling: f.courtRuling ?? null,
+            materialSimilarity: f.materialSimilarity ?? null,
+            proceduralStatus: f.proceduralStatus ?? null,
+            anticipatedBlock: f.anticipatedBlock ?? null,
+            breakthroughArgument: f.breakthroughArgument ?? null,
+            legalVehicle: f.legalVehicle ?? null,
+            survivability: f.survivability ?? null,
+          })
+          .returning();
+        insertedFindings.push(inserted);
+      }
 
-      const rawText = message.content[0]?.type === "text" ? message.content[0].text : "[]";
-      let chunkFindings: RawFinding[] = [];
-
-      try {
-        let cleaned = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "").trim();
-        const arrayStart = cleaned.indexOf("[");
-        const arrayEnd = cleaned.lastIndexOf("]");
-        if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
-          cleaned = cleaned.slice(arrayStart, arrayEnd + 1);
-        } else if (arrayStart !== -1) {
-          cleaned = cleaned.slice(arrayStart);
-        }
-        chunkFindings = JSON.parse(cleaned);
-        if (!Array.isArray(chunkFindings)) chunkFindings = [];
-      } catch (parseErr) {
-        let recovered = false;
+      // Cross-case correlations setup
+      if (insertedFindings.length > 0) {
         try {
-          let partial = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "").trim();
-          const arrayStart = partial.indexOf("[");
-          if (arrayStart !== -1) partial = partial.slice(arrayStart);
-          const lastComplete = partial.lastIndexOf("},");
-          if (lastComplete !== -1) {
-            const attempt = partial.slice(0, lastComplete + 1) + "]";
-            const parsed = JSON.parse(attempt);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              chunkFindings = parsed;
-              recovered = true;
-              logger.warn({ docId, chunkIndex, recovered: parsed.length }, "AI response truncated — recovered partial findings");
-              sendSse(res, { type: "status", message: `Response was truncated — recovered ${parsed.length} findings. Analysis complete.` });
+          const otherCaseFindings = await db
+            .select({
+              id: findingsTable.id,
+              issueTitle: findingsTable.issueTitle,
+              transcriptExcerpt: findingsTable.transcriptExcerpt,
+              documentId: findingsTable.documentId,
+              documentTitle: documentsTable.title,
+              caseTitle: casesTable.title,
+            })
+            .from(findingsTable)
+            .innerJoin(documentsTable, eq(findingsTable.documentId, documentsTable.id))
+            .innerJoin(casesTable, eq(findingsTable.caseId, casesTable.id))
+            .where(ne(findingsTable.documentId, docId))
+            .orderBy(desc(findingsTable.id));
+
+          if (otherCaseFindings.length > 0) {
+            const crossMatches = await runCrossCaseMatching(insertedFindings, otherCaseFindings);
+            for (const match of crossMatches) {
+              await db.insert(crossCaseMatchesTable).values({
+                findingId: match.newFindingId,
+                sourceDocumentId: match.sourceDocumentId,
+                sourceDocumentTitle: match.sourceDocumentTitle,
+                matchedPassage: match.matchedPassage,
+                explanation: match.explanation,
+                relevanceScore: String(match.relevanceScore),
+              });
             }
           }
-        } catch { /* partial recovery also failed */ }
-
-        if (!recovered) {
-          logger.error({ err: parseErr, docId, chunkIndex, rawTextSnippet: rawText.slice(0, 300) }, "Failed to parse AI findings response");
-          if (!isChunked) {
-            sendSse(res, { type: "error", message: "Failed to parse AI response. Please try again." });
-            await db.update(documentsTable).set({ status: "error" }).where(eq(documentsTable.id, docId));
-            res.end();
-            return;
-          }
-          chunkFindings = [];
+        } catch (crossErr) {
+          logger.error({ crossErr }, "Cross-case execution bypassed");
         }
       }
 
-      allFindings.push(...chunkFindings);
+      // 5. Update state to analyzed once fully complete
+      await db
+        .update(documentsTable)
+        .set({ status: "analyzed", findingCount: insertedFindings.length, updatedAt: new Date() })
+        .where(eq(documentsTable.id, docId));
 
-      if (isChunked && chunkIndex < totalChunks - 1) {
-        chunkSummary = await buildChunkSummary(chunk, chunkSummary);
-      }
+      await db
+        .update(casesTable)
+        .set({ hasAnalysis: true, updatedAt: new Date() })
+        .where(eq(casesTable.id, caseId));
+
+      logger.info({ docId }, "Background analysis complete!");
+
+    } catch (err) {
+      logger.error({ err, docId }, "Background loop execution failed");
+      await db
+        .update(documentsTable)
+        .set({ status: "error" })
+        .where(eq(documentsTable.id, docId));
     }
-
-    const insertedFindings: Array<{
-      id: number;
-      issueTitle: string;
-      transcriptExcerpt: string;
-      legalAnalysis: string;
-      documentId: number;
-    }> = [];
-
-    for (const f of allFindings) {
-      const resolvedCategoryId =
-        f.categoryId != null && validCategoryIds.has(f.categoryId) ? f.categoryId : null;
-
-      const [inserted] = await db
-        .insert(findingsTable)
-        .values({
-          documentId: docId,
-          caseId,
-          issueTitle: f.issueTitle,
-          transcriptExcerpt: f.transcriptExcerpt,
-          legalAnalysis: f.legalAnalysis,
-          categoryId: resolvedCategoryId,
-          pageNumber: typeof f.pageNumber === "number" ? f.pageNumber : null,
-          lineNumber: typeof f.lineNumber === "number" ? f.lineNumber : null,
-          precedentName: f.precedentName ?? null,
-          precedentCitation: f.precedentCitation ?? null,
-          precedentType: f.precedentType ?? null,
-          courtRuling: f.courtRuling ?? null,
-          materialSimilarity: f.materialSimilarity ?? null,
-          proceduralStatus: f.proceduralStatus ?? null,
-          anticipatedBlock: f.anticipatedBlock ?? null,
-          breakthroughArgument: f.breakthroughArgument ?? null,
-          legalVehicle: f.legalVehicle ?? null,
-          survivability: f.survivability ?? null,
-        })
-        .returning();
-
-      insertedFindings.push({
-        id: inserted.id,
-        issueTitle: inserted.issueTitle,
-        transcriptExcerpt: inserted.transcriptExcerpt,
-        legalAnalysis: inserted.legalAnalysis,
-        documentId: inserted.documentId,
-      });
-
-      sendSse(res, {
-        type: "finding",
-        data: { ...inserted, crossCaseMatches: [] },
-      });
-    }
-
-    if (insertedFindings.length > 0) {
-      try {
-        sendSse(res, { type: "status", message: "Running cross-case matching..." });
-        const otherCaseFindings = await db
-          .select({
-            id: findingsTable.id,
-            issueTitle: findingsTable.issueTitle,
-            transcriptExcerpt: findingsTable.transcriptExcerpt,
-            documentId: findingsTable.documentId,
-            documentTitle: documentsTable.title,
-            caseTitle: casesTable.title,
-          })
-          .from(findingsTable)
-          .innerJoin(documentsTable, eq(findingsTable.documentId, documentsTable.id))
-          .innerJoin(casesTable, eq(findingsTable.caseId, casesTable.id))
-          .where(ne(findingsTable.documentId, docId))
-          .orderBy(desc(findingsTable.id));
-
-        if (otherCaseFindings.length > 0) {
-          const crossMatches = await runCrossCaseMatching(
-            insertedFindings,
-            otherCaseFindings,
-          );
-
-          for (const match of crossMatches) {
-            await db.insert(crossCaseMatchesTable).values({
-              findingId: match.newFindingId,
-              sourceDocumentId: match.sourceDocumentId,
-              sourceDocumentTitle: match.sourceDocumentTitle,
-              matchedPassage: match.matchedPassage,
-              explanation: match.explanation,
-              relevanceScore: String(match.relevanceScore),
-            });
-          }
-
-          sendSse(res, { type: "cross_case_done", count: crossMatches.length });
-        }
-      } catch (crossErr) {
-        console.error("Cross-case matching failed (non-fatal):", crossErr);
-      }
-    }
-
-    await db
-      .update(documentsTable)
-      .set({ status: "analyzed", findingCount: insertedFindings.length, updatedAt: new Date() })
-      .where(eq(documentsTable.id, docId));
-
-    await db
-      .update(casesTable)
-      .set({ hasAnalysis: true, updatedAt: new Date() })
-      .where(eq(casesTable.id, caseId));
-
-    sendSse(res, { type: "done" });
-    res.end();
-  } catch (err) {
-    logger.error({ err, docId, caseId }, "Document analysis failed");
-    const status = (err as { status?: number })?.status;
-    let userMessage: string;
-    if (status === 429) {
-      userMessage = "Rate limit reached after multiple retries. Please wait a minute and try again.";
-    } else if (status === 401) {
-      userMessage = "API key is invalid or missing. Contact the administrator.";
-    } else if (status && status >= 500) {
-      userMessage = "The AI service is temporarily unavailable. Please try again shortly.";
-    } else if (err instanceof Error && err.message && !err.message.startsWith("{")) {
-      userMessage = err.message;
-    } else {
-      userMessage = "Analysis failed. Please try again.";
-    }
-    sendSse(res, { type: "error", message: userMessage });
-    await db
-      .update(documentsTable)
-      .set({ status: "error" })
-      .where(eq(documentsTable.id, docId));
-    res.end();
-  }
+  })();
 });
 
 export default router;
