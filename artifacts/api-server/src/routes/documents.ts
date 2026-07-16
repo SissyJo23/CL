@@ -119,7 +119,7 @@ async function extractTextFromFile(file: Express.Multer.File): Promise<string> {
   return file.buffer.toString("utf-8");
 }
 
-// Optimized Background File Processing Endpoint
+// Optimized Background Async File Extraction Pipeline
 router.post(
   "/cases/:caseId/documents/upload",
   upload.array("files", 10),
@@ -128,17 +128,17 @@ router.post(
     const files = req.files as Express.Multer.File[] | undefined;
     const documentType = (req.body as { documentType?: string }).documentType ?? "other";
 
-    logger.info({ caseId, fileCount: files?.length ?? 0, documentType }, "Document upload processing requested");
+    logger.info({ caseId, fileCount: files?.length ?? 0, documentType }, "Document upload initiated");
 
     if (!files || files.length === 0) {
-      logger.warn({ caseId }, "Upload request executed with empty files array");
+      logger.warn({ caseId }, "Upload request with no files");
       res.status(400).json({ error: "No files provided" });
       return;
     }
 
     const created: typeof documentsTable.$inferSelect[] = [];
 
-    // Phase 1: Fast Handshake - Safely build rows as 'analyzing' placeholders immediately
+    // Phase 1: Create background database placeholders instantly
     for (const file of files) {
       try {
         const title = file.originalname.replace(/\.[^.]+$/, "");
@@ -148,21 +148,21 @@ router.post(
             caseId,
             title,
             documentType,
-            content: "Extracting file details, please wait...",
+            content: "Extracting file text payload...",
             status: "analyzing",
           })
           .returning();
         
         created.push(row);
       } catch (err) {
-        logger.error({ caseId, fileName: file.originalname }, "Placeholder configuration insertion error");
+        logger.error({ caseId, fileName: file.originalname }, "Placeholder allocation insertion failed");
       }
     }
 
-    // RESPOND IMMEDIATELY TO CLIENT SOCKET (<50ms) - Bypasses Render request time restrictions
+    // RESPOND IMMEDIATELY TO SAFELY END THE HTTP REQUEST TIMEOUT WINDOW (<50ms)
     res.status(201).json(created);
 
-    // Phase 2: Asynchronous Server Execution Routine
+    // Phase 2: Asynchronous Background Decompression and Extraction Loop
     (async () => {
       let index = 0;
       for (const file of files) {
@@ -179,17 +179,16 @@ router.post(
             throw new Error("Text processing engine returned clean empty buffers.");
           }
 
-          // Populate row block with fully processed text payload
+          // Update data block with text payload
           await db
             .update(documentsTable)
             .set({ content: extractedText, updatedAt: new Date() })
             .where(eq(documentsTable.id, rowPlaceholder.id));
 
-          // SUCCESS: Internal trigger shortcut steps straight into your background AI core loop!
-          logger.info({ docId: rowPlaceholder.id }, "Auto-advancing directly to analysis runner pipeline");
+          logger.info({ docId: rowPlaceholder.id }, "Forwarding internal analysis workflow handshake natively");
           
-          // Internal trigger executing background context directly without hitting public URLs
-          await fetch(`https://caselight-api.onrender.com/cases/${caseId}/documents/${rowPlaceholder.id}/analyze?mode=attorney`, {
+          // Fixed Internal Handshake Hook targeting localhost to avoid external routing drops
+          await fetch(`http://localhost:10000/cases/${caseId}/documents/${rowPlaceholder.id}/analyze?mode=attorney`, {
             method: "POST",
             headers: { 
               ...(req.headers.authorization ? { "Authorization": req.headers.authorization } : {})
@@ -232,10 +231,6 @@ router.delete("/cases/:caseId/documents/:id", async (req, res) => {
     .where(and(eq(documentsTable.id, id), eq(documentsTable.caseId, caseId)));
   res.status(204).send();
 });
-
-function sendSse(res: Response, event: unknown) {
-  res.write(`data: ${JSON.stringify(event)}\n\n`);
-}
 
 async function callAnthropicWithRetry(
   params: Parameters<typeof anthropic.messages.create>[0],
