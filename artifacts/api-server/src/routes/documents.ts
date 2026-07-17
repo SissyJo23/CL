@@ -15,6 +15,65 @@ const VALID_MODES = ["inmate", "advocate", "attorney", "appellate"] as const;
 type UserMode = typeof VALID_MODES[number];
 
 // ==========================================
+// HELPER FUNCTIONS (MOVED TO TOP)
+// ==========================================
+
+async function extractTextFromFile(file: Express.Multer.File): Promise<string> {
+  try {
+    if (file.mimetype === 'application/pdf') {
+      const data = await pdfParse(file.buffer);
+      return data.text;
+    } else if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      const result = await mammoth.extractRawText({ buffer: file.buffer });
+      return result.value;
+    } else if (file.mimetype === 'text/plain') {
+      return file.buffer.toString('utf-8');
+    } else {
+      // Try to parse as text for other formats
+      return file.buffer.toString('utf-8');
+    }
+  } catch (error) {
+    logger.error({ error, filename: file.originalname }, "Failed to extract text from file");
+    throw new Error(`Failed to extract text from ${file.originalname}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+async function callAnthropicWithRetry(
+  params: Parameters<typeof anthropic.messages.create>[0],
+  onStatus: (msg: string) => void,
+  maxRetries = 3,
+): Promise<Awaited<ReturnType<typeof anthropic.messages.create>>> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await anthropic.messages.create(params);
+    } catch (err: unknown) {
+      const status = (err as { status?: number })?.status;
+      const headers = (err as { headers?: Record<string, string> })?.headers;
+      if (status === 429 && attempt < maxRetries) {
+        const retryAfterRaw = headers?.["retry-after"];
+        const waitSecs = retryAfterRaw && !isNaN(parseInt(retryAfterRaw, 10)) ? parseInt(retryAfterRaw, 10) : 60;
+        for (let s = waitSecs; s > 0; s -= 10) {
+          onStatus(`Rate limit reached — retrying in ${s} second${s === 1 ? "" : "s"}…`);
+          await new Promise((r) => setTimeout(r, Math.min(10, s) * 1000));
+        }
+      } else if (status === 529 || status === 503) {
+        // Anthropic's overloaded errors
+        if (attempt < maxRetries) {
+          const waitSecs = Math.pow(2, attempt) * 5; // Exponential backoff
+          onStatus(`Service overloaded — retrying in ${waitSecs} seconds…`);
+          await new Promise((r) => setTimeout(r, waitSecs * 1000));
+        } else {
+          throw err;
+        }
+      } else {
+        throw err;
+      }
+    }
+  }
+  throw new Error("Max retries exceeded");
+}
+
+// ==========================================
 // SHARED CORE BACKGROUND ANALYSIS WORKER
 // ==========================================
 async function executeDocumentAnalysis(caseId: number, docId: number, userMode: UserMode | undefined) {
@@ -273,42 +332,47 @@ router.post("/cases/:caseId/documents/upload", upload.array("files", 10), async 
         .returning();
       created.push(row);
     } catch (err) {
-      logger.error({ caseId }, "Placeholder database row creation crash");
+      logger.error({ caseId, error: err }, "Placeholder database row creation crash");
     }
   }
 
-  // Handshake back to the client immediately (<10ms)
+  // Return immediately to client
   res.status(201).json(created);
 
-  // Decoupled Background Task
-  (async () => {
-    let index = 0;
-    for (const file of files) {
-      const rowPlaceholder = created[index];
-      index++;
-      if (!rowPlaceholder) continue;
-
+  // Process each file in background - FIXED: Better error handling and file matching
+  for (let i = 0; i < created.length && i < files.length; i++) {
+    const rowPlaceholder = created[i];
+    const file = files[i]; // Files and created entries are in the same order
+    
+    // Use IIFE to capture correct values
+    (async (cId: number, dId: number, f: Express.Multer.File) => {
       try {
-        const extractedText = await extractTextFromFile(file);
-        if (!extractedText.trim()) throw new Error("Document content parsing returned clean empty buffers");
+        logger.info({ docId: dId, filename: f.originalname }, "Starting background document processing");
+        
+        const extractedText = await extractTextFromFile(f);
+        if (!extractedText.trim()) {
+          throw new Error("Document content parsing returned empty content");
+        }
 
+        // Update with extracted content
         await db
           .update(documentsTable)
           .set({ content: extractedText, updatedAt: new Date() })
-          .where(eq(documentsTable.id, rowPlaceholder.id));
+          .where(eq(documentsTable.id, dId));
 
-        // CRITICAL FIX: Run directly in-memory instead of fetch() loop
-        await executeDocumentAnalysis(caseId, rowPlaceholder.id, undefined);
-
+        // Run analysis
+        await executeDocumentAnalysis(cId, dId, undefined);
+        
+        logger.info({ docId: dId }, "Background document processing complete");
       } catch (err) {
-        logger.error({ docId: rowPlaceholder.id }, "Async file payload processing crash");
+        logger.error({ docId: dId, error: err }, "Async file payload processing crash");
         await db
           .update(documentsTable)
           .set({ status: "error" })
-          .where(eq(documentsTable.id, rowPlaceholder.id));
+          .where(eq(documentsTable.id, dId));
       }
-    }
-  })();
+    })(caseId, rowPlaceholder.id, file);
+  }
 });
 
 router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
@@ -365,31 +429,5 @@ router.delete("/cases/:caseId/documents/:id", async (req, res) => {
     .where(and(eq(documentsTable.id, id), eq(documentsTable.caseId, caseId)));
   res.status(204).send();
 });
-
-async function callAnthropicWithRetry(
-  params: Parameters<typeof anthropic.messages.create>[0],
-  onStatus: (msg: string) => void,
-  maxRetries = 3,
-): Promise<Awaited<ReturnType<typeof anthropic.messages.create>>> {
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      return await anthropic.messages.create(params);
-    } catch (err: unknown) {
-      const status = (err as { status?: number })?.status;
-      const headers = (err as { headers?: Record<string, string> })?.headers;
-      if (status === 429 && attempt < maxRetries) {
-        const retryAfterRaw = headers?.["retry-after"];
-        const waitSecs = retryAfterRaw && !isNaN(parseInt(retryAfterRaw, 10)) ? parseInt(retryAfterRaw, 10) : 60;
-        for (let s = waitSecs; s > 0; s -= 10) {
-          onStatus(`Rate limit reached — retrying in ${s} second${s === 1 ? "" : "s"}…`);
-          await new Promise((r) => setTimeout(r, Math.min(10, s) * 1000));
-        }
-      } else {
-        throw err;
-      }
-    }
-  }
-  throw new Error("Max retries exceeded");
-}
 
 export default router;
