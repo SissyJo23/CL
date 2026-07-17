@@ -39,7 +39,13 @@ router.get("/cases", async (_req: AuthRequest, res) => {
 });
 
 router.post("/cases", async (req: AuthRequest, res) => {
-  const parsed = insertCaseSchema.safeParse(req.body);
+  // Inject a fallback userId (1) if the frontend fails to supply one
+  const payload = {
+    ...req.body,
+    userId: req.body.userId ? Number(req.body.userId) : 1
+  };
+
+  const parsed = insertCaseSchema.safeParse(payload);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.issues });
     return;
