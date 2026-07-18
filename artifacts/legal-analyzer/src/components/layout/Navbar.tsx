@@ -31,7 +31,10 @@ export default function Navbar() {
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
 
   useEffect(() => {
-    fetch("/api/health")
+  const API_BASE_URL = "https://caselight-api.onrender.com/api";
+
+fetch(`${API_BASE_URL}/health`)
+
       .then((r) => r.json())
       .then((d) => setHasApiKey(d.hasApiKey === true))
       .catch(() => setHasApiKey(null));
