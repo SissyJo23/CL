@@ -7,6 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Printer, Copy, CheckCircle2, AlertTriangle, Scale, FileText, Shield, Gavel } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+const API_BASE_URL = "https://caselight-api.onrender.com/api";
+
 type ClaimDismissed = {
   issueTitle: string;
   counselReasoning: string;
@@ -69,7 +71,7 @@ export default function NomeritPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/cases/${caseId}/documents/${documentId}/nomerit-analysis`)
+    fetch(`${API_BASE_URL}/cases/${caseId}/documents/${documentId}/nomerit-analysis`)
       .then((r) => {
         if (!r.ok) throw new Error("Analysis not found");
         return r.json();
