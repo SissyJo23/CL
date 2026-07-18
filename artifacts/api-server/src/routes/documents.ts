@@ -375,7 +375,7 @@ router.post("/cases/:caseId/documents/upload", upload.array("files", 10), async 
   }
 });
 
-router.get("/cases/:caseId/documents/:id/analyze", async (req, res) => {
+router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
   const caseId = Number(req.params.caseId);
   const docId = Number(req.params.id);
   const rawMode = req.query.mode;
