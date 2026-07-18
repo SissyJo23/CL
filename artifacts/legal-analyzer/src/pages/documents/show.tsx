@@ -13,6 +13,8 @@ import CategoryFilter from "@/components/categories/CategoryFilter";
 import type { Finding } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 
+const API_BASE_URL = "https://caselight-api.onrender.com/api";
+
 export default function DocumentShow() {
   const params = useParams();
   const caseId = parseInt(params.caseId || "0", 10);
@@ -46,7 +48,7 @@ export default function DocumentShow() {
 
   useEffect(() => {
     if (doc?.documentType === "no_merit_report") {
-      fetch(`/api/cases/${caseId}/documents/${documentId}/nomerit-analysis`)
+      fetch(`${API_BASE_URL}/cases/${caseId}/documents/${documentId}/nomerit-analysis`)
         .then((r) => {
           if (!r.ok) return;
           return r.json();
@@ -68,7 +70,7 @@ export default function DocumentShow() {
     setNomeritPriorStatus(null);
     setNomeritStatus("Starting no-merit analysis...");
     try {
-      const response = await fetch(`/api/cases/${caseId}/documents/${documentId}/analyze-nomerit`, {
+      const response = await fetch(`${API_BASE_URL}/cases/${caseId}/documents/${documentId}/analyze-nomerit`, {
         method: "POST",
       });
       if (!response.body) throw new Error("No response body");
@@ -119,7 +121,7 @@ export default function DocumentShow() {
     setStatusMessage("Starting analysis...");
 
     try {
-      const response = await fetch(`/api/cases/${caseId}/documents/${documentId}/analyze`, {
+      const response = await fetch(`${API_BASE_URL}/cases/${caseId}/documents/${documentId}/analyze`, {
         method: "POST",
       });
 
@@ -177,9 +179,7 @@ export default function DocumentShow() {
     if (!doc) return;
     setIsRedacting(true);
     try {
-      const API_BASE_URL = "https://caselight-api.onrender.com/api";
-    fetch(`${API_BASE_URL}/redact`, {
-
+      const response = await fetch(`${API_BASE_URL}/redact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: redactedContent ?? doc.content }),
