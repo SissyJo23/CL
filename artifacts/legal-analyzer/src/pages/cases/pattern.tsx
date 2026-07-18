@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Printer, GitBranch, RefreshCw, AlertCircle, Loader2, CheckCircle2, Clock, User, FileText, Scale, AlertTriangle } from "lucide-react";
 
+const API_BASE_URL = "https://caselight-api.onrender.com/api";
+
 type TimelineEntry = {
   date: string;
   event: string;
@@ -104,7 +106,7 @@ export default function PatternPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/cases/${caseId}/pattern-analysis`);
+      const res = await fetch(`${API_BASE_URL}/cases/${caseId}/pattern-analysis`);
       if (res.status === 404) {
         setAnalysis(null);
       } else if (res.ok) {
@@ -135,7 +137,7 @@ export default function PatternPage() {
     setProgress(5);
 
     try {
-      const response = await fetch(`/api/cases/${caseId}/pattern-analysis`, { method: "POST" });
+      const response = await fetch(`${API_BASE_URL}/cases/${caseId}/pattern-analysis`, { method: "POST" });
 
       if (!response.ok) {
         let msg = "Analysis failed.";
