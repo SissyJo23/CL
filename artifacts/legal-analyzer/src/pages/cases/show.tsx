@@ -19,6 +19,8 @@ import { useUserMode, type UserMode } from "@/contexts/UserModeContext";
 import { MODE_LABELS } from "@/lib/modeContent";
 import { parseJurisdictionBadge } from "@/lib/jurisdictionBadge";
 
+const API_BASE_URL = "https://caselight-api.onrender.com/api";
+
 const MODE_ICONS: Record<UserMode, React.ReactNode> = {
   inmate: <User className="w-3 h-3" />,
   advocate: <Users className="w-3 h-3" />,
@@ -142,7 +144,7 @@ export default function CaseShow() {
   const { data: pathwayResult, isLoading: reliefLoading } = useQuery<PathwayResult>({
     queryKey: ["relief-pathway", caseId],
     queryFn: async () => {
-      const res = await fetch(`/api/cases/${caseId}/relief-pathway`);
+      const res = await fetch(`${API_BASE_URL}/cases/${caseId}/relief-pathway`);
       if (res.status === 404) return { status: "not_found" } as PathwayResult;
       if (res.status === 422) return { status: "unsupported_jurisdiction" } as PathwayResult;
       if (!res.ok) return { status: "error" } as PathwayResult;
@@ -160,7 +162,7 @@ export default function CaseShow() {
   const { data: caseFindingsRaw, isLoading: findingsLoading } = useQuery<CaseFindingSummary[]>({
     queryKey: ["case-findings-summary", caseId],
     queryFn: async () => {
-      const res = await fetch(`/api/cases/${caseId}/findings`);
+      const res = await fetch(`${API_BASE_URL}/cases/${caseId}/findings`);
       if (!res.ok) return [];
       return res.json();
     },
@@ -210,7 +212,7 @@ export default function CaseShow() {
     setLive(docId, { phase: "running", message: "Starting analysis…", findingCount: 0 });
     try {
       const token = localStorage.getItem("authToken");
-      const response = await fetch(`/api/cases/${caseId}/documents/${docId}/analyze?mode=${mode}`, { 
+      const response = await fetch(`${API_BASE_URL}/cases/${caseId}/documents/${docId}/analyze?mode=${mode}`, { 
         method: "POST",
         headers: {
           ...(token ? { "Authorization": `Bearer ${token}` } : {}),
@@ -364,7 +366,7 @@ export default function CaseShow() {
       formData.append("documentType", docType);
 
       const token = localStorage.getItem("authToken");
-      const res = await fetch(`/api/cases/${caseId}/documents/upload`, {
+      const res = await fetch(`${API_BASE_URL}/cases/${caseId}/documents/upload`, {
         method: "POST",
         headers: {
           ...(token ? { "Authorization": `Bearer ${token}` } : {}),
