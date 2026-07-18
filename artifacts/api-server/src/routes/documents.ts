@@ -375,7 +375,7 @@ router.post("/cases/:caseId/documents/upload", upload.array("files", 10), async 
   }
 });
 
-router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
+router.get("/cases/:caseId/documents/:id/analyze", async (req, res) => {
   const caseId = Number(req.params.caseId);
   const docId = Number(req.params.id);
   const rawMode = req.query.mode;
@@ -398,10 +398,8 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
     await db.delete(findingsTable).where(and(eq(findingsTable.documentId, docId), eq(findingsTable.caseId, caseId)));
   }
 
-  // Acknowledge the user instantly
   res.status(202).json({ message: "Analysis processing started inside memory workers" });
 
-  // Fire internal in-memory execution routine
   (async () => {
     await executeDocumentAnalysis(caseId, docId, userMode);
   })();
