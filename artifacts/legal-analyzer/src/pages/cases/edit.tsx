@@ -11,7 +11,7 @@ interface CaseData {
   notes: string | null;
 }
 
-const API_BASE_URL = "https://caselight-api.onrender.com";
+const API_BASE_URL = "https://caselight-api.onrender.com/api";
 
 export default function CasesEdit() {
   const { id } = useParams<{ id: string }>();
