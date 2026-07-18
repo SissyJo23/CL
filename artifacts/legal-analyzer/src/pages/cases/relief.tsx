@@ -28,6 +28,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
+const API_BASE_URL = "https://caselight-api.onrender.com/api";
+
 type LadderStep = {
   step: number;
   court: string;
@@ -213,7 +215,7 @@ export default function ReliefPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/cases/${caseId}/relief-pathway`);
+      const res = await fetch(`${API_BASE_URL}/cases/${caseId}/relief-pathway`);
       if (res.status === 404) {
         setError("Case not found. The case you are looking for does not exist.");
       } else if (res.status === 422) {
@@ -242,7 +244,7 @@ export default function ReliefPage() {
     setRegenerating(true);
     setError(null);
     try {
-      const res = await fetch(`/api/cases/${caseId}/relief-pathway/regenerate`, { method: "POST" });
+      const res = await fetch(`${API_BASE_URL}/cases/${caseId}/relief-pathway/regenerate`, { method: "POST" });
       if (res.ok) {
         const data = await res.json();
         setPathway(data);
@@ -277,7 +279,7 @@ export default function ReliefPage() {
     setSaving(true);
     setSaveError(null);
     try {
-      const res = await fetch(`/api/cases/${caseId}/relief-pathway`, {
+      const res = await fetch(`${API_BASE_URL}/cases/${caseId}/relief-pathway`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -335,7 +337,7 @@ export default function ReliefPage() {
     setSavingAedpa(true);
     setAedpaEditError(null);
     try {
-      const res = await fetch(`/api/cases/${caseId}/relief-pathway`, {
+      const res = await fetch(`${API_BASE_URL}/cases/${caseId}/relief-pathway`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ aedpaDeadline, aedpaTolled: aedpaEditValues.tolled }),
