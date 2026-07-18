@@ -177,7 +177,9 @@ export default function DocumentShow() {
     if (!doc) return;
     setIsRedacting(true);
     try {
-      const response = await fetch("/api/redact", {
+      const API_BASE_URL = "https://caselight-api.onrender.com/api";
+    fetch(`${API_BASE_URL}/redact`, {
+
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: redactedContent ?? doc.content }),
