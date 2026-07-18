@@ -392,17 +392,39 @@ router.get("/cases/:caseId/documents/:id/analyze", async (req, res) => {
     return;
   }
 
-  await db.update(documentsTable).set({ status: "analyzing" }).where(eq(documentsTable.id, docId));
-
-  if (doc.status === "analyzed") {
-    await db.delete(findingsTable).where(and(eq(findingsTable.documentId, docId), eq(findingsTable.caseId, caseId)));
+  if (doc.status === "analyzing") {
+    res.status(409).json({ error: "Document is already being analyzed" });
+    return;
   }
 
-  res.status(202).json({ message: "Analysis processing started inside memory workers" });
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
 
-  (async () => {
+  res.flushHeaders();
+
+  res.write(`data: ${JSON.stringify({ type: 'status', message: 'Starting analysis...' })}\n\n`);
+
+  await db.update(documentsTable).set({ 
+    status: "analyzing", 
+    updatedAt: new Date() 
+  }).where(eq(documentsTable.id, docId));
+
+  if (doc.status === "analyzed") {
+    await db.delete(findingsTable).where(
+      and(eq(findingsTable.documentId, docId), eq(findingsTable.caseId, caseId))
+    );
+  }
+
+  try {
     await executeDocumentAnalysis(caseId, docId, userMode);
-  })();
+    res.write(`data: ${JSON.stringify({ type: 'done', message: 'Analysis complete' })}\n\n`);
+  } catch (error) {
+    res.write(`data: ${JSON.stringify({ type: 'error', message: error instanceof Error ? error.message : 'Analysis failed' })}\n\n`);
+  }
+  
+  res.end();
 });
 
 router.get("/cases/:caseId/documents/:id", async (req, res) => {
