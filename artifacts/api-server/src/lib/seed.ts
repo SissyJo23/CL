@@ -1,5 +1,5 @@
 import { db, casesTable, documentsTable, findingsTable, crossCaseMatchesTable, courtSessionsTable, courtRoundsTable, motionsTable, categoriesTable } from "@workspace/db";
-import { eq, like, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { logger } from "./logger";
 
 const DEMO_CASE_NUMBER = "DEMO-2018CF000847";
@@ -2706,52 +2706,5 @@ export async function seedIowaDemoCase(): Promise<void> {
     });
   } catch (err) {
     logger.error({ err }, "Failed to seed Iowa demo case");
-  }
-}
-export async function deleteAllDemoCases(): Promise<void> {
-  try {
-    logger.info("Sweeping for demo cases to delete...");
-    
-    // 1. Identify all demo cases by their "DEMO-" prefix
-    const demoCases = await db
-      .select({ id: casesTable.id })
-      .from(casesTable)
-      .where(like(casesTable.caseNumber, "DEMO-%"));
-
-    const caseIds = demoCases.map((c) => c.id);
-
-    if (caseIds.length === 0) {
-      logger.info("No demo cases found to delete.");
-      return;
-    }
-
-    // 2. Fetch associated session IDs (needed to delete court rounds safely)
-    const sessions = await db
-      .select({ id: courtSessionsTable.id })
-      .from(courtSessionsTable)
-      .where(inArray(courtSessionsTable.caseId, caseIds));
-      
-    const sessionIds = sessions.map((s) => s.id);
-
-    // 3. Delete everything in a transaction to ensure data integrity
-    await db.transaction(async (tx) => {
-      // Delete court rounds first (depends on sessions)
-      if (sessionIds.length > 0) {
-        await tx.delete(courtRoundsTable).where(inArray(courtRoundsTable.sessionId, sessionIds));
-      }
-
-      // Delete tables that depend directly on caseId
-      await tx.delete(motionsTable).where(inArray(motionsTable.caseId, caseIds));
-      await tx.delete(courtSessionsTable).where(inArray(courtSessionsTable.caseId, caseIds));
-      await tx.delete(findingsTable).where(inArray(findingsTable.caseId, caseIds));
-      await tx.delete(documentsTable).where(inArray(documentsTable.caseId, caseIds));
-
-      // Finally, delete the root cases
-      await tx.delete(casesTable).where(inArray(casesTable.id, caseIds));
-    });
-
-    logger.info({ count: caseIds.length }, "Successfully deleted all demo cases and their dependencies.");
-  } catch (err) {
-    logger.error({ err }, "Failed to delete demo cases");
   }
 }
