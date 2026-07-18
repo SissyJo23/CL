@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 
+const API_BASE_URL = "https://caselight-api.onrender.com/api";
 const STUCK_TIMEOUT_MS = 10 * 60 * 1000;
 
 export default function CourtRun() {
@@ -56,7 +57,7 @@ export default function CourtRun() {
       hasStarted.current = true;
       const runSimulation = async () => {
         try {
-          const response = await fetch(`/api/cases/${caseId}/court-sessions/${sessionId}/run`, {
+          const response = await fetch(`${API_BASE_URL}/cases/${caseId}/court-sessions/${sessionId}/run`, {
             method: "POST",
           });
 
