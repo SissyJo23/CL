@@ -14,7 +14,7 @@ async function buildAll() {
   console.log('📦 Compiling TypeScript with tsc...');
   
   try {
-    execSync('npx tsc', { 
+    execSync('npx tsc -p tsconfig.json', { 
       stdio: 'inherit', 
       cwd: __dirname
     });
