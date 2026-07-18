@@ -135,65 +135,95 @@ async function executeDocumentAnalysisWithStreaming(
         ? `Analyzing chunk ${chunkIndex + 1}/${totalChunks}...` 
         : "Analyzing document...";
       
+      // Send status update
       res.write(`data: ${JSON.stringify({ type: 'status', message: statusMsg })}\n\n`);
+      
+      // CRITICAL: Flush to ensure data is sent immediately
+      if (typeof res.flush === 'function') {
+        res.flush();
+      }
 
       const prompt = isChunked
         ? buildChunkAnalysisPrompt(doc.documentType, doc.title, chunk, chunkIndex, totalChunks, chunkSummary, otherDocsForPrompt, userCategories)
         : buildAnalysisPrompt(doc.documentType, doc.title, chunk, otherDocsForPrompt, userCategories);
 
-      const message = await callAnthropicWithRetry(
-        { model: "claude-3-5-sonnet-latest", max_tokens: 8192, messages: [{ role: "user", content: prompt }] },
-        (msg) => logger.info({ docId, chunkIndex }, msg)
-      );
-
-      const rawText = message.content[0]?.type === "text" ? message.content[0].text : "[]";
-      let chunkFindings: RawFinding[] = [];
+      // Send a heartbeat to keep connection alive while waiting for Anthropic
+      const heartbeatInterval = setInterval(() => {
+        try {
+          res.write(`: heartbeat\n\n`);
+          if (typeof res.flush === 'function') {
+            res.flush();
+          }
+        } catch (e) {
+          clearInterval(heartbeatInterval);
+        }
+      }, 5000);
 
       try {
-        let cleaned = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "").trim();
-        const arrayStart = cleaned.indexOf("[");
-        const arrayEnd = cleaned.lastIndexOf("]");
-        if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
-          cleaned = cleaned.slice(arrayStart, arrayEnd + 1);
-        }
-        chunkFindings = JSON.parse(cleaned);
-        if (!Array.isArray(chunkFindings)) chunkFindings = [];
-      } catch (parseErr) {
-        let recovered = false;
+        const message = await callAnthropicWithRetry(
+          { model: "claude-3-5-sonnet-latest", max_tokens: 8192, messages: [{ role: "user", content: prompt }] },
+          (msg) => logger.info({ docId, chunkIndex }, msg)
+        );
+        clearInterval(heartbeatInterval);
+
+        const rawText = message.content[0]?.type === "text" ? message.content[0].text : "[]";
+        let chunkFindings: RawFinding[] = [];
+
         try {
-          let partial = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "").trim();
-          const arrayStart = partial.indexOf("[");
-          if (arrayStart !== -1) partial = partial.slice(arrayStart);
-          const lastComplete = partial.lastIndexOf("},");
-          if (lastComplete !== -1) {
-            const attempt = partial.slice(0, lastComplete + 1) + "]";
-            const parsed = JSON.parse(attempt);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              chunkFindings = parsed;
-              recovered = true;
+          let cleaned = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "").trim();
+          const arrayStart = cleaned.indexOf("[");
+          const arrayEnd = cleaned.lastIndexOf("]");
+          if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
+            cleaned = cleaned.slice(arrayStart, arrayEnd + 1);
+          }
+          chunkFindings = JSON.parse(cleaned);
+          if (!Array.isArray(chunkFindings)) chunkFindings = [];
+        } catch (parseErr) {
+          let recovered = false;
+          try {
+            let partial = rawText.trim().replace(/^```json?\s*/i, "").replace(/```\s*$/, "").trim();
+            const arrayStart = partial.indexOf("[");
+            if (arrayStart !== -1) partial = partial.slice(arrayStart);
+            const lastComplete = partial.lastIndexOf("},");
+            if (lastComplete !== -1) {
+              const attempt = partial.slice(0, lastComplete + 1) + "]";
+              const parsed = JSON.parse(attempt);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                chunkFindings = parsed;
+                recovered = true;
+              }
             }
-          }
-        } catch { /* parse failure protection */ }
+          } catch { /* parse failure protection */ }
 
-        if (!recovered) {
-          if (!isChunked) {
-            await db.update(documentsTable).set({ status: "error" }).where(eq(documentsTable.id, docId));
-            res.write(`data: ${JSON.stringify({ type: 'error', message: 'Failed to parse analysis response' })}\n\n`);
-            return;
+          if (!recovered) {
+            if (!isChunked) {
+              await db.update(documentsTable).set({ status: "error" }).where(eq(documentsTable.id, docId));
+              res.write(`data: ${JSON.stringify({ type: 'error', message: 'Failed to parse analysis response' })}\n\n`);
+              if (typeof res.flush === 'function') {
+                res.flush();
+              }
+              return;
+            }
+            chunkFindings = [];
           }
-          chunkFindings = [];
         }
-      }
 
-      allFindings.push(...chunkFindings);
+        allFindings.push(...chunkFindings);
 
-      // Stream each finding as it's discovered
-      for (const f of chunkFindings) {
-        res.write(`data: ${JSON.stringify({ type: 'finding', data: f })}\n\n`);
-      }
+        // Stream each finding as it's discovered
+        for (const f of chunkFindings) {
+          res.write(`data: ${JSON.stringify({ type: 'finding', data: f })}\n\n`);
+          if (typeof res.flush === 'function') {
+            res.flush();
+          }
+        }
 
-      if (isChunked && chunkIndex < totalChunks - 1) {
-        chunkSummary = await buildChunkSummary(chunk, chunkSummary);
+        if (isChunked && chunkIndex < totalChunks - 1) {
+          chunkSummary = await buildChunkSummary(chunk, chunkSummary);
+        }
+      } catch (error) {
+        clearInterval(heartbeatInterval);
+        throw error;
       }
     }
 
@@ -258,6 +288,9 @@ async function executeDocumentAnalysisWithStreaming(
             });
           }
           res.write(`data: ${JSON.stringify({ type: 'cross_case_done' })}\n\n`);
+          if (typeof res.flush === 'function') {
+            res.flush();
+          }
         }
       } catch (crossErr) {
         logger.error({ crossErr }, "Cross-case tracking exception bypassed");
@@ -279,6 +312,9 @@ async function executeDocumentAnalysisWithStreaming(
     
     // Send completion event
     res.write(`data: ${JSON.stringify({ type: 'done', findingCount: insertedFindings.length })}\n\n`);
+    if (typeof res.flush === 'function') {
+      res.flush();
+    }
 
   } catch (error) {
     logger.error({ error, docId }, "SSE streaming pipeline crash");
@@ -286,7 +322,14 @@ async function executeDocumentAnalysisWithStreaming(
       .update(documentsTable)
       .set({ status: "error" })
       .where(eq(documentsTable.id, docId));
-    res.write(`data: ${JSON.stringify({ type: 'error', message: error instanceof Error ? error.message : 'Analysis failed' })}\n\n`);
+    try {
+      res.write(`data: ${JSON.stringify({ type: 'error', message: error instanceof Error ? error.message : 'Analysis failed' })}\n\n`);
+      if (typeof res.flush === 'function') {
+        res.flush();
+      }
+    } catch (e) {
+      // Connection already closed
+    }
   }
 }
 
@@ -588,7 +631,7 @@ router.post("/cases/:caseId/documents/upload", upload.array("files", 10), async 
 });
 
 // ==========================================
-// SSE STREAMING ANALYZE ROUTE (UPDATED)
+// SSE STREAMING ANALYZE ROUTE
 // ==========================================
 router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
   const caseId = Number(req.params.caseId);
@@ -597,53 +640,75 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
   const userMode: UserMode | undefined =
     typeof rawMode === "string" && VALID_MODES.includes(rawMode as UserMode) ? (rawMode as UserMode) : undefined;
 
-  const [doc] = await db
-    .select()
-    .from(documentsTable)
-    .where(and(eq(documentsTable.id, docId), eq(documentsTable.caseId, caseId)));
-
-  if (!doc) {
-    res.status(404).json({ error: "Document not found" });
-    return;
-  }
-
-  // Check if already analyzing
-  if (doc.status === "analyzing") {
-    res.status(409).json({ error: "Document is already being analyzed" });
-    return;
-  }
-
-  // Set up SSE headers
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
-  res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
-  res.flushHeaders();
-
-  // Send initial status
-  res.write(`data: ${JSON.stringify({ type: 'status', message: 'Starting analysis...' })}\n\n`);
-
-  // Update document status
-  await db.update(documentsTable).set({ 
-    status: "analyzing", 
-    updatedAt: new Date() 
-  }).where(eq(documentsTable.id, docId));
-
-  // Delete old findings if re-analyzing
-  if (doc.status === "analyzed") {
-    await db.delete(findingsTable).where(
-      and(eq(findingsTable.documentId, docId), eq(findingsTable.caseId, caseId))
-    );
-  }
-
   try {
+    const [doc] = await db
+      .select()
+      .from(documentsTable)
+      .where(and(eq(documentsTable.id, docId), eq(documentsTable.caseId, caseId)));
+
+    if (!doc) {
+      res.status(404).json({ error: "Document not found" });
+      return;
+    }
+
+    // Check if already analyzing
+    if (doc.status === "analyzing") {
+      res.status(409).json({ error: "Document is already being analyzed" });
+      return;
+    }
+
+    // CRITICAL: Set up SSE headers with proper CORS
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+      'Access-Control-Allow-Origin': 'https://www.caselightai.com',
+      'Access-Control-Allow-Credentials': 'true'
+    });
+
+    // CRITICAL: Flush headers immediately
+    res.flushHeaders();
+
+    // Send initial connection event
+    res.write(`data: ${JSON.stringify({ type: 'status', message: 'Connected to analysis stream' })}\n\n`);
+    
+    // Force flush
+    if (typeof res.flush === 'function') {
+      res.flush();
+    }
+
+    // Update document status
+    await db.update(documentsTable).set({ 
+      status: "analyzing", 
+      updatedAt: new Date() 
+    }).where(eq(documentsTable.id, docId));
+
+    // Delete old findings if re-analyzing
+    if (doc.status === "analyzed") {
+      await db.delete(findingsTable).where(
+        and(eq(findingsTable.documentId, docId), eq(findingsTable.caseId, caseId))
+      );
+    }
+
     // Run streaming analysis
     await executeDocumentAnalysisWithStreaming(caseId, docId, userMode, res);
+
   } catch (error) {
-    logger.error({ error, docId }, "Streaming analysis failed");
-    res.write(`data: ${JSON.stringify({ type: 'error', message: error instanceof Error ? error.message : 'Analysis failed' })}\n\n`);
-  } finally {
-    res.end();
+    logger.error({ error, caseId, docId }, "Analyze route error");
+    if (!res.headersSent) {
+      res.status(500).json({ error: error instanceof Error ? error.message : "Internal error" });
+    } else {
+      try {
+        res.write(`data: ${JSON.stringify({ type: 'error', message: error instanceof Error ? error.message : 'Analysis failed' })}\n\n`);
+        if (typeof res.flush === 'function') {
+          res.flush();
+        }
+        res.end();
+      } catch (e) {
+        // Connection already closed
+      }
+    }
   }
 });
 
@@ -701,4 +766,30 @@ router.delete("/cases/:caseId/documents/:id", async (req, res) => {
   res.status(204).send();
 });
 
-export default router;
+// ==========================================
+// TEST SSE ENDPOINT (for debugging)
+// ==========================================
+router.get("/test-sse", (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': 'https://www.caselightai.com',
+    'Access-Control-Allow-Credentials': 'true'
+  });
+  res.flushHeaders();
+
+  let count = 0;
+  const interval = setInterval(() => {
+    count++;
+    res.write(`data: ${JSON.stringify({ message: `Test ${count}`, timestamp: Date.now() })}\n\n`);
+    if (typeof res.flush === 'function') {
+      res.flush();
+    }
+    if (count >= 10) {
+      clearInterval(interval);
+      res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+      res.end();
+    }
+  }, 1000);
+});
