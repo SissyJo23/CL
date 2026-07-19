@@ -20,24 +20,22 @@ app.set("trust proxy", true);
 
 app.use(pinoHttp({ logger }));
 
-const allowedOrigins = process.env.CORS_ORIGIN 
-  ? process.env.CORS_ORIGIN.split(",").map((o) => o.trim()) 
-  : [];
+const allowedOrigins = [
+  "https://caselightai.com",
+  "https://www.caselightai.com",
+  ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : []),
+].map((o) => o.trim()).filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // !origin allows tools like Postman/cURL to work without a browser origin
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
 }));
-
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
