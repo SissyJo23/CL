@@ -28,7 +28,7 @@ function RotatingBanner() {
 }
 
 export default function Navbar() {
-  const API_BASE_URL = "https://caselight-api.onrender.com/api";
+  const API_BASE_URL = "https://caselight-api.onrender.com";
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -37,6 +37,7 @@ export default function Navbar() {
       .then((d) => setHasApiKey(d.hasApiKey === true))
       .catch(() => setHasApiKey(null));
   }, []);
+
 
   return (
     <>
