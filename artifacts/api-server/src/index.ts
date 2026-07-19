@@ -14,12 +14,8 @@ import courtRouter from "./routes/court";
 import exportRouter from "./routes/export";
 import { seedCategories, seedDemoCase } from "./lib/seed";
 
-
-
 const app = express();
-
 app.set("trust proxy", true);
-
 app.use(pinoHttp({ logger }));
 
 const allowedOrigins = [
@@ -42,16 +38,13 @@ app.use(cors({
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-// Auth middleware — sets req.userId to 1 (single-user mode)
 app.use((req: any, _res, next) => {
   req.userId = 1;
   const header = req.headers["authorization"] ?? "";
   if (header.startsWith("Bearer ")) {
     const token = header.slice(7);
     const match = token.match(/^user-(\d+)$/);
-    if (match && match[1]) {
-      req.userId = parseInt(match[1], 10);
-    }
+    if (match && match[1]) req.userId = parseInt(match[1], 10);
   }
   if (!req.userId || Number.isNaN(req.userId)) req.userId = 1;
   next();
@@ -64,16 +57,18 @@ app.get("/", (_req, res) => {
 app.post("/auth/login", (req, res) => {
   const { email, password } = req.body || {};
   const appPassword = process.env.APP_PASSWORD;
-
   if (!appPassword || password !== appPassword) {
     res.status(401).json({ success: false, message: "Invalid credentials" });
     return;
   }
-
   res.json({
     success: true,
     token: "user-1",
-    user: { email: email || "user@caselight.com", id: 1, name: "CaseLight User" },
+    user: {
+      email: email || "user@caselight.com",
+      id: 1,
+      name: "CaseLight User",
+    },
   });
 });
 
@@ -91,16 +86,12 @@ app.use("/api", exportRouter);
 const port = process.env.PORT || 10000;
 app.listen(port, "0.0.0.0", async () => {
   logger.info({ port }, "Server listening");
-
   if (!process.env.APP_PASSWORD) {
     logger.warn("⚠️  APP_PASSWORD is not set — all login attempts will fail");
   }
-
-  // Seed database on startup
   try {
     await seedCategories();
-await seedDemoCase();
-
+    await seedDemoCase();
     logger.info("Database seeding complete");
   } catch (err) {
     logger.error({ err }, "Seeding failed (non-fatal)");
