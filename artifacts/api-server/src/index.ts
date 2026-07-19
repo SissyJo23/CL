@@ -12,7 +12,8 @@ import nomeritRouter from "./routes/nomerit";
 import reliefRouter from "./routes/relief";
 import courtRouter from "./routes/court";
 import exportRouter from "./routes/export";
-import { seedCategories, seedDemoCase, seedIllinoisDemoCase, seedMinnesotaDemoCase, seedMichiganDemoCase, seedOhioDemoCase, seedIndianaDemoCase, seedIowaDemoCase } from "./lib/seed";
+import { seedCategories, seedDemoCase } from "./lib/seed";
+
 
 const app = express();
 
@@ -97,13 +98,8 @@ app.listen(port, "0.0.0.0", async () => {
   // Seed database on startup
   try {
     await seedCategories();
-    await seedDemoCase();
-    await seedIllinoisDemoCase();
-    await seedMinnesotaDemoCase();
-    await seedMichiganDemoCase();
-    await seedOhioDemoCase();
-    await seedIndianaDemoCase();
-    await seedIowaDemoCase();
+await seedDemoCase();
+
     logger.info("Database seeding complete");
   } catch (err) {
     logger.error({ err }, "Seeding failed (non-fatal)");
