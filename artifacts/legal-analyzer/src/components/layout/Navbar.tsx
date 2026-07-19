@@ -1,89 +1,44 @@
-import { Link } from "wouter";
 import { useEffect, useState } from "react";
-import { AlertTriangle, ShieldCheck, FolderOpen, Info } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../lib/auth";
 
-const TAGLINES = [
-  "The truth is in the transcripts.",
-  "A path to justice.",
-  "Here to tell the truth, not give false hope.",
-];
-
-function RotatingBanner() {
-  const [index, setIndex] = useState(0);
+export default function Navbar() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const [health, setHealth] = useState<boolean>(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setIndex((i) => (i + 1) % TAGLINES.length);
-    }, 4000);
+    const checkHealth = async () => {
+      try {
+        const res = await fetch("/api/health", { credentials: "include" });
+        setHealth(res.ok);
+      } catch {
+        setHealth(false);
+      }
+    };
+    checkHealth();
+    const interval = setInterval(checkHealth, 10000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="bg-slate-800 border-b border-slate-700 px-4 py-2 flex items-center justify-center gap-2 text-xs text-slate-200 font-medium tracking-wide">
-      <ShieldCheck className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-      <span>CaseLight — {TAGLINES[index]}</span>
-      <ShieldCheck className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-    </div>
-  );
-}
-
-export default function Navbar() {
-  const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    fetch("/api/health")
-      .then((r) => r.json())
-      .then((d) => setHasApiKey(d.hasApiKey === true))
-      .catch(() => setHasApiKey(null));
-  }, []);
-
-
-
-  return (
-    <>
-      <header className="w-full border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link
-            href="/"
-            className="font-serif text-xl font-medium tracking-tight text-foreground transition-colors hover:text-primary"
-          >
-            CaseLight
-          </Link>
-
-          <nav className="flex items-center gap-3">
-            <Link
-              href="/cases"
-              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <FolderOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">My Cases</span>
-            </Link>
-
-            <Link
-              href="/about"
-              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Info className="w-4 h-4" />
-              <span className="hidden sm:inline">About</span>
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      <RotatingBanner />
-
-      {hasApiKey === false && (
-        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 flex items-center gap-3 text-sm text-amber-800">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>
-            <strong>API key not configured.</strong> Add your Anthropic API key as the{" "}
-            <code className="font-mono bg-amber-100 px-1 rounded">
-              ANTHROPIC_API_KEY
-            </code>{" "}
-            secret to enable AI analysis and court simulation.
-          </span>
-        </div>
-      )}
-    </>
+    <nav className="navbar">
+      <div className="navbar-brand">CaseLight</div>
+      <div className="navbar-status">
+        {health ? (
+          <span className="status-ok">● API OK</span>
+        ) : (
+          <span className="status-error">● API Down</span>
+        )}
+      </div>
+      <button
+        onClick={() => {
+          logout();
+          navigate("/login");
+        }}
+      >
+        Logout
+      </button>
+    </nav>
   );
 }
