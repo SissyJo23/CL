@@ -133,7 +133,7 @@ async function executeDocumentAnalysis(caseId: number, docId: number, userMode: 
         : buildAnalysisPrompt(doc.documentType, doc.title, chunk, otherDocsForPrompt, userCategories);
 
       const message = await callAnthropicWithRetry(
-        { model: "claude-3-5-sonnet-latest", max_tokens: 8192, messages: [{ role: "user", content: prompt }] },
+        { model: "claude-sonnet-5", max_tokens: 8192, messages: [{ role: "user", content: prompt }] },
         (msg) => logger.info({ docId, chunkIndex }, msg)
       );
 
