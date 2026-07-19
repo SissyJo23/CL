@@ -9,6 +9,8 @@ import CasesEdit from "@/pages/cases/edit"; // Import the new edit page
 import Legal from "@/pages/legal";
 
 // ✅ POINT FRONTEND TO YOUR RENDER BACKEND
+const 
+// TO:
 const API_BASE_URL = "https://caselight-api.onrender.com/api";
 setBaseUrl(API_BASE_URL);
 
