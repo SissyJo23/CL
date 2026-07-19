@@ -15,6 +15,7 @@ import exportRouter from "./routes/export";
 import { seedCategories, seedDemoCase } from "./lib/seed";
 
 
+
 const app = express();
 
 app.set("trust proxy", true);
@@ -90,6 +91,7 @@ app.use("/api", exportRouter);
 const port = process.env.PORT || 10000;
 app.listen(port, "0.0.0.0", async () => {
   logger.info({ port }, "Server listening");
+import { seedCategories, seedDemoCase } from "./lib/seed";
 
   if (!process.env.APP_PASSWORD) {
     logger.warn("⚠️  APP_PASSWORD is not set — all login attempts will fail");
