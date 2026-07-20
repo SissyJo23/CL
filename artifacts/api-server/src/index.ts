@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
-import pinoHttp from "pino-http";
 import { logger } from "./lib/logger";
+import { seedCategories, seedDemoCase } from "./lib/seed";
 import casesRouter from "./routes/cases";
 import documentsRouter from "./routes/documents";
 import findingsRouter from "./routes/findings";
@@ -12,88 +12,114 @@ import nomeritRouter from "./routes/nomerit";
 import reliefRouter from "./routes/relief";
 import courtRouter from "./routes/court";
 import exportRouter from "./routes/export";
-import { seedCategories, seedDemoCase } from "./lib/seed";
 
 const app = express();
-app.set("trust proxy", true);
-app.use(pinoHttp({ logger }));
 
-const allowedOrigins = [
-  "https://caselightai.com",
-  "https://www.caselightai.com",
-  ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : []),
-].map((o) => o.trim()).filter(Boolean);
+// Trust proxy (Render sits behind Cloudflare)
+app.set("trust proxy", 1);
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-}));
-
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ limit: "50mb", extended: true }));
-
-app.use((req: any, _res, next) => {
-  req.userId = 1;
-  const header = req.headers["authorization"] ?? "";
-  if (header.startsWith("Bearer ")) {
-    const token = header.slice(7);
-    const match = token.match(/^user-(\d+)$/);
-    if (match && match[1]) req.userId = parseInt(match[1], 10);
-  }
-  if (!req.userId || Number.isNaN(req.userId)) req.userId = 1;
+// Logger middleware
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.path}`);
   next();
 });
 
-app.get("/", (_req, res) => {
-  res.json({ message: "CaseLight API is running ✅" });
-});
+// CORS configuration with explicit origin check
+const allowedOrigins = [
+  "https://caselightai.com",
+  "https://www.caselightai.com",
+  "http://localhost:3000",
+  "http://localhost:5173",
+];
 
-app.post("/auth/login", (req, res) => {
-  const { email, password } = req.body || {};
-  const appPassword = process.env.APP_PASSWORD;
-  if (!appPassword || password !== appPassword) {
-    res.status(401).json({ success: false, message: "Invalid credentials" });
-    return;
-  }
-  res.json({
-    success: true,
-    token: "user-1",
-    user: {
-      email: email || "user@caselight.com",
-      id: 1,
-      name: "CaseLight User",
+// Add env-based origins if set
+if (process.env.CORS_ORIGIN) {
+  const envOrigins = process.env.CORS_ORIGIN.split(",").map((o) => o.trim());
+  allowedOrigins.push(...envOrigins);
+}
+
+app.use(
+  cors({
+    origin: (incomingOrigin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!incomingOrigin) {
+        callback(null, true);
+        return;
+      }
+
+      // Check if origin is in allowedOrigins
+      if (allowedOrigins.includes(incomingOrigin)) {
+        callback(null, true);
+      } else {
+        logger.warn(`CORS blocked origin: ${incomingOrigin}`);
+        callback(new Error("Not allowed by CORS"));
+      }
     },
-  });
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+// Body parser
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Health check
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
 });
 
-app.use("/api", casesRouter);
-app.use("/api", documentsRouter);
-app.use("/api", findingsRouter);
-app.use("/api", categoriesRouter);
-app.use("/api", motionsRouter);
-app.use("/api", patternRouter);
-app.use("/api", nomeritRouter);
-app.use("/api", reliefRouter);
-app.use("/api", courtRouter);
-app.use("/api", exportRouter);
+// Routes
+app.use("/api/cases", casesRouter);
+app.use("/api/documents", documentsRouter);
+app.use("/api/findings", findingsRouter);
+app.use("/api/categories", categoriesRouter);
+app.use("/api/motions", motionsRouter);
+app.use("/api/pattern", patternRouter);
+app.use("/api/nomerit", nomeritRouter);
+app.use("/api/relief", reliefRouter);
+app.use("/api/court", courtRouter);
+app.use("/api/export", exportRouter);
 
-const port = process.env.PORT || 10000;
-app.listen(port, "0.0.0.0", async () => {
-  logger.info({ port }, "Server listening");
-  if (!process.env.APP_PASSWORD) {
-    logger.warn("⚠️  APP_PASSWORD is not set — all login attempts will fail");
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: "Not found" });
+});
+
+// Error handler
+app.use(
+  (
+    err: Error,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    logger.error(err);
+    res.status(500).json({ error: "Internal server error" });
   }
+);
+
+// Start server
+const PORT = process.env.PORT || 3000;
+
+async function start() {
   try {
     await seedCategories();
     await seedDemoCase();
-    logger.info("Database seeding complete");
+    logger.info("Database seeds completed");
   } catch (err) {
-    logger.error({ err }, "Seeding failed (non-fatal)");
+    logger.error("Seed error:", err);
   }
+
+  app.listen(PORT, () => {
+    logger.info(`Server listening on port ${PORT}`);
+  });
+}
+
+start().catch((err) => {
+  logger.error("Failed to start server:", err);
+  process.exit(1);
 });
+
+export default app;
