@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/layout/Layout";
-import Dashboard from "./pages/dashboard";
+import Dashboard from "./pages/home";
 import CasesIndex from "./pages/cases/index";
 import CasesShow from "./pages/cases/show";
 import CasesEdit from "./pages/cases/edit";
