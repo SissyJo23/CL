@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../lib/auth";
 
 export default function AuthLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -16,7 +14,7 @@ export default function AuthLogin() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("https://caselight-api.onrender.com/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -30,7 +28,7 @@ export default function AuthLogin() {
       }
 
       const data = await res.json();
-      login(data.token);
+      localStorage.setItem("authToken", data.token);
       navigate("/");
     } catch (err) {
       setError("Login failed. Please try again.");
