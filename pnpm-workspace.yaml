@@ -1,5 +1,5 @@
 packages:
-  - artifacts/*
+  # - artifacts/legal-analyzer    # COMMENT THIS OUT
   - lib/*
   - lib/integrations/*
   - scripts
