@@ -1,48 +1,30 @@
-import React, { createContext, useContext, ReactNode, useState, useEffect } from "react";
+import { Request, Response, NextFunction } from "express";
 
-interface AuthContextType {
-  isAuthenticated: boolean;
-  login: (password: string) => boolean;
-  logout: () => void;
+export interface AuthRequest extends Request {
+  isAuthenticated?: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const APP_PASSWORD = process.env.APP_PASSWORD || "caselight";
 
-export function AuthProvider({ children, apiBaseUrl }: { children: ReactNode; apiBaseUrl: string }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+export function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.replace("Bearer ", "");
 
-  useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    setIsAuthenticated(!!token);
-  }, []);
-
-  const login = (password: string) => {
-    const appPassword = import.meta.env.VITE_APP_PASSWORD || "caselight";
-    if (password === appPassword) {
-      const token = "auth-" + Date.now();
-      localStorage.setItem("authToken", token);
-      setIsAuthenticated(true);
-      return true;
-    }
-    return false;
-  };
-
-  const logout = () => {
-    localStorage.removeItem("authToken");
-    setIsAuthenticated(false);
-  };
-
-  return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within AuthProvider");
+  if (token) {
+    req.isAuthenticated = true;
   }
-  return context;
+
+  next();
+}
+
+export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  next();
+}
+
+export function validatePassword(password: string): boolean {
+  return password === APP_PASSWORD;
 }
