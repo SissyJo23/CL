@@ -1,8 +1,9 @@
 packages:
-  # - artifacts/legal-analyzer    # COMMENT THIS OUT
+  - artifacts/caselight             # Only the main artifact, not legal-analyzer
   - lib/*
   - lib/integrations/*
   - scripts
+
 
 allowBuilds:
   esbuild: set this to true
