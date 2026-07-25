@@ -1,9 +1,8 @@
 packages:
-  - artifacts/caselight             # Only the main artifact, not legal-analyzer
-  - lib/*
-  - lib/integrations/*
-  - scripts
-
+  - artifacts/api-server
+  - artifacts/landing
+  - artifacts/mockup-sandbox
+  - artifacts/pitch-deck
 
 allowBuilds:
   esbuild: set this to true
