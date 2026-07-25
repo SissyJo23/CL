@@ -3,6 +3,9 @@ packages:
   - artifacts/landing
   - artifacts/mockup-sandbox
   - artifacts/pitch-deck
+  - lib/*
+  - lib/integrations/*
+  - scripts
 
 allowBuilds:
   esbuild: set this to true
