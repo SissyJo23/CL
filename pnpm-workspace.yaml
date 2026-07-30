@@ -1,19 +1,16 @@
 packages:
-  - artifacts/api-server
-  - artifacts/landing
-  - artifacts/mockup-sandbox
-  - artifacts/pitch-deck
+  - artifacts/*
   - lib/*
   - lib/integrations/*
   - scripts
 
 allowBuilds:
-  esbuild: set this to true
+  esbuild: true
 
 autoInstallPeers: false
 
 catalog:
-  # The 3 dummy fallbacks that will completely silence the Replit errors:
+  # Dummy fallbacks that silence Replit errors:
   '@replit/vite-plugin-cartographer': '0.5.1'
   '@replit/vite-plugin-dev-banner': '0.1.1'
   '@replit/vite-plugin-runtime-error-modal': '0.0.6'
@@ -42,4 +39,3 @@ onlyBuiltDependencies:
   - esbuild
   - msw
   - unrs-resolver
-
