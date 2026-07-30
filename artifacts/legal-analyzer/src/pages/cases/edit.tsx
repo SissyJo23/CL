@@ -29,7 +29,8 @@ export default function CasesEdit() {
   });
 
   // Get current auth token helper
-  const getAuthHeader = () => {
+  const getAuthHeader = (): Record<string, string> => {
+
     const token = localStorage.getItem("authToken");
     return token ? { "Authorization": `Bearer ${token}` } : {};
   };
