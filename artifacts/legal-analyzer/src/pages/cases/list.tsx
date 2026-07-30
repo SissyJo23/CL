@@ -274,7 +274,8 @@ export default function CaseList() {
                         </Badge>
                       )}
                       <CaseCardMenu
-                        caseId={c.id}
+                        caseId={String(c.id)}
+
                         onDelete={(id) => setPendingDelete({ id, title: c.title })}
                       />
                     </div>
