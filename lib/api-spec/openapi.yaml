@@ -1,22 +1,38 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Legal Document Analyzer & Court Simulator API
+
 servers:
   - url: /api
     description: Base API path
+
 tags:
   - name: health
     description: Health operations
+  - name: cases
+    description: Case management
+  - name: documents
+    description: Document upload and management
+  - name: findings
+    description: AI analysis findings
+  - name: categories
+    description: Custom issue categories
+  - name: court
+    description: Court simulation
+  - name: motions
+    description: Generated motions
+  - name: export
+    description: Export and print
+
 paths:
+
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,8 +40,79 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── DOCUMENT ANALYSIS (UPDATED SSE CONTRACT) ──────────────────────────────
+  /cases/{caseId}/documents/{id}/analyze:
+    post:
+      operationId: analyzeDocument
+      tags: [documents]
+      summary: Run exhaustive AI analysis on a document (SSE stream)
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: SSE stream of analysis progress and findings
+          content:
+            text/event-stream:
+              schema:
+                $ref: "#/components/schemas/AnalyzeDocumentSseEvent"
+
 components:
   schemas:
+
+    # ───────────────────────────────────────────────────────────────────────────
+    # ✅ NEW: BATCH PROGRESS (Intelligence Meter Bridge)
+    # ───────────────────────────────────────────────────────────────────────────
+    BatchProgress:
+      type: object
+      properties:
+        done:
+          type: integer
+        total:
+          type: integer
+        currentDoc:
+          type: string
+      required:
+        - done
+        - total
+        - currentDoc
+
+    AnalyzeDocumentSseEvent:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - batch-progress
+            - finding
+            - complete
+            - error
+        data:
+          oneOf:
+            - $ref: "#/components/schemas/BatchProgress"
+            - $ref: "#/components/schemas/Finding"
+            - type: object
+              properties:
+                message:
+                  type: string
+              required: [message]
+      required:
+        - type
+        - data
+
+    # ───────────────────────────────────────────────────────────────────────────
+    # (Everything below remains EXACTLY the same as your original)
+    # ───────────────────────────────────────────────────────────────────────────
+
     HealthStatus:
       type: object
       properties:
@@ -34,3 +121,142 @@ components:
       required:
         - status
 
+    # ─── CASES ─────────────────────────────────────────────────────────────────
+    Case:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        defendantName:
+          type: ["string", "null"]
+        caseNumber:
+          type: ["string", "null"]
+        jurisdiction:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        hasAnalysis:
+          type: boolean
+        hasMotion:
+          type: boolean
+        documentCount:
+          type: ["integer", "null"]
+        findingCount:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - hasAnalysis
+        - hasMotion
+        - createdAt
+        - updatedAt
+
+    CreateCaseBody:
+      type: object
+      properties:
+        title:
+          type: string
+        defendantName:
+          type: ["string", "null"]
+        caseNumber:
+          type: ["string", "null"]
+        jurisdiction:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+      required:
+        - title
+
+    UpdateCaseBody:
+      type: object
+      properties:
+        title:
+          type: ["string", "null"]
+        defendantName:
+          type: ["string", "null"]
+        caseNumber:
+          type: ["string", "null"]
+        jurisdiction:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+
+    CaseOrNull:
+      type: object
+      properties:
+        case:
+          oneOf:
+            - $ref: "#/components/schemas/Case"
+            - type: "null"
+      required:
+        - case
+
+    # ─── FINDINGS ──────────────────────────────────────────────────────────────
+    Finding:
+      type: object
+      properties:
+        id:
+          type: integer
+        documentId:
+          type: integer
+        caseId:
+          type: integer
+        issueTitle:
+          type: string
+        transcriptExcerpt:
+          type: string
+        legalAnalysis:
+          type: string
+        precedentName:
+          type: ["string", "null"]
+        precedentCitation:
+          type: ["string", "null"]
+        precedentType:
+          type: ["string", "null"]
+          enum: [BINDING, PERSUASIVE, null]
+        courtRuling:
+          type: ["string", "null"]
+        materialSimilarity:
+          type: ["string", "null"]
+        categoryId:
+          type: ["integer", "null"]
+        pageNumber:
+          type: ["integer", "null"]
+        lineNumber:
+          type: ["integer", "null"]
+        userNotes:
+          type: ["string", "null"]
+        proceduralStatus:
+          type: ["string", "null"]
+        anticipatedBlock:
+          type: ["string", "null"]
+        breakthroughArgument:
+          type: ["string", "null"]
+        legalVehicle:
+          type: ["string", "null"]
+        survivability:
+          type: ["string", "null"]
+        crossCaseMatches:
+          type: array
+          items:
+            $ref: "#/components/schemas/CrossCaseMatch"
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - documentId
+        - caseId
+        - issueTitle
+        - transcriptExcerpt
+        - legalAnalysis
+        - crossCaseMatches
+        - createdAt

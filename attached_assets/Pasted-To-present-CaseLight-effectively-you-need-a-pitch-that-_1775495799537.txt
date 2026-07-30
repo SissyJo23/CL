@@ -1,0 +1,30 @@
+To present CaseLight effectively, you need a pitch that highlights its precision and its role as a "reality check" for legal strategy. Since the app is built on meticulous analysis rather than just optimism, the messaging should focus on its ability to stress-test a case before it ever hits a real courtroom.
+Here is a breakdown of how you can present CaseLight to potential users or stakeholders.
+1. The Value Proposition
+"CaseLight: Bringing Transparency and Strategy to the Toughest Legal Battles."
+Most legal tech focuses on filing or research. CaseLight focuses on outcome simulation. It bridges the gap between having a transcript and having a winning strategy by forcing the evidence through a "skeptical" AI-driven judicial filter.
+2. Key Feature Highlights
+When presenting the app, use these three pillars to explain how it works:
+I. The Finding Classifier
+CaseLight doesn't just read transcripts; it audits them. It extracts every "Finding" and categorizes them by legal weight (High, Medium, Low Importance). This turns thousands of pages of testimony into a prioritized data set.
+II. Cumulative Error & Roadmap Generation
+Individual errors might not win a case, but the cumulative effect often does. CaseLight generates:
+ * A Cumulative Error Brief that shows the combined weight of trial mistakes.
+ * A Strategic Roadmap that tells the user exactly which legal path to walk.
+III. The Advanced Court Simulator
+This is the core of the app. It’s not a simple chat; it’s a multi-round legal gauntlet.
+ * Standards-Based: Choose from Direct Appeal, Post-Conviction, Federal Habeas, or Bangert Motion.
+ * The Skeptical Judge: The AI is programmed to be a fair, tough adjudicator, ensuring the "win" is earned, not given.
+ * Adversarial Rounds: At least 4 rounds of back-and-forth against "The State" to exhaust every legal counter-argument.
+3. The "Integrity" Pitch
+One of your strongest selling points is that the app is designed to say "No."
+> "CaseLight isn't a 'win' button—it’s a precision instrument. If a case lacks merit for a post-conviction motion, the app will tell you. By providing a realistic, skeptical simulation, we save users time and resources by identifying which cases have a genuine path to relief and which ones do not."
+> 
+4. Sample Marketing Hook
+> Stop guessing how a judge will rule. Put your case through the gauntlet.
+> CaseLight analyzes your transcripts, identifies every error, and runs your defense through a 4-round adversarial simulation against the State. Whether you are prepping for a Federal Habeas or a Post-Conviction motion, see the ruling before you file the brief.
+> 
+Suggested Next Steps for Presentation:
+ * Case Studies: Since you’ve already tested two cases (one win, one loss), use those as "Proof of Concept" data points to show the app's accuracy.
+ * Visual Roadmap: Show a screenshot or a flow-chart of the "Transcript → Findings → Category → Roadmap" process.
+Would you like me to help draft a specific "About" page or a script for a demo video based on this?

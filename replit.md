@@ -1,45 +1,80 @@
-# [Project name]
+# CaseLight — Legal Document Analyzer & Court Simulator
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+## What This App Does
+A full-stack advocacy tool that reads legal documents (transcripts, police reports, appeals, etc.) and produces exhaustive AI-powered analysis of every line, date, signature, and procedural element. Features a 4-round+ AI court simulator (Defense vs State vs AI judge) across 4 legal modes. Mission: "Just because you didn't get justice doesn't mean you don't deserve it."
 
-## Run & Operate
+## Tech Stack
+- **Monorepo**: pnpm workspaces
+- **Frontend**: React + Vite (artifacts/legal-analyzer), wouter routing, shadcn/ui, TanStack Query
+- **Backend**: Express 5 (artifacts/api-server)
+- **Database**: PostgreSQL via Drizzle ORM
+- **AI**: Anthropic Claude (user's own API key — NOT Replit AI Integrations)
+- **Codegen**: Orval → generates React Query hooks and Zod schemas from openapi.yaml
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+## Project Structure
+```
+lib/
+  api-spec/openapi.yaml          — single source of truth for API
+  api-client-react/              — generated React Query hooks
+  api-zod/                       — generated Zod schemas
+  db/src/schema/                 — Drizzle ORM schema
+    cases.ts, documents.ts, categories.ts, findings.ts, court.ts, motions.ts,
+    pattern-analyses.ts, relief-pathways.ts, nomerit-analyses.ts
 
-## Stack
+artifacts/
+  api-server/src/
+    routes/                      — Express routes (cases, documents, findings, categories, court, motions, export, pattern, relief, nomerit)
+    lib/anthropic.ts             — Anthropic client + all AI prompts + DOCUMENT_TYPE_LABELS
+  legal-analyzer/src/
+    pages/                       — React pages (Home, CaseNew, CaseShow, DocumentShow, NomeritPage, CourtNew, CourtRun, CourtShow, MotionShow, PatternPage, ReliefPage)
+    components/                  — CategoryFilter, FindingCard, etc.
+```
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+## Key Architecture Decisions
+1. **User's own Anthropic key**: `ANTHROPIC_API_KEY` env secret — user purchases from console.anthropic.com. NOT via Replit integrations.
+2. **Exhaustive analysis**: AI prompt mandates covering every line — 15 mandatory coverage categories.
+3. **Permanent result cache**: Findings are stored in DB; re-analysis only on explicit request.
+4. **SSE streaming**: Document analysis and court simulation stream results via Server-Sent Events (fetch + ReadableStream on frontend).
+5. **Cross-case matching**: Every finding cross-referenced against all other documents in the case.
+6. **4 court modes**: direct_appeal, bangert_motion, postconviction_974, federal_habeas.
 
-## Where things live
+## Environment Variables Required
+- `DATABASE_URL` — provisioned automatically by Replit
+- `ANTHROPIC_API_KEY` — **user must supply this** (their Claude console key, starts with sk-ant-)
+- `APP_PASSWORD` — shared secret required to sign in via `/auth/login`
+- `PORT` — set automatically per artifact
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+## API Regeneration
+After changing `lib/api-spec/openapi.yaml`:
+```bash
+pnpm --filter @workspace/api-spec run codegen
+```
 
-## Architecture decisions
+## Database Changes
+After updating schema files in `lib/db/src/schema/`:
+```bash
+pnpm --filter @workspace/db run push
+```
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+## Color System for Categories
+Categories have 5 colors: blue, yellow, red, pink, orange. Rendered as badges on FindingCards.
 
-## Product
+## No-Merit Report Analyzer (Feature 3)
+When a document is typed as `no_merit_report`, the document page shows a violet "Run No-Merit Analysis" button. This triggers a two-phase AI analysis:
+1. **Phase 1**: Extracts dismissed claims from the report, identifies case findings counsel missed, and assesses arguability under Anders/Smith v. Robbins
+2. **Phase 2**: Drafts per-issue IAAC arguments (Strickland prongs) and a full Wisconsin-specific draft motion, including Martinez v. Ryan analysis
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Results stored in `nomerit_analyses` table. Analysis page: `/cases/:caseId/documents/:id/nomerit`.
 
-## User preferences
+## Court Simulation Modes
+1. **Direct Appeal** — De novo / harmless error standard
+2. **Bangert Motion** — Plea withdrawal; burden shifts to State (State v. Bangert, 131 Wis. 2d 246)
+3. **§974.06 Postconviction** — IAC (Strickland) + Escalona-Naranjo procedural bar
+4. **Federal Habeas** — AEDPA § 2254 deference, SCOTUS clearly established law
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
-
-## Gotchas
-
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+## Tone Guidelines
+- Never cold or clinical. Warm, determined, advocacy-first.
+- No emojis anywhere in the UI.
+- Key copy: "Just because you didn't get justice doesn't mean you don't deserve it."
+- Analysis complete: "We went through every line. Here's everything we found."
+- Disclaimer shown respectfully — not cold legalese.
