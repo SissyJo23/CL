@@ -2,8 +2,8 @@ import React from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { FileText, ChevronRight, Scale, Shield, BarChart3, Gavel, BrainCircuit, Activity } from "lucide-react";
 
-const APP_URL = "https://best-possible.replit.app";
-const DEMO_URL = "https://best-possible.replit.app/cases/1";
+const APP_URL = "https://caselightai.com";
+const DEMO_URL = "https://caselightai.com";
 
 const FadeIn = ({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) => {
   return (
