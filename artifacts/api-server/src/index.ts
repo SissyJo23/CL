@@ -2,16 +2,7 @@ import express from "express";
 import cors from "cors";
 import { logger } from "./lib/logger";
 import { seedCategories, seedDemoCase } from "./lib/seed";
-import casesRouter from "./routes/cases";
-import documentsRouter from "./routes/documents";
-import findingsRouter from "./routes/findings";
-import categoriesRouter from "./routes/categories";
-import motionsRouter from "./routes/motions";
-import patternRouter from "./routes/pattern";
-import nomeritRouter from "./routes/nomerit";
-import reliefRouter from "./routes/relief";
-import courtRouter from "./routes/court";
-import exportRouter from "./routes/export";
+import routesRouter from "./routes";
 
 const app = express();
 
@@ -70,17 +61,8 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// Routes
-app.use("/api/cases", casesRouter);
-app.use("/api/documents", documentsRouter);
-app.use("/api/findings", findingsRouter);
-app.use("/api/categories", categoriesRouter);
-app.use("/api/motions", motionsRouter);
-app.use("/api/pattern", patternRouter);
-app.use("/api/nomerit", nomeritRouter);
-app.use("/api/relief", reliefRouter);
-app.use("/api/court", courtRouter);
-app.use("/api/export", exportRouter);
+// All API routes, including /api/healthz, are mounted under /api.
+app.use("/api", routesRouter);
 
 // 404 handler
 app.use((req, res) => {
@@ -109,7 +91,7 @@ async function start() {
     await seedDemoCase();
     logger.info("Database seeds completed");
   } catch (err) {
-    logger.error("Seed error:", err);
+    logger.error({ err }, "Seed error");
   }
 
   app.listen(PORT, () => {

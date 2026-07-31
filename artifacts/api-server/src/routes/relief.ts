@@ -64,7 +64,7 @@ router.get("/cases/:id/relief-pathway", async (req, res) => {
     }).returning();
   }
 
-  res.json(pathway);
+  return res.json(pathway);
 });
 
 export default router;

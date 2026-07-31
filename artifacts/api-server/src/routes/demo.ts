@@ -1,4 +1,4 @@
-Import { Router } from "express";
+import { Router } from "express";
 import { getDemoCaseId } from "../lib/seed";
 
 const router = Router();

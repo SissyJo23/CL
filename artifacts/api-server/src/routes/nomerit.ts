@@ -1,6 +1,7 @@
 import { Router, type Response } from "express";
 import { db, documentsTable, findingsTable, nomeritAnalysesTable, casesTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
+import type { Message as AnthropicMessage } from "@anthropic-ai/sdk/resources/messages/messages.js";
 import { anthropic } from "../lib/anthropic";
 import { logger } from "../lib/logger";
 
@@ -14,10 +15,10 @@ async function callAnthropicWithRetry(
   params: Parameters<typeof anthropic.messages.create>[0],
   onStatus: (msg: string) => void,
   maxRetries = 3,
-): Promise<Awaited<ReturnType<typeof anthropic.messages.create>>> {
+): Promise<AnthropicMessage> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      return await anthropic.messages.create(params);
+      return await anthropic.messages.create(params) as AnthropicMessage;
     } catch (err: unknown) {
       const status = (err as { status?: number })?.status;
       const headers = (err as { headers?: Record<string, string> })?.headers;

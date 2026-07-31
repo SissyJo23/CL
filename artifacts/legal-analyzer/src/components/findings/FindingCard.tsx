@@ -245,70 +245,52 @@ export default function FindingCard({ finding, caseId, documentId, onDeleted, on
                 <ChevronDown className={cn("w-4 h-4 transition-transform", crossCaseOpen && "rotate-180")} />
               </CollapsibleTrigger>
               <CollapsibleContent>
-                    <div className="grid grid-cols-2 divide-x divide-border border-t border-border mt-auto bg-slate-900/50">
-          <div className="flex flex-col">
+                <div className="divide-y divide-border border-t border-border">
+                  {finding.crossCaseMatches.map((match: CrossCaseMatch, i: number) => (
+                    <div key={i} className="p-3 space-y-1">
+                      <p className="text-sm font-medium text-foreground">{match.sourceDocumentTitle}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{match.matchedPassage}</p>
+                      <p className="text-xs text-muted-foreground italic">{match.explanation}</p>
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
+          {isPlainMode && (() => {
+            const actionStep = actionStepForVehicle(finding.legalVehicle, mode);
+            if (!actionStep) return null;
+            return (
+              <div className="px-5 pb-4">
+                <div className="flex items-start gap-2 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-lg px-3 py-2.5 text-xs text-indigo-800 dark:text-indigo-300 leading-snug">
+                  <Lightbulb className="w-3.5 h-3.5 shrink-0 mt-0.5 text-indigo-500" />
+                  <span><span className="font-semibold">What you can do: </span>{actionStep}</span>
+                </div>
+              </div>
+            );
+          })()}
+
+          <div className="grid grid-cols-2 divide-x divide-border border-t border-border mt-auto">
             <Button
               variant="ghost"
-              className="rounded-none h-12 text-slate-300 hover:text-white hover:bg-blue-900/30"
+              className="rounded-none h-11 text-muted-foreground hover:text-foreground hover:bg-muted/50"
               onClick={() => setEditOpen(true)}
               disabled={!caseId || !documentId}
             >
-              <Pencil className="w-4 h-4 mr-2 text-blue-400" />
-              Reassign Category
+              <Pencil className="w-4 h-4 mr-2" />
+              Reassign
             </Button>
-            <span className="text-[10px] text-center pb-1 text-slate-500 italic">
-              Moves this finding to a different legal category.
-            </span>
-          </div>
-
-          <div className="flex flex-col">
             <Button
               variant="ghost"
-              className="rounded-none h-12 text-red-400/70 hover:text-red-400 hover:bg-red-950/30"
+              className="rounded-none h-11 text-destructive/70 hover:text-destructive hover:bg-destructive/5"
               onClick={handleDelete}
               disabled={!caseId || !documentId || deleteFinding.isPending}
             >
               {deleteFinding.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
-              Remove Finding
+              Delete
             </Button>
-            <span className="text-[10px] text-center pb-1 text-slate-500 italic">
-              Permanently deletes this record from the vault.
-            </span>
           </div>
-        </div>
-
-        {isPlainMode && (() => {
-          const actionStep = actionStepForVehicle(finding.legalVehicle, mode);
-          if (!actionStep) return null;
-          return (
-            <div className="px-5 pb-4">
-              <div className="flex items-start gap-2 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-lg px-3 py-2.5 text-xs text-indigo-800 dark:text-indigo-300 leading-snug">
-                <Lightbulb className="w-3.5 h-3.5 shrink-0 mt-0.5 text-indigo-500" />
-                <span><span className="font-semibold">What you can do: </span>{actionStep}</span>
-              </div>
-            </div>
-          );
-        })()}
-
-        <div className="grid grid-cols-2 divide-x divide-border border-t border-border mt-auto">
-          <Button
-            variant="ghost"
-            className="rounded-none h-11 text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            onClick={() => setEditOpen(true)}
-            disabled={!caseId || !documentId}
-          >
-            <Pencil className="w-4 h-4 mr-2" />
-            Reassign
-          </Button>
-          <Button
-            variant="ghost"
-            className="rounded-none h-11 text-destructive/70 hover:text-destructive hover:bg-destructive/5"
-            onClick={handleDelete}
-            disabled={!caseId || !documentId || deleteFinding.isPending}
-          >
-            {deleteFinding.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
-            Delete
-          </Button>
         </div>
       </div>
 
