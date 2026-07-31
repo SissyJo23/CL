@@ -7,7 +7,7 @@ import CasesShow from "./pages/cases/show";
 import CasesEdit from "./pages/cases/edit";
 import CasesPattern from "./pages/cases/pattern";
 import CasesRelief from "./pages/cases/relief";
-import DocumentsIndex from "./pages/documents/index";
+import DocumentsIndex from "./pages/documents/list";
 import DocumentsShow from "./pages/documents/show";
 import DocumentsNomerit from "./pages/documents/nomerit";
 import CourtNew from "./pages/court/new";
