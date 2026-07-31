@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams } from "wouter";
 import { useEffect, useState } from "react";
 
 export default function DocumentsShow() {

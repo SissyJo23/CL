@@ -65,43 +65,61 @@ export default function CaseNew() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-2xl">
-        <Link href="/" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-6 transition-colors">
-          <ArrowLeft className="w-4 h-4 mr-2" />
+      <main className="flex-1 container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-3xl">
+        <Link
+          href="/"
+          className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-8 transition-colors group"
+          data-testid="link-back"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-0.5 transition-transform" />
           Back to Home
         </Link>
-        
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-serif font-medium tracking-tight">Open a New Case</h1>
-            <p className="text-muted-foreground mt-2">Every detail matters. We'll organize it from here.</p>
+
+        <div className="space-y-8">
+          <div className="space-y-3">
+            <h1 className="text-3xl sm:text-4xl font-serif font-semibold tracking-tight text-foreground">
+              Open a New Case
+            </h1>
+            <p className="text-muted-foreground text-base leading-relaxed max-w-2xl">
+              Every detail matters. Start with the case name and jurisdiction—we'll organize everything from here.
+            </p>
           </div>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-card border border-border p-6 rounded-xl shadow-sm">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-card border border-card-border p-6 sm:p-8 rounded-lg shadow-sm">
               <FormField
                 control={form.control}
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Case Title</FormLabel>
+                    <FormLabel className="text-sm font-semibold">Case Title*</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. State v. Smith Appeal" {...field} data-testid="input-title" />
+                      <Input
+                        placeholder="e.g., State v. Marcus Johnson"
+                        className="h-11"
+                        {...field}
+                        data-testid="input-title"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="defendantName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Defendant Name</FormLabel>
+                      <FormLabel className="text-sm font-semibold">Defendant Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="John Smith" {...field} data-testid="input-defendant" />
+                        <Input
+                          placeholder="Marcus Johnson"
+                          className="h-11"
+                          {...field}
+                          data-testid="input-defendant"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -113,9 +131,14 @@ export default function CaseNew() {
                   name="caseNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Case Number</FormLabel>
+                      <FormLabel className="text-sm font-semibold">Case Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="2023-CR-001" {...field} data-testid="input-case-number" />
+                        <Input
+                          placeholder="2021CF000123"
+                          className="h-11"
+                          {...field}
+                          data-testid="input-case-number"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -128,9 +151,14 @@ export default function CaseNew() {
                 name="jurisdiction"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Jurisdiction</FormLabel>
+                    <FormLabel className="text-sm font-semibold">Jurisdiction</FormLabel>
                     <FormControl>
-                      <Input placeholder="Wisconsin Court of Appeals" {...field} data-testid="input-jurisdiction" />
+                      <Input
+                        placeholder="Wisconsin Court of Appeals, District III"
+                        className="h-11"
+                        {...field}
+                        data-testid="input-jurisdiction"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -142,13 +170,13 @@ export default function CaseNew() {
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Initial Notes</FormLabel>
+                    <FormLabel className="text-sm font-semibold">Initial Notes</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="What stands out about this case?" 
-                        className="min-h-[120px]"
-                        {...field} 
-                        data-testid="input-notes" 
+                      <Textarea
+                        placeholder="What stands out about this case? What are the key issues you're tracking?"
+                        className="min-h-[140px] resize-none"
+                        {...field}
+                        data-testid="input-notes"
                       />
                     </FormControl>
                     <FormMessage />
@@ -156,15 +184,18 @@ export default function CaseNew() {
                 )}
               />
 
-              <div className="pt-4 flex justify-end">
-                <Button 
-                  type="submit" 
-                  size="lg" 
-                  className="w-full sm:w-auto" 
+              <div className="pt-6 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <p className="text-xs text-muted-foreground">
+                  * Required field
+                </p>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full sm:w-auto h-11 px-8 shadow-sm"
                   disabled={createCase.isPending}
                   data-testid="button-submit-case"
                 >
-                  {createCase.isPending ? "Creating..." : "Create Workspace"}
+                  {createCase.isPending ? "Creating Workspace..." : "Create Case Workspace"}
                 </Button>
               </div>
             </form>

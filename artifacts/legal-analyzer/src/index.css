@@ -56,43 +56,44 @@
 
   --opaque-button-border-intensity: -8;
 
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
+  --elevate-1: rgba(0,0,0, .02);
+  --elevate-2: rgba(0,0,0, .05);
 
-  --background: 40 33% 98%; /* Warm, off-white #fdfbf7 */
-  --foreground: 220 20% 15%; /* Deep slate #1f2530 */
+  /* CaseLight palette: warm cream paper, editorial navy, confident blue actions */
+  --background: 42 48% 96%; /* Warm cream paper #faf7f0 */
+  --foreground: 215 28% 17%; /* Editorial navy #1e2a3a */
   
-  --border: 40 10% 88%;
-  --input: 40 10% 88%;
-  --ring: 220 20% 15%;
+  --border: 42 20% 88%; /* Subtle cream border */
+  --input: 42 20% 88%;
+  --ring: 210 65% 52%; /* Medium blue focus ring */
 
-  --card: 0 0% 100%;
-  --card-foreground: 220 20% 15%;
-  --card-border: 40 10% 88%;
+  --card: 0 0% 100%; /* Pure white cards on cream */
+  --card-foreground: 215 28% 17%;
+  --card-border: 42 15% 90%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 220 20% 15%;
-  --popover-border: 40 10% 88%;
+  --popover-foreground: 215 28% 17%;
+  --popover-border: 42 15% 88%;
 
-  --primary: 220 20% 15%;
-  --primary-foreground: 40 33% 98%;
+  --primary: 210 65% 52%; /* Confident medium blue #3b89d9 */
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 40 10% 93%;
-  --secondary-foreground: 220 20% 15%;
+  --secondary: 42 30% 92%; /* Soft cream accent */
+  --secondary-foreground: 215 28% 17%;
 
-  --muted: 40 10% 93%;
-  --muted-foreground: 220 10% 40%;
+  --muted: 42 25% 94%; /* Very light cream */
+  --muted-foreground: 215 15% 45%; /* Muted navy-gray */
 
-  --accent: 40 10% 93%;
-  --accent-foreground: 220 20% 15%;
+  --accent: 42 35% 88%; /* Warm cream highlight */
+  --accent-foreground: 215 28% 17%;
 
-  --destructive: 0 70% 45%;
+  --destructive: 0 65% 48%;
   --destructive-foreground: 0 0% 100%;
 
   --app-font-sans: 'DM Sans', sans-serif;
   --app-font-serif: 'Playfair Display', serif;
-  --app-font-mono: Menlo, monospace;
-  --radius: 0.5rem;
+  --app-font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  --radius: 0.375rem;
 }
 
 .dark {
@@ -100,36 +101,37 @@
   --badge-outline: rgba(255,255,255, .05);
   --opaque-button-border-intensity: 9;
 
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --elevate-1: rgba(255,255,255, .03);
+  --elevate-2: rgba(255,255,255, .07);
 
-  --background: 220 20% 10%;
-  --foreground: 40 33% 98%;
-  --border: 220 20% 20%;
-  --input: 220 20% 20%;
-  --ring: 40 33% 98%;
+  /* Dark mode: deep navy shell, cream accents */
+  --background: 215 35% 12%; /* Deep navy #151d29 */
+  --foreground: 42 48% 96%; /* Cream text */
+  --border: 215 25% 22%;
+  --input: 215 25% 22%;
+  --ring: 210 65% 58%;
   
-  --card: 220 20% 13%;
-  --card-foreground: 40 33% 98%;
-  --card-border: 220 20% 20%;
+  --card: 215 30% 15%; /* Slightly lighter navy cards */
+  --card-foreground: 42 48% 96%;
+  --card-border: 215 25% 22%;
 
-  --popover: 220 20% 13%;
-  --popover-foreground: 40 33% 98%;
-  --popover-border: 220 20% 20%;
+  --popover: 215 30% 15%;
+  --popover-foreground: 42 48% 96%;
+  --popover-border: 215 25% 22%;
 
-  --primary: 40 33% 98%;
-  --primary-foreground: 220 20% 15%;
+  --primary: 210 65% 58%; /* Brighter blue in dark mode */
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 220 20% 20%;
-  --secondary-foreground: 40 33% 98%;
+  --secondary: 215 25% 22%;
+  --secondary-foreground: 42 48% 96%;
 
-  --muted: 220 20% 20%;
-  --muted-foreground: 220 10% 60%;
+  --muted: 215 25% 20%;
+  --muted-foreground: 215 10% 65%;
 
-  --accent: 220 20% 20%;
-  --accent-foreground: 40 33% 98%;
+  --accent: 215 25% 24%;
+  --accent-foreground: 42 48% 96%;
 
-  --destructive: 0 70% 45%;
+  --destructive: 0 65% 52%;
   --destructive-foreground: 0 0% 100%;
 }
 
