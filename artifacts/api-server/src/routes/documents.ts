@@ -401,8 +401,18 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
   }
 
   if (doc.status === "analyzing") {
-    res.status(409).json({ error: "Document is already being analyzed" });
-    return;
+    const analysisStartedAt = doc.updatedAt?.getTime() ?? Date.now();
+    const analysisAgeMs = Date.now() - analysisStartedAt;
+    const staleAnalysisTimeoutMs = 15 * 60 * 1000;
+    if (analysisAgeMs < staleAnalysisTimeoutMs) {
+      res.status(409).json({ error: "Document is already being analyzed" });
+      return;
+    }
+
+    await db
+      .update(documentsTable)
+      .set({ status: "pending", updatedAt: new Date() })
+      .where(eq(documentsTable.id, docId));
   }
 
   res.setHeader('Content-Type', 'text/event-stream');
