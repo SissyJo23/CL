@@ -28,19 +28,23 @@ router.use(reliefRouter);
 router.use(nomeritRouter);
 
 // This is your new Login Door
-router.post("/auth/login", (req, res) => {
-  const { email, password } = req.body;
-  
-  // You can change 'admin@caselight.com' to your actual email later if you want.
-  if (email === 'admin@caselight.com' && password === 'password123') {
-    res.json({ 
-      success: true, 
-      token: "fake-jwt-token-for-now", 
-      user: { email: 'admin@caselight.com', name: 'Christy' } 
-    });
-  } else {
-    res.status(401).json({ success: false, message: "Invalid credentials" });
+router.post("/auth/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // 1. Force check your actual environment variables set up in Render
+    if (email === process.env.APP_USERID && password === process.env.APP_PASSWORD) {
+      return res.json({ 
+        user: { 
+          email, 
+          userMode: "attorney", // This instantly forces the UI to unlock the "Upload document +" screens
+          name: "Administrator" 
+        } 
+      });
+    }
+
+    res.status(401).json({ error: "Invalid credentials" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
   }
 });
-
-export default router;
