@@ -28,32 +28,20 @@ router.use(reliefRouter);
 router.use(nomeritRouter);
 
 // This is your new Login Door
-import { Router } from "express";
 
-const router = Router();
-
-router.post("/auth/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    
-    // 1. Validates securely against your dynamic Render dashboard values
-    if (email === process.env.APP_USERID && password === process.env.APP_PASSWORD) {
-      return res.json({ 
-        success: true,
-        token: "fake-jwt-token-for-now",
-        user: { 
-          email, 
-          userMode: "attorney", // Unlocks your core legal document upload workflow panels
-          name: "Administrator" 
-        } 
-      });
-    }
-
+router.post("/auth/login", (req, res) => {
+  const { email, password } = req.body;
+  
+  // You can change 'admin@caselight.com' to your actual email later if you want.
+  if (email === 'admin@caselight.com' && password === 'password123') {
+    res.json({ 
+      success: true, 
+      token: "fake-jwt-token-for-now", 
+      user: { email: 'admin@caselight.com', name: 'Christy' } 
+    });
+  } else {
     res.status(401).json({ success: false, message: "Invalid credentials" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 
-// CRITICAL: This is the exact line the server needs to prevent the boot crash
 export default router;
