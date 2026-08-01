@@ -138,7 +138,12 @@ export default function CaseShow() {
   const caseId = parseInt(params.id || "0", 10);
   const { mode: rawMode, setMode } = useUserMode();
   const mode: UserMode = rawMode ?? "attorney";
-  const { data: currentCase, isLoading: caseLoading } = useGetCase(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseQueryKey(caseId) } });
+  const {
+    data: currentCase,
+    isLoading: caseLoading,
+    isError: caseQueryFailed,
+    error: caseQueryError,
+  } = useGetCase(caseId, { query: { enabled: !!caseId, queryKey: getGetCaseQueryKey(caseId) } });
   const { data: documents, isLoading: docsLoading } = useListDocuments(caseId, { query: { enabled: !!caseId, queryKey: getListDocumentsQueryKey(caseId) } });
   const { data: courtSessions } = useListCourtSessions(caseId, { query: { enabled: !!caseId, queryKey: getListCourtSessionsQueryKey(caseId) } });
   const { data: pathwayResult, isLoading: reliefLoading } = useQuery<PathwayResult>({
@@ -470,6 +475,18 @@ export default function CaseShow() {
           <div className="space-y-4">
             <Skeleton className="h-10 w-2/3" />
             <Skeleton className="h-4 w-1/3" />
+          </div>
+        ) : caseQueryFailed ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-900">
+            <h1 className="font-serif text-xl font-medium">Case workspace unavailable</h1>
+            <p className="mt-2 text-sm">
+              {caseQueryError instanceof Error
+                ? caseQueryError.message
+                : "The case could not be loaded from the CaseLight API."}
+            </p>
+            <p className="mt-3 text-xs text-red-800/80">
+              Check that the API is running and that this browser origin is allowed.
+            </p>
           </div>
         ) : currentCase ? (
           <div className="min-w-0 space-y-6 sm:space-y-8">

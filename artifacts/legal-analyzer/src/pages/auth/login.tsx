@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Scale } from "lucide-react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -107,6 +108,12 @@ export default function AuthLogin() {
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
+          <div className="mt-5 border-t border-border pt-5 text-center">
+            <p className="mb-2 text-xs text-muted-foreground">Want to explore first?</p>
+            <Link href="/demo" className="text-sm font-medium text-primary underline underline-offset-4">
+              Open the CaseLight demo
+            </Link>
+          </div>
         </div>
 
         <p className="text-center text-xs text-muted-foreground">

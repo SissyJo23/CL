@@ -19,6 +19,7 @@ app.use((req, res, next) => {
 const allowedOrigins = [
   "https://caselightai.com",
   "https://www.caselightai.com",
+  "https://caselight-static.onrender.com",
   "http://localhost:3000",
   "http://localhost:5173",
 ];
@@ -59,6 +60,10 @@ app.use(express.urlencoded({ extended: true }));
 // Health check
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
+});
+
+app.get("/", (_req, res) => {
+  res.json({ status: "ok", service: "CaseLight API", health: "/health" });
 });
 
 // All API routes, including /api/healthz, are mounted under /api.
