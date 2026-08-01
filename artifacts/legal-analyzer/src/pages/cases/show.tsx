@@ -250,7 +250,7 @@ export default function CaseShow() {
           if (!line.startsWith("data:")) continue;
           const jsonStr = line.slice(5).trim();
           if (!jsonStr) continue;
-          let event: { type?: string; message?: string };
+          let event: { type?: string; message?: string; findingCount?: number };
           try {
             event = JSON.parse(jsonStr) as { type?: string; message?: string };
           } catch { continue; }
@@ -260,7 +260,9 @@ export default function CaseShow() {
           } else if (event.type === "status") {
             setLive(docId, { message: event.message ?? "" });
           } else if (event.type === "done") {
-            setLive(docId, { phase: "done", message: `${findingCount} finding${findingCount === 1 ? "" : "s"} extracted`, findingCount });
+            const verifiedFindingCount = typeof event.findingCount === "number" ? event.findingCount : findingCount;
+            findingCount = verifiedFindingCount;
+            setLive(docId, { phase: "done", message: `${verifiedFindingCount} finding${verifiedFindingCount === 1 ? "" : "s"} extracted`, findingCount: verifiedFindingCount });
           } else if (event.type === "error") {
             streamFailed = true;
             setLive(docId, { phase: "error", message: event.message ?? "Analysis failed." });
@@ -1046,8 +1048,8 @@ export default function CaseShow() {
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <label className="text-sm font-medium">Choose a PDF, DOCX, TXT, or image</label>
-                          <Input type="file" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp" multiple onChange={(e) => setUploadFiles(Array.from(e.target.files ?? []))} className="w-full cursor-pointer text-xs" />
+                          <label className="text-sm font-medium">Choose a PDF, DOCX, or TXT file</label>
+                          <Input type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" multiple onChange={(e) => setUploadFiles(Array.from(e.target.files ?? []))} className="w-full cursor-pointer text-xs" />
                           {uploadFiles.length > 0 && (
                             <div className="text-xs text-muted-foreground space-y-0.5">
                               {uploadFiles.map((f, i) => <p key={i}>{f.name} ({(f.size / 1024).toFixed(0)} KB)</p>)}
