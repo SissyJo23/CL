@@ -329,7 +329,7 @@ export default function CaseShow() {
   const [docContent, setDocContent] = useState("");
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [inputMode, setInputMode] = useState<"paste" | "upload">("paste");
+  const [inputMode, setInputMode] = useState<"paste" | "upload">("upload");
 
   const handleCreateDocument = () => {
     if (!docTitle || !docContent) {
@@ -440,7 +440,7 @@ export default function CaseShow() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-5xl">
+      <main className="w-full max-w-5xl min-w-0 flex-1 overflow-x-hidden px-4 py-5 sm:container sm:mx-auto sm:px-6 sm:py-8">
         <Link href="/" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-6 transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home
@@ -452,12 +452,12 @@ export default function CaseShow() {
             <Skeleton className="h-4 w-1/3" />
           </div>
         ) : currentCase ? (
-          <div className="space-y-8">
+          <div className="min-w-0 space-y-6 sm:space-y-8">
             {/* Upper Workspace Title Actions */}
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-serif font-medium tracking-tight text-foreground">{currentCase.title}</h1>
-                <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-sm text-muted-foreground">
+            <div className="flex min-w-0 flex-col justify-between gap-5 md:flex-row md:items-start">
+              <div className="min-w-0">
+                <h1 className="break-words text-2xl font-serif font-medium tracking-tight text-foreground sm:text-3xl">{currentCase.title}</h1>
+                <div className="mt-3 flex min-w-0 flex-wrap gap-x-3 gap-y-2 text-xs text-muted-foreground sm:text-sm">
                   {currentCase.caseNumber && <span>Case #: <span className="font-medium text-foreground">{currentCase.caseNumber}</span></span>}
                   {currentCase.defendantName && <span>Defendant: <span className="font-medium text-foreground">{currentCase.defendantName}</span></span>}
                   {(() => {
@@ -467,7 +467,7 @@ export default function CaseShow() {
                       <span className="inline-flex items-center gap-2">
                         <span className="inline-flex items-center gap-1">
                           <MapPin className="w-3.5 h-3.5 shrink-0" />
-                          <span className="font-medium text-foreground">{jBadge.displayText}</span>
+                          <span className="max-w-full break-words font-medium text-foreground">{jBadge.displayText}</span>
                         </span>
                         {jBadge.circuit && (
                           <Link href={`/cases/${caseId}/relief`}>
@@ -515,32 +515,32 @@ export default function CaseShow() {
                   </Select>
                 </div>
               </div>
-              <div className="flex gap-2 shrink-0 flex-wrap">
-                <Button variant="outline" size="sm" onClick={() => window.print()}>
+              <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap md:justify-end">
+                <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => window.print()}>
                   <Download className="w-4 h-4 mr-2" />
                   Export
                 </Button>
                 <Link href={`/cases/${caseId}/pattern`}>
-                  <Button variant="outline" size="sm" className="border-violet-300 text-violet-700 hover:bg-violet-50 dark:border-violet-700 dark:text-violet-300 dark:hover:bg-violet-900/20">
+                  <Button variant="outline" size="sm" className="w-full border-violet-300 text-violet-700 hover:bg-violet-50 dark:border-violet-700 dark:text-violet-300 dark:hover:bg-violet-900/20 sm:w-auto">
                     <GitBranch className="w-4 h-4 mr-2" />
                     Pattern Analysis
                   </Button>
                 </Link>
                 <Link href={`/cases/${caseId}/relief`}>
-                  <Button variant="outline" size="sm" className="border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-900/20">
+                  <Button variant="outline" size="sm" className="w-full border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-900/20 sm:w-auto">
                     <Milestone className="w-4 h-4 mr-2" />
                     Relief Pathway
                   </Button>
                 </Link>
                 {hasAnyFindings ? (
                   <Link href={`/cases/${caseId}/court/new`}>
-                    <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                    <Button size="sm" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto">
                       <Scale className="w-4 h-4 mr-2" />
                       Run Court Simulator
                     </Button>
                   </Link>
                 ) : (
-                  <Button size="sm" disabled title="Analyze at least one document first">
+                  <Button size="sm" className="w-full sm:w-auto" disabled title="Analyze at least one document first">
                     <Scale className="w-4 h-4 mr-2" />
                     Run Court Simulator
                   </Button>
@@ -931,24 +931,26 @@ export default function CaseShow() {
             )}
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-xl font-serif font-medium">Record Documents</h2>
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="secondary" size="sm">
+                    <Button variant="secondary" size="sm" className="w-full sm:w-auto">
                       <Plus className="w-4 h-4 mr-2" />
                       Add Document
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[600px]">
+                  <DialogContent className="w-[calc(100%-1.5rem)] max-h-[90dvh] overflow-y-auto p-5 sm:max-w-[600px]">
                     <DialogHeader>
-                      <DialogTitle>Add Document to Record</DialogTitle>
+                      <DialogTitle className="text-left">Add Document to Record</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Title</label>
-                        <Input value={docTitle} onChange={(e) => setDocTitle(e.target.value)} placeholder="e.g. Day 1 Trial Transcript" />
-                      </div>
+                      {inputMode === "paste" && (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Title</label>
+                          <Input value={docTitle} onChange={(e) => setDocTitle(e.target.value)} placeholder="e.g. Day 1 Trial Transcript" />
+                        </div>
+                      )}
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Type</label>
                         <Select value={docType} onValueChange={(val) => setDocType(val as CreateDocumentBodyDocumentType)}>
@@ -968,15 +970,15 @@ export default function CaseShow() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="flex rounded-lg border border-border overflow-hidden">
+                      <div className="grid grid-cols-2 overflow-hidden rounded-lg border border-border">
                         <button
                           className={`flex-1 py-2 text-sm font-medium transition-colors ${inputMode === "paste" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
                           onClick={() => setInputMode("paste")} type="button"
-                        >Paste Text</button>
+                        >Paste text</button>
                         <button
                           className={`flex-1 py-2 text-sm font-medium transition-colors ${inputMode === "upload" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
                           onClick={() => setInputMode("upload")} type="button"
-                        >Upload File</button>
+                        >Upload document</button>
                       </div>
                       {inputMode === "paste" ? (
                         <div className="space-y-2">
@@ -988,15 +990,15 @@ export default function CaseShow() {
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <label className="text-sm font-medium">Files (PDF, DOCX, TXT, or image — multiple allowed)</label>
-                          <Input type="file" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp" multiple onChange={(e) => setUploadFiles(Array.from(e.target.files ?? []))} className="cursor-pointer" />
+                          <label className="text-sm font-medium">Choose a PDF, DOCX, TXT, or image</label>
+                          <Input type="file" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp" multiple onChange={(e) => setUploadFiles(Array.from(e.target.files ?? []))} className="w-full cursor-pointer text-xs" />
                           {uploadFiles.length > 0 && (
                             <div className="text-xs text-muted-foreground space-y-0.5">
                               {uploadFiles.map((f, i) => <p key={i}>{f.name} ({(f.size / 1024).toFixed(0)} KB)</p>)}
                             </div>
                           )}
                           <Button className="w-full" onClick={handleUploadDocument} disabled={isUploading || uploadFiles.length === 0}>
-                            {isUploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Extracting text...</> : `Upload & Extract${uploadFiles.length > 1 ? ` (${uploadFiles.length} files)` : ""}`}
+                            {isUploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Uploading…</> : `Upload document${uploadFiles.length > 1 ? `s (${uploadFiles.length})` : ""}`}
                           </Button>
                         </div>
                       )}
