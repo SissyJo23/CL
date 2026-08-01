@@ -18,8 +18,9 @@ import { Badge } from "@/components/ui/badge";
 import { useUserMode, type UserMode } from "@/contexts/UserModeContext";
 import { MODE_LABELS } from "@/lib/modeContent";
 import { parseJurisdictionBadge } from "@/lib/jurisdictionBadge";
+import { API_BASE, getToken } from "@/lib/api";
 
-const API_BASE_URL = "https://caselight-api.onrender.com/api";
+const API_BASE_URL = `${API_BASE}/api`;
 
 const MODE_ICONS: Record<UserMode, React.ReactNode> = {
   inmate: <User className="w-3 h-3" />,
@@ -213,10 +214,11 @@ export default function CaseShow() {
     });
   };
 
-  const analyzeDocument = async (docId: number): Promise<void> => {
+  const analyzeDocument = async (docId: number): Promise<boolean> => {
     setLive(docId, { phase: "running", message: "Starting analysis…", findingCount: 0 });
+    let streamFailed = false;
     try {
-      const token = localStorage.getItem("authToken");
+      const token = getToken();
       const response = await fetch(`${API_BASE_URL}/cases/${caseId}/documents/${docId}/analyze?mode=${mode}`, {
         method: "POST",
         headers: {
@@ -228,7 +230,7 @@ export default function CaseShow() {
         let msg = "Analysis failed.";
         try { const b = await response.json(); if (b?.error) msg = b.error; } catch { /* ignore */ }
         setLive(docId, { phase: "error", message: msg });
-        return;
+        return false;
       }
 
       if (!response.body) throw new Error("No response body");
@@ -238,7 +240,7 @@ export default function CaseShow() {
       let findingCount = 0;
 
       while (true) {
-        if (abortRef.current) { reader.cancel(); return; }
+        if (abortRef.current) { await reader.cancel(); return false; }
         const { value, done } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
@@ -248,23 +250,28 @@ export default function CaseShow() {
           if (!line.startsWith("data:")) continue;
           const jsonStr = line.slice(5).trim();
           if (!jsonStr) continue;
+          let event: { type?: string; message?: string };
           try {
-            const event = JSON.parse(jsonStr);
-            if (event.type === "finding") {
-              findingCount++;
-              setLive(docId, { phase: "running", message: `${findingCount} finding${findingCount === 1 ? "" : "s"} found…`, findingCount });
-            } else if (event.type === "status") {
-              setLive(docId, { message: event.message ?? "" });
-            } else if (event.type === "done") {
-              setLive(docId, { phase: "done", message: `${findingCount} finding${findingCount === 1 ? "" : "s"} extracted`, findingCount });
-            } else if (event.type === "error") {
-              setLive(docId, { phase: "error", message: event.message ?? "Analysis failed." });
-            }
-          } catch { /* ignore malformed SSE */ }
+            event = JSON.parse(jsonStr) as { type?: string; message?: string };
+          } catch { continue; }
+          if (event.type === "finding") {
+            findingCount++;
+            setLive(docId, { phase: "running", message: `${findingCount} finding${findingCount === 1 ? "" : "s"} found…`, findingCount });
+          } else if (event.type === "status") {
+            setLive(docId, { message: event.message ?? "" });
+          } else if (event.type === "done") {
+            setLive(docId, { phase: "done", message: `${findingCount} finding${findingCount === 1 ? "" : "s"} extracted`, findingCount });
+          } else if (event.type === "error") {
+            streamFailed = true;
+            setLive(docId, { phase: "error", message: event.message ?? "Analysis failed." });
+            throw new Error(event.message ?? "Analysis failed.");
+          }
         }
       }
-    } catch {
-      setLive(docId, { phase: "error", message: "Connection lost during analysis." });
+      return !streamFailed;
+    } catch (error) {
+      setLive(docId, { phase: "error", message: error instanceof Error ? error.message : "Connection lost during analysis." });
+      return false;
     }
   };
 
@@ -278,9 +285,10 @@ export default function CaseShow() {
     setLiveStatuses(new Map());
 
     let completed = 0;
+    let failed = 0;
     for (const doc of queue) {
       if (abortRef.current) break;
-      await analyzeDocument(doc.id);
+      if (!await analyzeDocument(doc.id)) failed++;
       completed++;
       setBatchProgress({ done: completed, total: queue.length });
     }
@@ -289,10 +297,16 @@ export default function CaseShow() {
     queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
     queryClient.invalidateQueries({ queryKey: getGetCaseQueryKey(caseId) });
     queryClient.invalidateQueries({ queryKey: ["case-findings-summary", caseId] });
-    toast({
-      title: "Analysis Complete",
-      description: `All ${queue.length} document${queue.length === 1 ? "" : "s"} have been processed.`,
-    });
+    toast(failed === 0
+      ? {
+          title: "Analysis Complete",
+          description: `All ${queue.length} document${queue.length === 1 ? "" : "s"} have been processed.`,
+        }
+      : {
+          title: "Analysis finished with errors",
+          description: `${failed} of ${queue.length} document${queue.length === 1 ? "" : "s"} failed. Review the document status and try again.`,
+          variant: "destructive",
+        });
   };
 
   const handleDeleteDocument = (docId: number) => {
@@ -379,7 +393,7 @@ export default function CaseShow() {
       });
       formData.append("documentType", docType);
 
-      const token = localStorage.getItem("authToken");
+      const token = getToken();
       const res = await fetch(`${API_BASE_URL}/cases/${caseId}/documents/upload`, {
         method: "POST",
         headers: {

@@ -83,7 +83,7 @@ async function callAnthropicWithRetry(
 // ==========================================
 // SHARED CORE BACKGROUND ANALYSIS WORKER
 // ==========================================
-async function executeDocumentAnalysis(caseId: number, docId: number, userMode: UserMode | undefined) {
+async function executeDocumentAnalysis(caseId: number, docId: number, userMode: UserMode | undefined): Promise<number> {
   try {
     logger.info({ docId, caseId }, "Background worker executing analysis loop directly in memory");
 
@@ -175,8 +175,7 @@ async function executeDocumentAnalysis(caseId: number, docId: number, userMode: 
 
         if (!recovered) {
           if (!isChunked) {
-            await db.update(documentsTable).set({ status: "error" }).where(eq(documentsTable.id, docId));
-            return;
+            throw new Error("AI analysis returned an invalid findings response.");
           }
           chunkFindings = [];
         }
@@ -264,12 +263,14 @@ async function executeDocumentAnalysis(caseId: number, docId: number, userMode: 
       .where(eq(casesTable.id, caseId));
 
     logger.info({ docId }, "Background memory analysis worker complete!");
+    return insertedFindings.length;
   } catch (error) {
     logger.error({ error, docId }, "Memory worker pipeline runtime crash");
     await db
       .update(documentsTable)
       .set({ status: "error" })
       .where(eq(documentsTable.id, docId));
+    throw error;
   }
 }
 
@@ -425,8 +426,8 @@ router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
   }
 
   try {
-    await executeDocumentAnalysis(caseId, docId, userMode);
-    res.write(`data: ${JSON.stringify({ type: 'done', message: 'Analysis complete' })}\n\n`);
+    const findingCount = await executeDocumentAnalysis(caseId, docId, userMode);
+    res.write(`data: ${JSON.stringify({ type: 'done', findingCount, message: 'Analysis complete' })}\n\n`);
   } catch (error) {
     res.write(`data: ${JSON.stringify({ type: 'error', message: error instanceof Error ? error.message : 'Analysis failed' })}\n\n`);
   }
