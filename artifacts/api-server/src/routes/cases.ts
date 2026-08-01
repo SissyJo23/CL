@@ -163,7 +163,7 @@ router.post("/cases/:id/strategy", async (req: AuthRequest, res) => {
   });
 
   const message = await anthropic.messages.create({
-    model: "claude-3-sonnet-20240229",
+    model: "claude-sonnet-4-6",
     max_tokens: 8192,
     messages: [{ role: "user", content: prompt }],
   });

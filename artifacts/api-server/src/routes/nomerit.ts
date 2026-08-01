@@ -158,7 +158,7 @@ The "arguable" standard under Anders/Smith is LOW: an issue qualifies if any rea
 
     const phase1Response = await callAnthropicWithRetry(
       {
-        model: "claude-opus-4-5",
+        model: "claude-sonnet-4-6",
         max_tokens: 8192,
         messages: [{ role: "user", content: phase1Prompt }],
       },
@@ -235,7 +235,7 @@ Return ONLY a valid JSON object with exactly these 2 keys:
 
     const phase2Response = await callAnthropicWithRetry(
       {
-        model: "claude-opus-4-5",
+        model: "claude-sonnet-4-6",
         max_tokens: 8192,
         messages: [{ role: "user", content: phase2Prompt }],
       },

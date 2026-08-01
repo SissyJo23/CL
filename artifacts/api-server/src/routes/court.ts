@@ -203,7 +203,7 @@ router.post("/cases/:caseId/court-sessions/:id/run", async (req, res) => {
       const MAX_RETRIES = 2;
       for (let attempt = 1; attempt <= MAX_RETRIES && roundData === null; attempt++) {
         const message = await anthropic.messages.create({
-          model: "claude-opus-4-5",
+          model: "claude-sonnet-4-6",
           max_tokens: 3000,
           messages: [{ role: "user", content: prompt }],
         });
@@ -258,7 +258,7 @@ router.post("/cases/:caseId/court-sessions/:id/run", async (req, res) => {
     });
 
     const verdictMsg = await anthropic.messages.create({
-      model: "claude-opus-4-5",
+          model: "claude-sonnet-4-6",
       max_tokens: 2000,
       messages: [{ role: "user", content: verdictPrompt }],
     });
@@ -322,7 +322,7 @@ router.post("/cases/:caseId/court-sessions/:id/run", async (req, res) => {
       });
 
       const motionMsg = await anthropic.messages.create({
-        model: "claude-opus-4-5",
+          model: "claude-sonnet-4-6",
         max_tokens: 8192,
         messages: [{ role: "user", content: motionPrompt }],
       });

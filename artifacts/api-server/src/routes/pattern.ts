@@ -161,7 +161,7 @@ router.post("/cases/:caseId/pattern-analysis", async (req, res) => {
     while (attempt <= maxRetries) {
       try {
         const message = await anthropic.messages.create({
-          model: "claude-opus-4-5",
+          model: "claude-sonnet-4-6",
           max_tokens: 8192,
           messages: [{ role: "user", content: prompt }],
         });
