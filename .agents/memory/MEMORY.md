@@ -1,0 +1,1 @@
+- [Public deployment topology](public-deployment-topology.md) — custom domain is Render landing; public analyzer must be bundled at `/app` and call the Render API directly.
