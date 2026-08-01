@@ -309,6 +309,14 @@ export default function CaseShow() {
   };
 
   const handleGenerateStrategy = () => {
+    if (!hasAnyFindings) {
+      toast({
+        title: "Analyze documents first",
+        description: "Upload a document, then run analysis before generating a case strategy.",
+        variant: "destructive",
+      });
+      return;
+    }
     generateStrategy.mutate(
       { id: caseId },
       {
@@ -316,8 +324,9 @@ export default function CaseShow() {
           queryClient.invalidateQueries({ queryKey: getGetCaseStrategyQueryKey(caseId) });
           toast({ title: "Case Strategy Generated", description: "Cumulative error brief and strategic roadmap are ready." });
         },
-        onError: () => {
-          toast({ title: "Error", description: "Failed to generate strategy. Make sure documents have been analyzed first.", variant: "destructive" });
+        onError: (error) => {
+          const detail = error instanceof Error ? error.message : "The strategy could not be generated.";
+          toast({ title: "Strategy unavailable", description: detail, variant: "destructive" });
         },
       },
     );
@@ -374,7 +383,18 @@ export default function CaseShow() {
         body: formData,
       });
 
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        let message = `Upload failed (${res.status}).`;
+        try {
+          const body = await res.json();
+          if (typeof body?.error === "string") message = body.error;
+          else if (Array.isArray(body?.error)) message = body.error.map((item: { message?: string }) => item.message).filter(Boolean).join(" ");
+        } catch {
+          const text = await res.text();
+          if (text) message = text;
+        }
+        throw new Error(message);
+      }
 
       const data = await res.json();
       queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey(caseId) });
@@ -565,7 +585,7 @@ export default function CaseShow() {
                     size="sm"
                     variant="outline"
                     onClick={handleGenerateStrategy}
-                    disabled={generateStrategy.isPending}
+                    disabled={generateStrategy.isPending || !hasAnyFindings}
                     className="border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-900/30"
                   >
                     {generateStrategy.isPending ? (
@@ -577,6 +597,11 @@ export default function CaseShow() {
                     )}
                   </Button>
                 </div>
+                {!hasAnyFindings && !generateStrategy.isPending && !strategy && (
+                  <div className="border-b border-amber-200 bg-amber-50/60 px-5 py-3 text-sm text-amber-900 dark:border-amber-800/60 dark:bg-amber-900/10 dark:text-amber-200">
+                    Upload and analyze at least one document before generating this strategy.
+                  </div>
+                )}
                 {generateStrategy.isPending ? (
                   <div className="p-5 space-y-3">
                     <Skeleton className="h-4 w-full" />
@@ -935,7 +960,7 @@ export default function CaseShow() {
                 <h2 className="text-xl font-serif font-medium">Record Documents</h2>
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="secondary" size="sm" className="w-full sm:w-auto">
+                    <Button variant="secondary" size="sm" className="w-full sm:w-auto" data-testid="button-add-document">
                       <Plus className="w-4 h-4 mr-2" />
                       Add Document
                     </Button>
