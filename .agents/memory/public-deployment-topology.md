@@ -7,4 +7,10 @@ The public CaseLight domain is controlled by the Render static landing service, 
 
 **Why:** The custom domain can look healthy while serving only the landing bundle; links to an unserved `/app` path then fall back to the landing HTML or a browser download response.
 
-**How to apply:** Before diagnosing a blank public app, inspect response headers and HTML to identify the serving platform, then verify the public landing build includes the actual analyzer route and uses the correct API origin.
+**How to apply:** Before diagnosing a blank public app, inspect response headers and HTML to identify the serving platform, then verify the public landing build includes the actual analyzer route and uses the correct API origin. A successful push to GitHub is not proof of a Render deploy; verify the live asset hash and API behavior against the pushed revision.
+
+Render's public landing and API services did not update after pushes to the repository's `main` branch during the August 1, 2026 verification. The live frontend continued serving the old login bundle and the live API continued accepting the retired password login, so Render's repository/branch or auto-deploy configuration must be checked before further code debugging.
+
+**Why:** Treating a GitHub push as a deployment caused source fixes to be reported as live while the custom domain still served the previous build.
+
+**How to apply:** After every public fix, compare the live bundle markers and API contract with the commit. If they remain old, stop feature work and repair/trigger the Render deployment first.
