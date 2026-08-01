@@ -1,5 +1,6 @@
 import { useParams } from "wouter";
 import { useEffect, useState } from "react";
+import { API_BASE } from "@/lib/api";
 
 export default function CasesRelief() {
   const { id } = useParams<{ id: string }>();
@@ -8,7 +9,7 @@ export default function CasesRelief() {
   useEffect(() => {
     const fetchRelief = async () => {
       try {
-        const res = await fetch(`/api/relief/${id}`, {
+        const res = await fetch(`${API_BASE}/api/relief/${id}`, {
           headers: { "Authorization": `Bearer ${localStorage.getItem("authToken")}` },
           credentials: "include",
         });

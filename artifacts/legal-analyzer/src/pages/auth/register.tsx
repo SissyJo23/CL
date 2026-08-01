@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
-import { setToken } from "@/lib/api";
+import { Link, useLocation } from "wouter";
+import { API_BASE, setToken } from "@/lib/api";
 
 export default function Register() {
   const [, setLocation] = useLocation();
@@ -18,7 +18,7 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      const res = await fetch("https://caselight-api.onrender.com/api/auth/register", {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -85,7 +85,7 @@ export default function Register() {
           </button>
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <a href="/login" className="text-primary underline">Sign in</a>
+            <Link href="/login" className="text-primary underline">Sign in</Link>
           </p>
         </div>
       </div>

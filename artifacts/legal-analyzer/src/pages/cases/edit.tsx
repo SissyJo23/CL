@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { API_BASE } from "@/lib/api";
 
 interface CaseData {
   title: string;
@@ -11,7 +12,7 @@ interface CaseData {
   notes: string | null;
 }
 
-const API_BASE_URL = "https://caselight-api.onrender.com/api";
+const API_BASE_URL = `${API_BASE}/api`;
 
 export default function CasesEdit() {
   const { id } = useParams<{ id: string }>();

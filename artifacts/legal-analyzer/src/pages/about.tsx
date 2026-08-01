@@ -1,6 +1,7 @@
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Search, Scale, Layers } from "lucide-react";
+import { Link } from "wouter";
 
 const APP_URL = "/";
 const DEMO_URL = "/cases/1";
@@ -114,18 +115,18 @@ export default function About() {
               Ready to see what CaseLight finds in your case?
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a
+              <Link
                 href={APP_URL}
                 className="inline-flex h-11 items-center justify-center bg-foreground text-background px-8 font-sans font-medium text-sm tracking-wide hover:opacity-90 transition-opacity w-full sm:w-auto"
               >
                 Open the App
-              </a>
-              <a
+              </Link>
+              <Link
                 href={DEMO_URL}
                 className="inline-flex h-11 items-center justify-center border border-border bg-transparent px-8 font-sans font-medium text-sm text-foreground hover:bg-muted transition-colors w-full sm:w-auto"
               >
                 Explore a Sample Case
-              </a>
+              </Link>
             </div>
           </div>
         </section>

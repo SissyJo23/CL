@@ -4,6 +4,7 @@ import { Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { API_BASE } from "@/lib/api";
 
 export default function AuthLogin() {
   const [email, setEmail] = useState("");
@@ -18,7 +19,7 @@ export default function AuthLogin() {
     setLoading(true);
 
     try {
-      const res = await fetch("https://caselight-api.onrender.com/api/auth/login", {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

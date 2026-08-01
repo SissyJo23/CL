@@ -1,5 +1,6 @@
 import { useParams } from "wouter";
 import { useEffect, useState } from "react";
+import { API_BASE } from "@/lib/api";
 
 export default function CasesPattern() {
   const { id } = useParams<{ id: string }>();
@@ -8,7 +9,7 @@ export default function CasesPattern() {
   useEffect(() => {
     const fetchPattern = async () => {
       try {
-        const res = await fetch(`/api/pattern/${id}`, {
+        const res = await fetch(`${API_BASE}/api/pattern/${id}`, {
           headers: { "Authorization": `Bearer ${localStorage.getItem("authToken")}` },
           credentials: "include",
         });
