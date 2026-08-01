@@ -24,7 +24,7 @@ export default function CasesPattern() {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/cases/${id}/pattern-analysis`, { headers: { Authorization: `Bearer ${getToken() ?? ""}` } });
+      const res = await fetch(`${API_BASE}/api/cases/${id}/pattern-analysis`, { headers: { Authorization: `Bearer ${getToken() ?? ""}` } });
       if (res.ok) setResult(await res.json());
       else if (res.status !== 404) setMessage("Pattern analysis could not be loaded.");
     } catch {
@@ -40,7 +40,7 @@ export default function CasesPattern() {
     setRunning(true);
     setMessage("");
     try {
-      const res = await fetch(`${API_BASE}/cases/${id}/pattern-analysis`, {
+      const res = await fetch(`${API_BASE}/api/cases/${id}/pattern-analysis`, {
         method: "POST",
         headers: { Authorization: `Bearer ${getToken() ?? ""}` },
       });
@@ -76,14 +76,14 @@ export default function CasesPattern() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
       <Navbar />
-      <main className="w-full max-w-4xl mx-auto flex-1 px-4 py-6 sm:px-6 sm:py-10">
+        <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6 sm:px-6 sm:py-10">
         <Link href={`/cases/${id}`} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back to case
         </Link>
         <div className="mt-6 flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">CaseLight analysis</p>
-            <h1 className="mt-2 flex items-center gap-2 text-3xl font-serif"><GitBranch className="h-7 w-7 text-primary" /> Pattern Analysis</h1>
+            <h1 className="mt-2 flex items-center gap-2 text-2xl font-serif sm:text-3xl"><GitBranch className="h-6 w-6 shrink-0 text-primary sm:h-7 sm:w-7" /> Pattern Analysis</h1>
             <p className="mt-2 text-sm text-muted-foreground">Trace chronology, pressure points, and record inconsistencies across the case.</p>
           </div>
           <Button onClick={run} disabled={running} className="w-full sm:w-auto">

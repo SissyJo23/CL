@@ -14,7 +14,7 @@ export default function CasesRelief() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(`${API_BASE}/cases/${id}/relief-pathway`, { headers: { Authorization: `Bearer ${getToken() ?? ""}` } })
+    fetch(`${API_BASE}/api/cases/${id}/relief-pathway`, { headers: { Authorization: `Bearer ${getToken() ?? ""}` } })
       .then(async (res) => { if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Relief pathway unavailable."); return res.json(); })
       .then(setResult)
       .catch((err) => setError(err instanceof Error ? err.message : "Relief pathway unavailable."))
@@ -24,9 +24,9 @@ export default function CasesRelief() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
       <Navbar />
-      <main className="w-full max-w-4xl mx-auto flex-1 px-4 py-6 sm:px-6 sm:py-10">
+        <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6 sm:px-6 sm:py-10">
         <Link href={`/cases/${id}`} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Back to case</Link>
-        <div className="mt-6 border-b border-border pb-5"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">CaseLight pathway</p><h1 className="mt-2 flex items-center gap-2 text-3xl font-serif"><Map className="h-7 w-7 text-primary" /> Relief Pathway</h1><p className="mt-2 text-sm text-muted-foreground">A clear ladder from the current case posture toward available review and relief options.</p></div>
+         <div className="mt-6 border-b border-border pb-5"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">CaseLight pathway</p><h1 className="mt-2 flex items-center gap-2 text-2xl font-serif sm:text-3xl"><Map className="h-6 w-6 shrink-0 text-primary sm:h-7 sm:w-7" /> Relief Pathway</h1><p className="mt-2 text-sm leading-6 text-muted-foreground">A clear ladder from the current case posture toward available review and relief options.</p></div>
         {loading && <div className="flex items-center gap-2 py-12 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Building pathway…</div>}
         {error && <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900">{error}</div>}
         {result && <div className="mt-6 space-y-5">
