@@ -1,1 +1,2 @@
 - [Public deployment topology](public-deployment-topology.md) — custom domain is Render landing; public analyzer must be bundled at `/app` and call the Render API directly.
+- [GitHub sync](github-sync.md) — when remote main advances during work, merge it before pushing; use the authenticated Git transport if the workspace push helper reports a branch-exists error.
