@@ -1,4 +1,5 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
+import { useEffect } from "react";
 import Dashboard from "./pages/home";
 import CasesIndex from "./pages/cases/list";
 import CasesNew from "./pages/cases/new";
@@ -6,7 +7,7 @@ import CasesShow from "./pages/cases/show";
 import CasesEdit from "./pages/cases/edit";
 import CasesPattern from "./pages/cases/pattern";
 import CasesRelief from "./pages/cases/relief";
-import DocumentsIndex from "./pages/documents/index";
+import DocumentsIndex from "./pages/documents/list";
 import DocumentsShow from "./pages/documents/show";
 import DocumentsNomerit from "./pages/documents/nomerit";
 import CourtNew from "./pages/court/new";
@@ -20,31 +21,83 @@ import About from "./pages/about";
 import Legal from "./pages/legal";
 import NotFound from "./pages/not-found";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://caselight-api.onrender.com";
+// Secure Workspace Guard Component
+function ProtectedRoute({ component: Component, ...rest }: { component: any, [key: string]: any }) {
+  const [, setLocation] = useLocation();
+  const isAuthenticated = localStorage.getItem("isLoggedIn") === "true";
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLocation("/login");
+    }
+  }, [isAuthenticated, setLocation]);
+
+  if (!isAuthenticated) return null;
+  return <Component {...rest} />;
+}
 
 export default function App() {
   return (
     <Switch>
+      {/* Public Pages */}
       <Route path="/login" component={AuthLogin} />
       <Route path="/register" component={Register} />
       <Route path="/about" component={About} />
       <Route path="/legal" component={Legal} />
-      <Route path="/" component={Dashboard} />
-      <Route path="/cases" component={CasesIndex} />
-      <Route path="/cases/new" component={CasesNew} />
-      <Route path="/cases/:caseId/motions/:id" component={MotionShow} />
-      <Route path="/cases/:caseId/motions" component={MotionList} />
-      <Route path="/cases/:caseId/court/:id/run" component={CourtRun} />
-      <Route path="/cases/:caseId/court/:id" component={CourtShow} />
-      <Route path="/cases/:caseId/court/new" component={CourtNew} />
-      <Route path="/cases/:id" component={CasesShow} />
-      <Route path="/cases/:id/edit" component={CasesEdit} />
-      <Route path="/cases/:id/pattern" component={CasesPattern} />
-      <Route path="/cases/:id/relief" component={CasesRelief} />
-      <Route path="/documents" component={DocumentsIndex} />
-      <Route path="/documents/:id" component={DocumentsShow} />
-      <Route path="/documents/:id/nomerit" component={DocumentsNomerit} />
-      <Route path="/court/:id" component={CourtRun} />
+
+      {/* Protected Workspaces */}
+      <Route path="/">
+        {(params) => <ProtectedRoute component={Dashboard} {...params} />}
+      </Route>
+      <Route path="/cases">
+        {(params) => <ProtectedRoute component={CasesIndex} {...params} />}
+      </Route>
+      <Route path="/cases/new">
+        {(params) => <ProtectedRoute component={CasesNew} {...params} />}
+      </Route>
+      <Route path="/cases/:caseId/motions/:id">
+        {(params) => <ProtectedRoute component={MotionShow} {...params} />}
+      </Route>
+      <Route path="/cases/:caseId/motions">
+        {(params) => <ProtectedRoute component={MotionList} {...params} />}
+      </Route>
+      <Route path="/cases/:caseId/court/:id/run">
+        {(params) => <ProtectedRoute component={CourtRun} {...params} />}
+      </Route>
+      <Route path="/cases/:caseId/court/:id">
+        {(params) => <ProtectedRoute component={CourtShow} {...params} />}
+      </Route>
+      <Route path="/cases/:caseId/court/new">
+        {(params) => <ProtectedRoute component={CourtNew} {...params} />}
+      </Route>
+      <Route path="/cases/:id">
+        {(params) => <ProtectedRoute component={CasesShow} {...params} />}
+      </Route>
+      <Route path="/cases/:id/edit">
+        {(params) => <ProtectedRoute component={CasesEdit} {...params} />}
+      </Route>
+      <Route path="/cases/:id/pattern">
+        {(params) => <ProtectedRoute component={CasesPattern} {...params} />}
+      </Route>
+      <Route path="/cases/:id/relief">
+        {(params) => <ProtectedRoute component={CasesRelief} {...params} />}
+      </Route>
+      
+      {/* Target Document Upload Views Layout */}
+      <Route path="/documents">
+        {(params) => <ProtectedRoute component={DocumentsIndex} {...params} />}
+      </Route>
+      <Route path="/documents/:id">
+        {(params) => <ProtectedRoute component={DocumentsShow} {...params} />}
+      </Route>
+      <Route path="/documents/:id/nomerit">
+        {(params) => <ProtectedRoute component={DocumentsNomerit} {...params} />}
+      </Route>
+      
+      <Route path="/court/:id">
+        {(params) => <ProtectedRoute component={CourtRun} {...params} />}
+      </Route>
+      
       <Route component={NotFound} />
     </Switch>
   );
