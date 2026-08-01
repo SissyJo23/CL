@@ -1,11 +1,12 @@
 import { Link, useLocation } from "wouter";
 import { Scale } from "lucide-react";
+import { clearToken } from "@/lib/api";
 
 export default function Navbar() {
   const [, setLocation] = useLocation();
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
+    clearToken();
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("user");
     setLocation("/login");

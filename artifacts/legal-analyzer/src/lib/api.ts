@@ -2,15 +2,17 @@ export const API_BASE =
   import.meta.env.VITE_API_URL ?? "https://caselight-api.onrender.com";
 
 export function getToken(): string | null {
-  return localStorage.getItem("cl_token");
+  return localStorage.getItem("cl_token") || localStorage.getItem("authToken");
 }
 
 export function setToken(token: string): void {
   localStorage.setItem("cl_token", token);
+  localStorage.setItem("authToken", token);
 }
 
 export function clearToken(): void {
   localStorage.removeItem("cl_token");
+  localStorage.removeItem("authToken");
 }
 
 export function isAuthenticated(): boolean {

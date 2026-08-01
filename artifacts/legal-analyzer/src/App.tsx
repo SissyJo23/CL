@@ -70,6 +70,9 @@ export default function App() {
       <Route path="/cases/:caseId/court/new">
         {(params) => <ProtectedRoute component={CourtNew} {...params} />}
       </Route>
+      <Route path="/cases/:caseId/documents/:id">
+        {(params) => <ProtectedRoute component={DocumentsShow} {...params} />}
+      </Route>
       <Route path="/cases/:id">
         {(params) => <ProtectedRoute component={CasesShow} {...params} />}
       </Route>

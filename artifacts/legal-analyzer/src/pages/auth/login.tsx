@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { API_BASE } from "@/lib/api";
+import { setToken } from "@/lib/api";
 
 export default function AuthLogin() {
   const [email, setEmail] = useState("");
@@ -33,7 +34,7 @@ export default function AuthLogin() {
       }
 
       const data = await res.json();
-      localStorage.setItem("authToken", data.token);
+      setToken(data.token);
       localStorage.setItem("isLoggedIn", "true");
       setLocation("/");
     } catch (err) {

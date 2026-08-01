@@ -306,10 +306,33 @@ router.post("/cases/:caseId/documents", async (req, res) => {
   res.status(201).json(row);
 });
 
-router.post("/cases/:caseId/documents/upload", upload.array("files", 10), async (req, res) => {
+router.post(
+  "/cases/:caseId/documents/upload",
+  (req, res, next) => {
+    upload.array("files", 10)(req, res, (error) => {
+      if (!error) {
+        next();
+        return;
+      }
+
+      if (error instanceof multer.MulterError) {
+        const message =
+          error.code === "LIMIT_FILE_SIZE"
+            ? "Each file must be 25MB or smaller."
+            : error.code === "LIMIT_UNEXPECTED_FILE"
+              ? "Upload files using the files field."
+              : error.message;
+        res.status(400).json({ error: message });
+        return;
+      }
+
+      res.status(400).json({ error: error instanceof Error ? error.message : "Invalid upload." });
+    });
+  },
+  async (req, res) => {
   const caseId = Number(req.params.caseId);
   const files = req.files as Express.Multer.File[] | undefined;
-  const documentType = (req.body as { documentType?: string }).documentType ?? "other";
+  const documentType = ((req.body ?? {}) as { documentType?: string }).documentType ?? "other";
 
   if (!files || files.length === 0) {
     res.status(400).json({ error: "No files provided" });
@@ -374,7 +397,8 @@ router.post("/cases/:caseId/documents/upload", upload.array("files", 10), async 
       }
     })(caseId, rowPlaceholder.id, file);
   }
-});
+  },
+);
 
 router.post("/cases/:caseId/documents/:id/analyze", async (req, res) => {
   const caseId = Number(req.params.caseId);
