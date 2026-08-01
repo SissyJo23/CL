@@ -46,7 +46,13 @@ async function callAnthropicWithRetry(
 ): Promise<AnthropicMessage> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      return await anthropic.messages.create(params) as AnthropicMessage;
+      const timeout = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("AI analysis timed out after 120 seconds")), 120_000);
+      });
+      return await Promise.race([
+        anthropic.messages.create(params),
+        timeout,
+      ]) as AnthropicMessage;
     } catch (err: unknown) {
       const status = (err as { status?: number })?.status;
       const headers = (err as { headers?: Record<string, string> })?.headers;
@@ -339,64 +345,40 @@ router.post(
     return;
   }
 
-  const created: typeof documentsTable.$inferSelect[] = [];
-
+  const extractedFiles: Array<{ file: Express.Multer.File; content: string }> = [];
   for (const file of files) {
     try {
-      const title = file.originalname.replace(/\.[^.]+$/, "");
-      const [row] = await db
-        .insert(documentsTable)
-        .values({
-          caseId,
-          title,
-          documentType,
-          content: "Extracting file layout strings...",
-          status: "analyzing",
-        })
-        .returning();
-      created.push(row);
+      const content = await extractTextFromFile(file);
+      if (!content.trim()) {
+        throw new Error("Document content parsing returned empty content");
+      }
+      extractedFiles.push({ file, content });
     } catch (err) {
-      logger.error({ caseId, error: err }, "Placeholder database row creation crash");
+      logger.error({ caseId, filename: file.originalname, error: err }, "Document extraction failed");
+      res.status(400).json({
+        error: err instanceof Error ? err.message : `Could not extract ${file.originalname}.`,
+      });
+      return;
     }
   }
 
-  // Return immediately to client
-  res.status(201).json(created);
-
-  // Process each file in background - FIXED: Better error handling and file matching
-  for (let i = 0; i < created.length && i < files.length; i++) {
-    const rowPlaceholder = created[i];
-    const file = files[i]; // Files and created entries are in the same order
-    
-    // Use IIFE to capture correct values
-    (async (cId: number, dId: number, f: Express.Multer.File) => {
-      try {
-        logger.info({ docId: dId, filename: f.originalname }, "Starting background document processing");
-        
-        const extractedText = await extractTextFromFile(f);
-        if (!extractedText.trim()) {
-          throw new Error("Document content parsing returned empty content");
-        }
-
-        // Update with extracted content
-        await db
-          .update(documentsTable)
-          .set({ content: extractedText, updatedAt: new Date() })
-          .where(eq(documentsTable.id, dId));
-
-        // Run analysis
-        await executeDocumentAnalysis(cId, dId, undefined);
-        
-        logger.info({ docId: dId }, "Background document processing complete");
-      } catch (err) {
-        logger.error({ docId: dId, error: err }, "Async file payload processing crash");
-        await db
-          .update(documentsTable)
-          .set({ status: "error" })
-          .where(eq(documentsTable.id, dId));
-      }
-    })(caseId, rowPlaceholder.id, file);
+  const created: typeof documentsTable.$inferSelect[] = [];
+  for (const { file, content } of extractedFiles) {
+    const title = file.originalname.replace(/\.[^.]+$/, "");
+    const [row] = await db
+      .insert(documentsTable)
+      .values({
+        caseId,
+        title,
+        documentType,
+        content,
+        status: "pending",
+      })
+      .returning();
+    created.push(row);
   }
+
+  res.status(201).json(created);
   },
 );
 

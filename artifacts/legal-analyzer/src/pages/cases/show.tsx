@@ -382,7 +382,9 @@ export default function CaseShow() {
       setUploadFiles([]);
       toast({
         title: "Success",
-        description: data.length === 1 ? "Document uploaded and processed successfully." : `${data.length} documents uploaded and processed.`
+        description: data.length === 1
+          ? "Document uploaded and ready for analysis."
+          : `${data.length} documents uploaded and ready for analysis.`
       });
     } catch (err) {
       toast({
@@ -421,6 +423,11 @@ export default function CaseShow() {
       case "analyzing": return (
         <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
           <Loader2 className="w-3 h-3 mr-1 animate-spin" /> Analyzing
+        </Badge>
+      );
+      case "processing": return (
+        <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100">
+          <Loader2 className="w-3 h-3 mr-1 animate-spin" /> Preparing
         </Badge>
       );
       case "error": return (
