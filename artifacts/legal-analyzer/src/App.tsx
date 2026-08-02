@@ -20,6 +20,7 @@ import About from "./pages/about";
 import Legal from "./pages/legal";
 import NotFound from "./pages/not-found";
 import { API_BASE, getToken } from "./lib/api";
+import { setToken } from "./lib/api";
 
 function DemoEntry() {
   const [, setLocation] = useLocation();
@@ -66,15 +67,31 @@ function DemoEntry() {
   );
 }
 
-// The demo entry point supplies the lightweight workspace token used by the
-// current read/write API. There is no legacy password gate in this version.
+function AppEntry() {
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    // The current API is a shared workspace API rather than an identity
+    // provider. Establish a neutral app session so the real workspace is
+    // usable without selecting or mutating the demo case.
+    if (!getToken()) {
+      setToken("workspace-session");
+    }
+  }, []);
+
+  return <Dashboard />;
+}
+
+// The app home is intentionally separate from the demo. Visitors should
+// choose whether to open a new workspace, view their cases, or enter the
+// explicitly requested demo instead of being silently placed in case 130.
 function ProtectedRoute({ component: Component, ...rest }: { component: any, [key: string]: any }) {
   const [, setLocation] = useLocation();
   const isAuthenticated = Boolean(getToken());
 
   useEffect(() => {
     if (!isAuthenticated) {
-      setLocation("/demo");
+      setLocation("/");
     }
   }, [isAuthenticated, setLocation]);
 
@@ -92,8 +109,8 @@ export default function App() {
       <Route path="/legal" component={Legal} />
       <Route path="/demo" component={DemoEntry} />
 
-      {/* The app entry resolves to the working demo workspace. */}
-      <Route path="/" component={DemoEntry} />
+      {/* The app entry is the real CaseLight home, never an implicit demo. */}
+      <Route path="/" component={AppEntry} />
       <Route path="/cases">
         {(params) => <ProtectedRoute component={CasesIndex} {...params} />}
       </Route>
