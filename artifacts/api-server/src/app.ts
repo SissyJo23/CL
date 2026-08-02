@@ -10,17 +10,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// TEMPORARY LOGIN ROUTE — THIS WILL MAKE SIGN IN WORK
-app.post("/auth/login", (req, res) => {
-  const { email } = req.body || {};
-  res.json({
-    token: "temp-debug-token-" + Date.now(),
-    user: { email: email || "test@example.com", id: 999, name: "Test User" }
-  });
-});
-
 app.get("/", (req, res) => {
-  res.json({ message: "CaseLight API is running - temp login active ✅" });
+  res.json({ status: "ok", service: "CaseLight API", health: "/health" });
 });
 
 export default app;

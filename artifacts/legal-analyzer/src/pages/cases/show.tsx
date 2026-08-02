@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch, Milestone, User, Users, BookOpen, MapPin, Shield, Star, ChevronDown, ChevronRight, AlertTriangle } from "lucide-react";
+import { ArrowLeft, FileText, Upload, Plus, Download, Scale, AlertCircle, Loader2, CheckCircle2, Swords, Map as MapIcon, RefreshCw, Play, Zap, Trash2, Gavel, Clock, GitBranch, Milestone, MapPin, Shield, Star, ChevronDown, ChevronRight, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,19 +15,10 @@ import { Input } from "@/components/ui/input";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { useUserMode, type UserMode } from "@/contexts/UserModeContext";
-import { MODE_LABELS } from "@/lib/modeContent";
 import { parseJurisdictionBadge } from "@/lib/jurisdictionBadge";
 import { API_BASE, getToken } from "@/lib/api";
 
 const API_BASE_URL = `${API_BASE}/api`;
-
-const MODE_ICONS: Record<UserMode, React.ReactNode> = {
-  inmate: <User className="w-3 h-3" />,
-  advocate: <Users className="w-3 h-3" />,
-  attorney: <Scale className="w-3 h-3" />,
-  appellate: <BookOpen className="w-3 h-3" />,
-};
 
 type CaseFindingSummary = {
   id: number;
@@ -137,8 +128,7 @@ type LiveStatus = {
 export default function CaseShow() {
   const params = useParams();
   const caseId = parseInt(params.id || "0", 10);
-  const { mode: rawMode, setMode } = useUserMode();
-  const mode: UserMode = rawMode ?? "attorney";
+  const mode = "attorney";
   const {
     data: currentCase,
     isLoading: caseLoading,
@@ -532,40 +522,6 @@ export default function CaseShow() {
                       </span>
                     );
                   })()}
-                </div>
-                <div className="mt-3">
-                  <Select value={mode} onValueChange={(v) => setMode(v as UserMode)}>
-                    <SelectTrigger className="h-7 text-xs border-border/50 bg-muted/30 hover:bg-muted/60 w-auto gap-1.5 px-2 focus:ring-0 focus:ring-offset-0 text-muted-foreground">
-                      {MODE_ICONS[mode]}
-                      <span>Viewing as: <span className="font-medium text-foreground">{MODE_LABELS[mode]}</span></span>
-                    </SelectTrigger>
-                    <SelectContent align="start">
-                      <SelectItem value="inmate">
-                        <div className="flex items-center gap-2">
-                          <User className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span>Inmate</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="advocate">
-                        <div className="flex items-center gap-2">
-                          <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span>Advocate</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="attorney">
-                        <div className="flex items-center gap-2">
-                          <Scale className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span>Attorney</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="appellate">
-                        <div className="flex items-center gap-2">
-                          <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span>Appellate</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
               <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap md:justify-end">

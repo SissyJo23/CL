@@ -2,4 +2,5 @@
 - [GitHub sync](github-sync.md) — when remote main advances during work, merge it before pushing; use the authenticated Git transport if the workspace push helper reports a branch-exists error.
 - [Document upload lifecycle](document-upload-lifecycle.md) — production upload succeeded but stayed analyzing because ingestion and AI analysis were coupled; keep upload pending and analysis explicit.
 - [Local versus production database](local-production-database.md) — local API smoke tests can fail because the workspace DB has no schema while Render production has the preserved CaseLight tables.
-- [CaseLight report evidence](caselight-report-evidence.md) — the uploaded legal research report is the product source of truth; current production case data has the shell but zero findings.
+- [CaseLight report evidence](caselight-report-evidence.md) — the uploaded legal research report is the source of truth; the archive has a separate 14-finding demo, not the 604-finding dataset.
+- [Merged PDF archive](merged-pdf-archive.md) — the merged PDF is a workspace/database export with embedded sensitive configuration, not a visual product reference.

@@ -16,12 +16,10 @@ import CourtRun from "./pages/court/run";
 import CourtShow from "./pages/court/show";
 import MotionList from "./pages/motions/list";
 import MotionShow from "./pages/motions/show";
-import AuthLogin from "./pages/auth/login";
-import Register from "./pages/auth/register";
 import About from "./pages/about";
 import Legal from "./pages/legal";
 import NotFound from "./pages/not-found";
-import { API_BASE } from "./lib/api";
+import { API_BASE, getToken } from "./lib/api";
 
 function DemoEntry() {
   const [, setLocation] = useLocation();
@@ -68,14 +66,15 @@ function DemoEntry() {
   );
 }
 
-// Secure Workspace Guard Component
+// The demo entry point supplies the lightweight workspace token used by the
+// current read/write API. There is no legacy password gate in this version.
 function ProtectedRoute({ component: Component, ...rest }: { component: any, [key: string]: any }) {
   const [, setLocation] = useLocation();
-  const isAuthenticated = localStorage.getItem("isLoggedIn") === "true";
+  const isAuthenticated = Boolean(getToken());
 
   useEffect(() => {
     if (!isAuthenticated) {
-      setLocation("/login");
+      setLocation("/demo");
     }
   }, [isAuthenticated, setLocation]);
 
@@ -87,16 +86,14 @@ export default function App() {
   return (
     <Switch>
       {/* Public Pages */}
-      <Route path="/login" component={AuthLogin} />
-      <Route path="/register" component={Register} />
+      <Route path="/login" component={DemoEntry} />
+      <Route path="/register" component={DemoEntry} />
       <Route path="/about" component={About} />
       <Route path="/legal" component={Legal} />
       <Route path="/demo" component={DemoEntry} />
 
-      {/* Protected Workspaces */}
-      <Route path="/">
-        {(params) => <ProtectedRoute component={Dashboard} {...params} />}
-      </Route>
+      {/* The app entry resolves to the working demo workspace. */}
+      <Route path="/" component={DemoEntry} />
       <Route path="/cases">
         {(params) => <ProtectedRoute component={CasesIndex} {...params} />}
       </Route>

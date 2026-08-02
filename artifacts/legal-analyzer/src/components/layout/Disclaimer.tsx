@@ -6,7 +6,7 @@ export default function Disclaimer() {
   const handleSignOut = () => {
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("user");
-    setLocation("/login");
+    setLocation("/demo");
   };
 
   return (
