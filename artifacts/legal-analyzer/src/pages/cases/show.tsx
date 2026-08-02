@@ -471,7 +471,7 @@ export default function CaseShow() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
       <Navbar />
-      <main className="w-full max-w-5xl min-w-0 flex-1 overflow-x-hidden px-4 py-5 sm:container sm:mx-auto sm:px-6 sm:py-8">
+      <main className="caselight-case-shell min-w-0 flex-1 overflow-x-hidden px-4 py-5 sm:px-6 sm:py-8">
         <Link href="/" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-6 transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home

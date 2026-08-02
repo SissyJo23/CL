@@ -18,6 +18,7 @@ import MotionList from "./pages/motions/list";
 import MotionShow from "./pages/motions/show";
 import AuthLogin from "./pages/auth/login";
 import Register from "./pages/auth/register";
+import PublicHome from "./pages/auth/public-home";
 import About from "./pages/about";
 import Legal from "./pages/legal";
 import NotFound from "./pages/not-found";
@@ -100,7 +101,7 @@ function AppEntry() {
   if (state === "loading") {
     return <div className="min-h-[100dvh] grid place-items-center bg-background text-sm text-muted-foreground">Opening your CaseLight workspace…</div>;
   }
-  return <AuthLogin />;
+  return <PublicHome />;
 }
 
 function ProtectedRoute({ component: Component, ...rest }: { component: any, [key: string]: any }) {

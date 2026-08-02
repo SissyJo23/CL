@@ -2,43 +2,51 @@ import { Link } from "wouter";
 import Navbar from "@/components/layout/Navbar";
 import Disclaimer from "@/components/layout/Disclaimer";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, Scale, FileText, ArrowRight } from "lucide-react";
+import { ShieldCheck, Scale, FileText, Clock, Plus } from "lucide-react";
+import { useListCases } from "@workspace/api-client-react";
+
+function formatDate(dateString: string) {
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(dateString));
+}
 
 export default function Home() {
+  const { data: cases, isLoading } = useListCases();
+  // Show max 4 recent cases
+  const recentCases = cases?.slice(0, 4) || [];
+
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background">
+    <div className="min-h-[100dvh] flex flex-col bg-background selection:bg-primary/20 selection:text-primary">
       <Navbar />
 
-      <main className="flex-1">
-        {/* Hero */}
-        <section className="px-6 py-20 sm:py-28 text-center">
-          <div className="max-w-3xl mx-auto space-y-7">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/8 border border-primary/15">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              <span className="text-xs font-medium text-primary tracking-wide">
-                Forensic Legal Analysis
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-10">
+
+        {/* Navy Hero Panel */}
+        <section className="bg-foreground text-background rounded-sm overflow-hidden shadow-sm relative">
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/40 via-transparent to-transparent"></div>
+          <div className="relative z-10 px-8 py-12 md:px-12 md:py-16 flex flex-col items-start max-w-3xl">
+            <div className="inline-flex items-center gap-2.5 mb-6">
+              <div className="w-8 h-8 rounded-sm bg-primary flex items-center justify-center">
+                <Scale className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <span className="font-serif text-xl font-medium tracking-wide text-background/90 uppercase">
+                CaseLight Workspace
               </span>
             </div>
-
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-foreground leading-[1.1]">
+            <h1 className="font-serif text-4xl sm:text-5xl font-normal leading-[1.15] mb-5">
               Every case deserves<br />a second look
             </h1>
-
-            <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-              Analyze transcripts. Surface reversible error. Draft motions that withstand scrutiny.
-              Built for advocates continuing the fight after an unfair result.
+            <p className="text-base sm:text-lg text-background/80 font-serif max-w-2xl leading-relaxed mb-8">
+              Analyze transcripts, surface reversible error, and draft motions that withstand scrutiny. Build your appellate strategy structurally.
             </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row items-center gap-4">
               <Link href="/cases/new">
-                <Button size="lg" className="h-12 px-8 text-base group shadow-sm" data-testid="button-create-case">
-                  Open New Case
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-0.5 transition-transform" />
+                <Button size="lg" className="h-12 px-8 bg-primary text-primary-foreground hover:bg-primary/90 rounded-sm shadow-none font-medium" data-testid="button-create-case">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Case
                 </Button>
               </Link>
-
               <Link href="/cases">
-                <Button variant="outline" size="lg" className="h-12 px-8 text-base" data-testid="button-view-cases">
+                <Button variant="outline" size="lg" className="h-12 px-8 border-background/30 text-background hover:bg-background/10 rounded-sm shadow-none font-medium" data-testid="button-view-cases">
                   View All Cases
                 </Button>
               </Link>
@@ -46,72 +54,99 @@ export default function Home() {
           </div>
         </section>
 
-        {/* How It Works */}
-        <section className="px-6 py-16 sm:py-20 bg-gradient-to-b from-muted/30 to-background">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-foreground mb-3">
-                Built for precision
-              </h2>
-              <p className="text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto">
-                CaseLight structures your work so nothing gets lost in the record
+        {/* RECENT Strip */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between border-b border-border/80 pb-3">
+            <h2 className="font-serif text-lg font-medium text-foreground tracking-tight flex items-center gap-2">
+              <Clock className="w-4 h-4 text-muted-foreground" />
+              Recent Workspaces
+            </h2>
+            <Link href="/cases" className="text-sm font-medium text-primary hover:underline underline-offset-4">
+              View all
+            </Link>
+          </div>
+
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-36 bg-card border border-border/50 rounded-sm animate-pulse"></div>
+              ))}
+            </div>
+          ) : recentCases.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {recentCases.map((c) => (
+                <Link key={c.id} href={`/cases/${c.id}`}>
+                  <div className="group h-full bg-card border border-border/80 p-5 rounded-sm shadow-sm hover:border-primary/40 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between min-h-[9rem]">
+                    <div>
+                      <h3 className="font-serif font-medium text-lg text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                        {c.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1.5 font-serif">
+                        {c.notes || "No case notes yet."}
+                      </p>
+                    </div>
+                    <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground border-t border-border/50 pt-3">
+                      <span className="uppercase tracking-wider font-medium">{c.jurisdiction || "No jurisdiction"}</span>
+                      <span>{formatDate(c.updatedAt)}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-card border border-border border-dashed p-8 rounded-sm text-center">
+              <p className="text-muted-foreground font-serif">No cases found. Create a new case to get started.</p>
+            </div>
+          )}
+        </section>
+
+        {/* Restrained How It Works */}
+        <section className="bg-card border border-border shadow-sm rounded-sm p-8 sm:p-10 mb-8 mt-4">
+          <div className="mb-8 border-b border-border/80 pb-4">
+            <h2 className="font-serif text-xl font-medium text-foreground">
+              Methodology
+            </h2>
+            <p className="text-muted-foreground text-sm font-serif mt-1">
+              CaseLight structures your work so nothing gets lost in the record.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 md:gap-12">
+            <div className="space-y-3">
+              <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center mb-4 border border-primary/20">
+                <FileText className="w-4 h-4 text-primary" />
+              </div>
+              <h3 className="font-serif text-base font-semibold text-foreground">
+                Index the Record
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed font-serif">
+                Upload transcripts and rulings. Each document is indexed so you can trace every claim directly back to the source text.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
-              <div className="bg-card border border-card-border rounded-lg p-7 space-y-3.5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-primary" />
-                </div>
-                <h3 className="font-serif text-lg font-semibold text-foreground">
-                  Organize the Record
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Upload transcripts, rulings, and filings. Each document is indexed and searchable so you can trace every claim back to the source.
-                </p>
+            <div className="space-y-3">
+              <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center mb-4 border border-primary/20">
+                <Scale className="w-4 h-4 text-primary" />
               </div>
-
-              <div className="bg-card border border-card-border rounded-lg p-7 space-y-3.5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
-                  <Scale className="w-5 h-5 text-primary" />
-                </div>
-                <h3 className="font-serif text-lg font-semibold text-foreground">
-                  Surface Legal Error
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Identify preservation, procedural missteps, and constitutional issues. Every error is categorized and evaluated against binding precedent.
-                </p>
-              </div>
-
-              <div className="bg-card border border-card-border rounded-lg p-7 space-y-3.5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
-                  <ShieldCheck className="w-5 h-5 text-primary" />
-                </div>
-                <h3 className="font-serif text-lg font-semibold text-foreground">
-                  Test Your Argument
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Simulate the State's response before you file. Know where your argument holds and where it needs reinforcement.
-                </p>
-              </div>
+              <h3 className="font-serif text-base font-semibold text-foreground">
+                Surface Error
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed font-serif">
+                Identify procedural missteps and constitutional issues. Every error is categorized and evaluated against precedent.
+              </p>
             </div>
-          </div>
-        </section>
 
-        {/* CTA Strip */}
-        <section className="px-6 py-12 sm:py-16">
-          <div className="max-w-4xl mx-auto bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-8 sm:p-10 text-center">
-            <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-foreground mb-3">
-              Ready to begin?
-            </h2>
-            <p className="text-muted-foreground text-sm sm:text-base mb-6 max-w-xl mx-auto">
-              Open a case workspace and start building your analysis. Every detail is preserved and every argument is traceable.
-            </p>
-            <Link href="/cases/new">
-              <Button size="lg" className="h-12 px-8 shadow-sm" data-testid="button-cta-create">
-                Create Your First Case
-              </Button>
-            </Link>
+            <div className="space-y-3">
+              <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center mb-4 border border-primary/20">
+                <ShieldCheck className="w-4 h-4 text-primary" />
+              </div>
+              <h3 className="font-serif text-base font-semibold text-foreground">
+                Build Strategy
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed font-serif">
+                Simulate the State's response. Know where your argument holds and where it needs reinforcement before you file.
+              </p>
+            </div>
           </div>
         </section>
       </main>
