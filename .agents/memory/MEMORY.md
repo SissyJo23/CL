@@ -4,3 +4,4 @@
 - [Local versus production database](local-production-database.md) — local API smoke tests can fail because the workspace DB has no schema while Render production has the preserved CaseLight tables.
 - [CaseLight report evidence](caselight-report-evidence.md) — the uploaded legal research report is the source of truth; the archive has a separate 14-finding demo, not the 604-finding dataset.
 - [Merged PDF archive](merged-pdf-archive.md) — the merged PDF is a workspace/database export with embedded sensitive configuration, not a visual product reference.
+- [CaseLight visual language](caselight-visual-language.md) — uploaded product captures define the warm paper, navy chrome, serif editorial UI and centered responsive workspace.
