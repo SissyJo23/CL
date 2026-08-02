@@ -14,3 +14,9 @@ Render's public landing and API services did not update after pushes to the repo
 **Why:** Treating a GitHub push as a deployment caused source fixes to be reported as live while the custom domain still served the previous build.
 
 **How to apply:** After every public fix, compare the live bundle markers and API contract with the commit. If they remain old, stop feature work and repair/trigger the Render deployment first.
+
+The public `/app` entry is a neutral CaseLight workspace home; only an explicit `/app/demo` link may open the demo case.
+
+**Why:** Sending the primary app CTA directly into a demo case makes the product appear to belong to the wrong person and obscures the real case/workspace entry flow.
+
+**How to apply:** Keep the landing CTA and analyzer root separate from demo routing. Never use the demo case as an implicit authentication or fallback destination.
