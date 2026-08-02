@@ -5,6 +5,7 @@ import CasesIndex from "./pages/cases/list";
 import CasesNew from "./pages/cases/new";
 import CasesShow from "./pages/cases/show";
 import CasesEdit from "./pages/cases/edit";
+import CasesReport from "./pages/cases/report";
 import CasesPattern from "./pages/cases/pattern";
 import CasesRelief from "./pages/cases/relief";
 import DocumentsIndex from "./pages/documents/index";
@@ -128,6 +129,9 @@ export default function App() {
       </Route>
       <Route path="/cases/:id/edit">
         {(params) => <ProtectedRoute component={CasesEdit} {...params} />}
+      </Route>
+      <Route path="/cases/:id/report">
+        {(params) => <ProtectedRoute component={CasesReport} {...params} />}
       </Route>
       <Route path="/cases/:id">
         {(params) => <ProtectedRoute component={CasesShow} {...params} />}

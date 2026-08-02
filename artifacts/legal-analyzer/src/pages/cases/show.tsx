@@ -569,6 +569,12 @@ export default function CaseShow() {
                 </div>
               </div>
               <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap md:justify-end">
+                <Link href={`/cases/${caseId}/report`}>
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Report
+                  </Button>
+                </Link>
                 <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => window.print()}>
                   <Download className="w-4 h-4 mr-2" />
                   Export
