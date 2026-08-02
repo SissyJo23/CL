@@ -16,11 +16,12 @@ import CourtRun from "./pages/court/run";
 import CourtShow from "./pages/court/show";
 import MotionList from "./pages/motions/list";
 import MotionShow from "./pages/motions/show";
+import AuthLogin from "./pages/auth/login";
+import Register from "./pages/auth/register";
 import About from "./pages/about";
 import Legal from "./pages/legal";
 import NotFound from "./pages/not-found";
-import { API_BASE, getToken } from "./lib/api";
-import { setToken } from "./lib/api";
+import { API_BASE, clearToken, getToken, isDemoSession, isValidSession, setToken } from "./lib/api";
 
 function DemoEntry() {
   const [, setLocation] = useLocation();
@@ -38,11 +39,7 @@ function DemoEntry() {
       })
       .then(({ caseId }) => {
         if (cancelled) return;
-        // The demo case is intentionally read-only at the UI level, but it
-        // uses the same workspace so every demo button exercises the product.
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("authToken", "demo-session");
-        localStorage.setItem("cl_token", "demo-session");
+        setToken("demo-session");
         setLocation(`/cases/${caseId}`);
       })
       .catch((reason) => {
@@ -68,30 +65,51 @@ function DemoEntry() {
 }
 
 function AppEntry() {
-  const [, setLocation] = useLocation();
+  const token = getToken();
+  const [state, setState] = useState<"loading" | "signed-out" | "signed-in">(
+    token && !isDemoSession() && isValidSession() ? "loading" : "signed-out",
+  );
 
   useEffect(() => {
-    // The current API is a shared workspace API rather than an identity
-    // provider. Establish a neutral app session so the real workspace is
-    // usable without selecting or mutating the demo case.
-    if (!getToken()) {
-      setToken("workspace-session");
+    if (!token || isDemoSession() || !isValidSession()) {
+      if (token) clearToken();
+      setState("signed-out");
+      return;
     }
-  }, []);
 
-  return <Dashboard />;
+    let cancelled = false;
+    fetch(`${API_BASE}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error("Session expired");
+        if (!cancelled) setState("signed-in");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        clearToken();
+        setState("signed-out");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  if (state === "signed-in") return <Dashboard />;
+  if (state === "loading") {
+    return <div className="min-h-[100dvh] grid place-items-center bg-background text-sm text-muted-foreground">Opening your CaseLight workspace…</div>;
+  }
+  return <AuthLogin />;
 }
 
-// The app home is intentionally separate from the demo. Visitors should
-// choose whether to open a new workspace, view their cases, or enter the
-// explicitly requested demo instead of being silently placed in case 130.
 function ProtectedRoute({ component: Component, ...rest }: { component: any, [key: string]: any }) {
   const [, setLocation] = useLocation();
-  const isAuthenticated = Boolean(getToken());
+  const isAuthenticated = isValidSession();
 
   useEffect(() => {
     if (!isAuthenticated) {
-      setLocation("/");
+      setLocation("/login");
     }
   }, [isAuthenticated, setLocation]);
 
@@ -103,13 +121,13 @@ export default function App() {
   return (
     <Switch>
       {/* Public Pages */}
-      <Route path="/login" component={DemoEntry} />
-      <Route path="/register" component={DemoEntry} />
+      <Route path="/login" component={AuthLogin} />
+      <Route path="/register" component={Register} />
       <Route path="/about" component={About} />
       <Route path="/legal" component={Legal} />
       <Route path="/demo" component={DemoEntry} />
 
-      {/* The app entry is the real CaseLight home, never an implicit demo. */}
+      {/* The app entry is the real CaseLight account/workspace entry. */}
       <Route path="/" component={AppEntry} />
       <Route path="/cases">
         {(params) => <ProtectedRoute component={CasesIndex} {...params} />}

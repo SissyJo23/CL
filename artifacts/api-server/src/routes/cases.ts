@@ -8,13 +8,13 @@ import {
   documentsTable,
   motionsTable,
 } from "@workspace/db";
-import { eq, desc, sql } from "drizzle-orm";
+import { and, eq, desc, sql } from "drizzle-orm";
 import { anthropic, buildCaseStrategyPrompt } from "../lib/anthropic";
 import { type AuthRequest } from "../lib/auth";
 
 const router = Router();
 
-router.get("/cases", async (_req: AuthRequest, res) => {
+router.get("/cases", async (req: AuthRequest, res) => {
   const rows = await db
     .select({
       id: casesTable.id,
@@ -33,16 +33,24 @@ router.get("/cases", async (_req: AuthRequest, res) => {
     .from(casesTable)
     .leftJoin(documentsTable, eq(documentsTable.caseId, casesTable.id))
     .leftJoin(findingsTable, eq(findingsTable.caseId, casesTable.id))
+    .where(
+      req.isDemo
+        ? and(eq(casesTable.userId, req.userId!), eq(casesTable.caseNumber, "DEMO-2018CF000847"))
+        : eq(casesTable.userId, req.userId!),
+    )
     .groupBy(casesTable.id)
     .orderBy(desc(casesTable.updatedAt));
   res.json(rows);
 });
 
 router.post("/cases", async (req: AuthRequest, res) => {
-  // Inject a fallback userId (1) if the frontend fails to supply one
+  if (req.isDemo) {
+    res.status(403).json({ error: "The public demo is read-only." });
+    return;
+  }
   const payload = {
     ...req.body,
-    userId: req.body.userId ? Number(req.body.userId) : 1
+    userId: req.userId!,
   };
 
   const parsed = insertCaseSchema.safeParse(payload);
@@ -57,10 +65,15 @@ router.post("/cases", async (req: AuthRequest, res) => {
   res.status(201).json(row);
 });
 
-router.get("/cases/recent", async (_req: AuthRequest, res) => {
+router.get("/cases/recent", async (req: AuthRequest, res) => {
   const [row] = await db
     .select()
     .from(casesTable)
+    .where(
+      req.isDemo
+        ? and(eq(casesTable.userId, req.userId!), eq(casesTable.caseNumber, "DEMO-2018CF000847"))
+        : eq(casesTable.userId, req.userId!),
+    )
     .orderBy(desc(casesTable.updatedAt))
     .limit(1);
   res.json({ case: row ?? null });
@@ -71,7 +84,7 @@ router.get("/cases/:id", async (req: AuthRequest, res) => {
   const [row] = await db
     .select()
     .from(casesTable)
-    .where(eq(casesTable.id, id));
+    .where(and(eq(casesTable.id, id), eq(casesTable.userId, req.userId!)));
   if (!row) {
     res.status(404).json({ error: "Not found" });
     return;
@@ -100,7 +113,7 @@ router.patch("/cases/:id", async (req: AuthRequest, res) => {
   const [row] = await db
     .update(casesTable)
     .set(updates)
-    .where(eq(casesTable.id, id))
+    .where(and(eq(casesTable.id, id), eq(casesTable.userId, req.userId!)))
     .returning();
   if (!row) {
     res.status(404).json({ error: "Not found" });
@@ -111,13 +124,16 @@ router.patch("/cases/:id", async (req: AuthRequest, res) => {
 
 router.delete("/cases/:id", async (req: AuthRequest, res) => {
   const id = Number(req.params.id);
-  await db.delete(casesTable).where(eq(casesTable.id, id));
+  await db.delete(casesTable).where(and(eq(casesTable.id, id), eq(casesTable.userId, req.userId!)));
   res.status(204).send();
 });
 
 router.get("/cases/:id/strategy", async (req: AuthRequest, res) => {
   const id = Number(req.params.id);
-  const [caseRow] = await db.select().from(casesTable).where(eq(casesTable.id, id));
+  const [caseRow] = await db
+    .select()
+    .from(casesTable)
+    .where(and(eq(casesTable.id, id), eq(casesTable.userId, req.userId!)));
   if (!caseRow) {
     res.status(404).json({ error: "Case not found" });
     return;
@@ -131,7 +147,10 @@ router.get("/cases/:id/strategy", async (req: AuthRequest, res) => {
 
 router.post("/cases/:id/strategy", async (req: AuthRequest, res) => {
   const id = Number(req.params.id);
-  const [caseRow] = await db.select().from(casesTable).where(eq(casesTable.id, id));
+  const [caseRow] = await db
+    .select()
+    .from(casesTable)
+    .where(and(eq(casesTable.id, id), eq(casesTable.userId, req.userId!)));
   if (!caseRow) {
     res.status(404).json({ error: "Case not found" });
     return;

@@ -1,12 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { setBaseUrl } from "@workspace/api-client-react";
+import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
 import { UserModeProvider } from "@/contexts/UserModeContext";
 import App from "./App";
 import "./index.css";
+import { getToken } from "./lib/api";
 
 setBaseUrl("https://caselight-api.onrender.com");
+setAuthTokenGetter(async () => getToken());
 
 const queryClient = new QueryClient();
 

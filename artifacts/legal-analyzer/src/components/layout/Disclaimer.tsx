@@ -1,9 +1,11 @@
 import { Link, useLocation } from "wouter";
+import { clearToken } from "@/lib/api";
 
 export default function Disclaimer() {
   const [, setLocation] = useLocation();
 
   const handleSignOut = () => {
+    clearToken();
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("user");
     setLocation("/");

@@ -11,10 +11,20 @@ import demoRouter from "./demo";
 import patternRouter from "./pattern";
 import reliefRouter from "./relief";
 import nomeritRouter from "./nomerit";
+import authRouter from "./auth";
+import { authMiddleware, rejectDemoWrites, requireAuth, requireCaseAccess } from "../lib/auth";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(authRouter);
+// The demo remains an explicit public read-only entry. All real workspace
+// routes below require a verified account session.
+router.use(demoRouter);
+router.use(authMiddleware);
+router.use(requireAuth);
+router.use(requireCaseAccess);
+router.use(rejectDemoWrites);
 router.use(casesRouter);
 router.use(documentsRouter);
 router.use(findingsRouter);
@@ -22,16 +32,8 @@ router.use(categoriesRouter);
 router.use(courtRouter);
 router.use(motionsRouter);
 router.use(exportRouter);
-router.use(demoRouter);
 router.use(patternRouter);
 router.use(reliefRouter);
 router.use(nomeritRouter);
-
-router.post("/auth/login", (req, res) => {
-  res.status(410).json({
-    success: false,
-    message: "Password login is disabled. Use the CaseLight demo entry point.",
-  });
-});
 
 export default router;
